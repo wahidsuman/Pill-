@@ -44,7 +44,9 @@ fun PillTrackerScreen(
             .fillMaxSize()
             .background(
                 brush = Brush.verticalGradient(
-                    colors = listOf(Blue50, Color.White)
+                    colors = listOf(Blue50, Color.White),
+                    startY = 0f,
+                    endY = Float.POSITIVE_INFINITY
                 )
             )
     ) {
