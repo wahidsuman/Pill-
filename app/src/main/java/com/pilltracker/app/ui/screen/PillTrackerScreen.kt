@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -329,14 +330,20 @@ fun PillsListSection(
             )
             FloatingActionButton(
                 onClick = onAddPill,
-                containerColor = Blue500,
+                containerColor = Blue600,
                 contentColor = Color.White,
-                modifier = Modifier.size(48.dp)
+                modifier = Modifier
+                    .size(56.dp)
+                    .shadow(8.dp, RoundedCornerShape(28.dp)),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 12.dp
+                )
             ) {
                 Icon(
                     imageVector = Icons.Default.Add,
                     contentDescription = "Add Pill",
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }

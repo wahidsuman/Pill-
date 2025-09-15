@@ -38,6 +38,10 @@ fun AddPillModal(
     var times by remember { mutableStateOf(listOf("")) }
     var showTimePicker by remember { mutableStateOf(false) }
     var selectedTimeIndex by remember { mutableStateOf(0) }
+    var is24HourFormat by remember { mutableStateOf(false) }
+    var frequency by remember { mutableStateOf("daily") }
+    var customDays by remember { mutableStateOf(listOf<String>()) }
+    var showCustomDaysPicker by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -106,6 +110,100 @@ fun AddPillModal(
                             onClick = { color = colorOption }
                         )
                     }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Time Format Toggle
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Time Format",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = Gray700
+                    )
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = "12h",
+                            fontSize = 12.sp,
+                            color = if (!is24HourFormat) Blue600 else Gray600
+                        )
+                        Switch(
+                            checked = is24HourFormat,
+                            onCheckedChange = { is24HourFormat = it },
+                            colors = SwitchDefaults.colors(
+                                checkedThumbColor = Blue600,
+                                checkedTrackColor = Blue100,
+                                uncheckedThumbColor = Gray600,
+                                uncheckedTrackColor = Gray200
+                            )
+                        )
+                        Text(
+                            text = "24h",
+                            fontSize = 12.sp,
+                            color = if (is24HourFormat) Blue600 else Gray600
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Frequency Selection
+                Text(
+                    text = "Frequency",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Gray700,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val frequencies = listOf("daily", "weekly", "monthly", "custom")
+                    frequencies.forEach { freq ->
+                        FilterChip(
+                            onClick = { 
+                                frequency = freq
+                                if (freq == "custom") {
+                                    showCustomDaysPicker = true
+                                }
+                            },
+                            label = { 
+                                Text(
+                                    text = freq.replaceFirstChar { it.uppercase() },
+                                    fontSize = 12.sp
+                                )
+                            },
+                            selected = frequency == freq,
+                            modifier = Modifier.weight(1f),
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = Blue100,
+                                selectedLabelColor = Blue600,
+                                containerColor = Gray100,
+                                labelColor = Gray700
+                            )
+                        )
+                    }
+                }
+
+                // Show custom days if custom frequency is selected
+                if (frequency == "custom" && customDays.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "Selected Days: ${customDays.joinToString(", ")}",
+                        fontSize = 12.sp,
+                        color = Blue600,
+                        modifier = Modifier.padding(start = 4.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -211,14 +309,17 @@ fun AddPillModal(
                                         dosage = dosage,
                                         times = validTimes,
                                         color = color,
-                                        nextDose = validTimes.first()
+                                        nextDose = validTimes.first(),
+                                        frequency = frequency,
+                                        customDays = if (frequency == "custom") customDays else emptyList()
                                     )
                                     onAddPill(pill)
                                 }
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = name.isNotBlank() && dosage.isNotBlank() && times.any { it.isNotBlank() }
+                        enabled = name.isNotBlank() && dosage.isNotBlank() && times.any { it.isNotBlank() } && 
+                                (frequency != "custom" || customDays.isNotEmpty())
                     ) {
                         Text("Add Pill")
                     }
@@ -236,7 +337,20 @@ fun AddPillModal(
                 newTimes[selectedTimeIndex] = selectedTime
                 times = newTimes
                 showTimePicker = false
-            }
+            },
+            is24HourFormat = is24HourFormat
+        )
+    }
+
+    // Custom Days Picker Dialog
+    if (showCustomDaysPicker) {
+        CustomDaysPickerDialog(
+            onDismiss = { showCustomDaysPicker = false },
+            onDaysSelected = { selectedDays ->
+                customDays = selectedDays
+                showCustomDaysPicker = false
+            },
+            selectedDays = customDays
         )
     }
 }
@@ -244,7 +358,8 @@ fun AddPillModal(
 @Composable
 fun NativeTimePickerDialog(
     onDismiss: () -> Unit,
-    onTimeSelected: (String) -> Unit
+    onTimeSelected: (String) -> Unit,
+    is24HourFormat: Boolean = false
 ) {
     val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
@@ -253,12 +368,18 @@ fun NativeTimePickerDialog(
         val timePickerDialog = android.app.TimePickerDialog(
             context,
             { _, hourOfDay, minute ->
-                val timeString = String.format("%02d:%02d", hourOfDay, minute)
+                val timeString = if (is24HourFormat) {
+                    String.format("%02d:%02d", hourOfDay, minute)
+                } else {
+                    val hour = if (hourOfDay == 0) 12 else if (hourOfDay > 12) hourOfDay - 12 else hourOfDay
+                    val amPm = if (hourOfDay < 12) "AM" else "PM"
+                    String.format("%02d:%02d %s", hour, minute, amPm)
+                }
                 onTimeSelected(timeString)
             },
             calendar.get(Calendar.HOUR_OF_DAY),
             calendar.get(Calendar.MINUTE),
-            false // 24-hour format
+            is24HourFormat
         )
         
         timePickerDialog.setOnCancelListener {
@@ -270,6 +391,112 @@ fun NativeTimePickerDialog(
         }
         
         timePickerDialog.show()
+    }
+}
+
+@Composable
+fun CustomDaysPickerDialog(
+    onDismiss: () -> Unit,
+    onDaysSelected: (List<String>) -> Unit,
+    selectedDays: List<String>
+) {
+    var tempSelectedDays by remember { mutableStateOf(selectedDays.toMutableSet()) }
+    
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp)
+            ) {
+                Text(
+                    text = "Select Days",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray800
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                val daysOfWeek = listOf(
+                    "Monday" to "Mon",
+                    "Tuesday" to "Tue", 
+                    "Wednesday" to "Wed",
+                    "Thursday" to "Thu",
+                    "Friday" to "Fri",
+                    "Saturday" to "Sat",
+                    "Sunday" to "Sun"
+                )
+
+                daysOfWeek.forEach { (fullDay, shortDay) ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                if (tempSelectedDays.contains(fullDay)) {
+                                    tempSelectedDays.remove(fullDay)
+                                } else {
+                                    tempSelectedDays.add(fullDay)
+                                }
+                            }
+                            .padding(vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = fullDay,
+                            fontSize = 16.sp,
+                            color = Gray800
+                        )
+                        
+                        Checkbox(
+                            checked = tempSelectedDays.contains(fullDay),
+                            onCheckedChange = { isChecked ->
+                                if (isChecked) {
+                                    tempSelectedDays.add(fullDay)
+                                } else {
+                                    tempSelectedDays.remove(fullDay)
+                                }
+                            },
+                            colors = CheckboxDefaults.colors(
+                                checkedColor = Blue600,
+                                uncheckedColor = Gray400
+                            )
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+                    
+                    Button(
+                        onClick = {
+                            onDaysSelected(tempSelectedDays.toList())
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = tempSelectedDays.isNotEmpty()
+                    ) {
+                        Text("Done")
+                    }
+                }
+            }
+        }
     }
 }
 

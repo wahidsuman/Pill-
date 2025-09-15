@@ -15,5 +15,7 @@ data class Pill(
     val image: String? = null,
     val nextDose: String,
     val taken: Boolean = false,
+    val frequency: String = "daily", // daily, weekly, monthly, custom
+    val customDays: List<String> = emptyList(), // For custom frequency (e.g., ["monday", "wednesday", "friday"])
     val createdAt: Long = System.currentTimeMillis()
 )
