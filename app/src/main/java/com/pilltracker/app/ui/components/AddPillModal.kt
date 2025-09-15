@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
@@ -19,6 +20,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -128,18 +130,18 @@ fun AddPillModal(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                val frequencies = listOf(
-                    "daily" to "Daily",
-                    "weekly" to "Weekly", 
-                    "monthly" to "Monthly",
-                    "custom" to "Custom"
-                )
-                
                 LazyRow(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
+                    val frequencies = listOf(
+                        "daily" to "Daily",
+                        "weekly" to "Weekly", 
+                        "monthly" to "Monthly",
+                        "custom" to "Custom"
+                    )
+                    
                     items(frequencies.size) { index ->
                         val (freq, displayText) = frequencies[index]
                         FilterChip(
