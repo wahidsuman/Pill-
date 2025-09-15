@@ -29,7 +29,7 @@ fun CustomTimePickerDialog(
     initialHour: Int = 12,
     initialMinute: Int = 0,
     isAM: Boolean = true,
-    onTimeSelected: (hour: Int, minute: Int, isAM: Boolean) -> Unit,
+    onTimeSelected: (timeString: String) -> Unit,
     onDismiss: () -> Unit
 ) {
     var selectedHour by remember { mutableStateOf(initialHour) }
@@ -108,7 +108,23 @@ fun CustomTimePickerDialog(
                     )
                 }
                 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Real-time preview of selected time
+                Text(
+                    text = String.format(
+                        "%02d:%02d %s",
+                        selectedHour,
+                        selectedMinute,
+                        if (selectedIsAM) "AM" else "PM"
+                    ),
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Blue600,
+                    modifier = Modifier.padding(vertical = 8.dp)
+                )
+                
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 // Action Buttons
                 Row(
@@ -128,7 +144,13 @@ fun CustomTimePickerDialog(
                     // OK Button
                     Button(
                         onClick = {
-                            onTimeSelected(selectedHour, selectedMinute, selectedIsAM)
+                            val timeString = String.format(
+                                "%02d:%02d %s",
+                                selectedHour,
+                                selectedMinute,
+                                if (selectedIsAM) "AM" else "PM"
+                            )
+                            onTimeSelected(timeString)
                             onDismiss()
                         },
                         modifier = Modifier.weight(1f)
@@ -169,6 +191,10 @@ fun CustomNumberPicker(
                     }
                 }
                 
+                // Configure for wheel/spinner appearance
+                wrapSelectorWheel = false
+                descendantFocusability = android.view.ViewGroup.FOCUS_BLOCK_DESCENDANTS
+                
                 // Customize appearance
                 setTextColor(Blue600.toArgb())
                 setTextSize(20f)
@@ -194,15 +220,31 @@ private fun NumberPicker.applyCustomStyling() {
         selectorWheelPaintField.isAccessible = true
         val selectorWheelPaint = selectorWheelPaintField.get(this) as android.graphics.Paint
         
-        // Set text color for center item (selected)
+        // Set text color for center item (selected) - deep blue and bold
         selectorWheelPaint.color = Blue600.toArgb()
-        selectorWheelPaint.textSize = 20f
+        selectorWheelPaint.textSize = 24f
         selectorWheelPaint.isFakeBoldText = true
+        selectorWheelPaint.typeface = android.graphics.Typeface.DEFAULT_BOLD
         
-        // Set text color for non-selected items
+        // Set text color for non-selected items - light gray
         val textColorField = NumberPicker::class.java.getDeclaredField("mTextColor")
         textColorField.isAccessible = true
         textColorField.set(this, Gray400.toArgb())
+        
+        // Set divider color to match the theme
+        val dividerColorField = NumberPicker::class.java.getDeclaredField("mDividerColor")
+        dividerColorField.isAccessible = true
+        dividerColorField.set(this, Blue600.toArgb())
+        
+        // Set selection divider color
+        val selectionDividerColorField = NumberPicker::class.java.getDeclaredField("mSelectionDividerColor")
+        selectionDividerColorField.isAccessible = true
+        selectionDividerColorField.set(this, Blue600.toArgb())
+        
+        // Set selection divider height
+        val selectionDividerHeightField = NumberPicker::class.java.getDeclaredField("mSelectionDividerHeight")
+        selectionDividerHeightField.isAccessible = true
+        selectionDividerHeightField.set(this, 2)
         
     } catch (e: Exception) {
         // Fallback if reflection fails
