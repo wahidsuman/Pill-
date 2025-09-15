@@ -183,7 +183,7 @@ fun QuickStatsSection(
             modifier = Modifier.weight(1f)
         )
         StatCard(
-            title = "Total Pills",
+            title = "Total",
             value = totalCount.toString(),
             color = Blue600,
             modifier = Modifier.weight(1f)
@@ -199,7 +199,7 @@ fun StatCard(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(100.dp),
+        modifier = modifier.height(110.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
@@ -212,15 +212,16 @@ fun StatCard(
         ) {
             Text(
                 text = value,
-                fontSize = 24.sp,
+                fontSize = 22.sp,
                 fontWeight = FontWeight.Bold,
                 color = color
             )
             Text(
                 text = title,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 color = Gray600,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier.padding(top = 4.dp),
+                maxLines = 1
             )
         }
     }
