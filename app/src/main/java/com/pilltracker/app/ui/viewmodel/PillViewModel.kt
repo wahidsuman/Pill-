@@ -1,18 +1,24 @@
 package com.pilltracker.app.ui.viewmodel
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pilltracker.app.data.model.Pill
 import com.pilltracker.app.data.repository.PillRepository
+import com.pilltracker.app.service.PillAlarmManager
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
 class PillViewModel @Inject constructor(
-    private val repository: PillRepository
+    private val repository: PillRepository,
+    @ApplicationContext private val context: Context
 ) : ViewModel() {
+    
+    private val alarmManager = PillAlarmManager(context)
 
     private val _pills = MutableStateFlow<List<Pill>>(emptyList())
     val pills: StateFlow<List<Pill>> = _pills.asStateFlow()
@@ -61,7 +67,9 @@ class PillViewModel @Inject constructor(
 
     fun addPill(pill: Pill) {
         viewModelScope.launch {
-            repository.insertPill(pill)
+            val pillId = repository.insertPill(pill)
+            val pillWithId = pill.copy(id = pillId)
+            alarmManager.schedulePillReminder(pillWithId)
             _showAddForm.value = false
         }
     }
@@ -74,6 +82,7 @@ class PillViewModel @Inject constructor(
 
     fun deletePill(pill: Pill) {
         viewModelScope.launch {
+            alarmManager.cancelPillReminder(pill)
             repository.deletePill(pill)
         }
     }
