@@ -4,6 +4,9 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -404,93 +407,65 @@ fun NativeTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Hour and Minute Controls
+                // Scrollable Hour and Minute Selectors
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    // Hour Controls
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Hour Selector
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
                             text = "Hour",
-                            fontSize = 12.sp,
-                            color = Gray600,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Gray700,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                    if (displayHour > 1) {
-                                        val newHour = if (displayHour == 12) 1 else displayHour - 1
-                                        selectedHour = if (isAM) newHour else newHour + 12
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowUp,
-                                    contentDescription = "Increase hour",
-                                    tint = Blue600
-                                )
-                            }
-                            
-                            IconButton(
-                                onClick = {
-                                    val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                    if (displayHour < 12) {
-                                        val newHour = if (displayHour == 11) 12 else displayHour + 1
-                                        selectedHour = if (isAM) newHour else newHour + 12
-                                    }
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "Decrease hour",
-                                    tint = Blue600
-                                )
-                            }
-                        }
+                        ScrollableTimeSelector(
+                            items = (1..12).map { it.toString().padStart(2, '0') },
+                            selectedItem = run {
+                                val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                                displayHour.toString().padStart(2, '0')
+                            },
+                            onItemSelected = { hourStr ->
+                                val hour = hourStr.toInt()
+                                selectedHour = if (isAM) hour else hour + 12
+                            },
+                            modifier = Modifier.height(120.dp)
+                        )
                     }
 
-                    // Minute Controls
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = ":",
+                        fontSize = 32.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Blue600,
+                        modifier = Modifier.padding(vertical = 40.dp)
+                    )
+
+                    // Minute Selector
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(1f)
+                    ) {
                         Text(
                             text = "Minute",
-                            fontSize = 12.sp,
-                            color = Gray600,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = Gray700,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    selectedMinute = (selectedMinute - 1 + 60) % 60
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowUp,
-                                    contentDescription = "Increase minute",
-                                    tint = Blue600
-                                )
-                            }
-                            
-                            IconButton(
-                                onClick = {
-                                    selectedMinute = (selectedMinute + 1) % 60
-                                }
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "Decrease minute",
-                                    tint = Blue600
-                                )
-                            }
-                        }
+                        ScrollableTimeSelector(
+                            items = (0..59).map { it.toString().padStart(2, '0') },
+                            selectedItem = selectedMinute.toString().padStart(2, '0'),
+                            onItemSelected = { minuteStr ->
+                                selectedMinute = minuteStr.toInt()
+                            },
+                            modifier = Modifier.height(120.dp)
+                        )
                     }
                 }
 
@@ -738,6 +713,64 @@ fun ColorOption(
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ScrollableTimeSelector(
+    items: List<String>,
+    selectedItem: String,
+    onItemSelected: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState()
+    val selectedIndex = items.indexOf(selectedItem)
+    
+    // Scroll to selected item when component is first composed
+    LaunchedEffect(selectedIndex) {
+        if (selectedIndex >= 0) {
+            listState.animateScrollToItem(selectedIndex)
+        }
+    }
+    
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(
+                color = Gray50,
+                shape = RoundedCornerShape(12.dp)
+            )
+    ) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            items(items.size) { index ->
+                val item = items[index]
+                val isSelected = item == selectedItem
+                
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp)
+                        .background(
+                            color = if (isSelected) Blue600 else Color.Transparent,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .clickable { onItemSelected(item) },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = item,
+                        fontSize = 18.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Color.White else Gray700
+                    )
+                }
             }
         }
     }
