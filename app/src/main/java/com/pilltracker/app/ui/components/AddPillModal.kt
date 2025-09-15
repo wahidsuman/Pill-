@@ -315,8 +315,7 @@ fun AddPillModal(
                 newTimes[selectedTimeIndex] = selectedTime
                 times = newTimes
                 showTimePicker = false
-            },
-            is24HourFormat = false
+            }
         )
     }
 
@@ -336,8 +335,7 @@ fun AddPillModal(
 @Composable
 fun NativeTimePickerDialog(
     onDismiss: () -> Unit,
-    onTimeSelected: (String) -> Unit,
-    is24HourFormat: Boolean = false
+    onTimeSelected: (String) -> Unit
 ) {
     val calendar = remember { Calendar.getInstance() }
     var selectedHour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY)) }
@@ -386,16 +384,10 @@ fun NativeTimePickerDialog(
                         ) {
                             IconButton(
                                 onClick = {
-                                    val displayHour = if (is24HourFormat) selectedHour else {
-                                        if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                    }
+                                    val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
                                     if (displayHour > 1) {
-                                        if (is24HourFormat) {
-                                            selectedHour = (selectedHour - 1 + 24) % 24
-                                        } else {
-                                            val newHour = if (displayHour == 12) 1 else displayHour - 1
-                                            selectedHour = if (isAM) newHour else newHour + 12
-                                        }
+                                        val newHour = if (displayHour == 12) 1 else displayHour - 1
+                                        selectedHour = if (isAM) newHour else newHour + 12
                                     }
                                 }
                             ) {
@@ -407,9 +399,7 @@ fun NativeTimePickerDialog(
                             }
                             
                             Text(
-                                text = if (is24HourFormat) {
-                                    String.format("%02d", selectedHour)
-                                } else {
+                                text = run {
                                     val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
                                     String.format("%02d", displayHour)
                                 },
@@ -422,16 +412,10 @@ fun NativeTimePickerDialog(
                             
                             IconButton(
                                 onClick = {
-                                    val displayHour = if (is24HourFormat) selectedHour else {
-                                        if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                    }
+                                    val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
                                     if (displayHour < 12) {
-                                        if (is24HourFormat) {
-                                            selectedHour = (selectedHour + 1) % 24
-                                        } else {
-                                            val newHour = if (displayHour == 11) 12 else displayHour + 1
-                                            selectedHour = if (isAM) newHour else newHour + 12
-                                        }
+                                        val newHour = if (displayHour == 11) 12 else displayHour + 1
+                                        selectedHour = if (isAM) newHour else newHour + 12
                                     }
                                 }
                             ) {
@@ -499,57 +483,55 @@ fun NativeTimePickerDialog(
                     }
                 }
 
-                // AM/PM Selection with clear differentiation (only for 12-hour format)
-                if (!is24HourFormat) {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    Text(
-                        text = "AM/PM",
-                        fontSize = 12.sp,
-                        color = Gray600,
-                        modifier = Modifier.padding(bottom = 8.dp)
-                    )
-                    
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                // AM/PM Selection with clear differentiation
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                Text(
+                    text = "AM/PM",
+                    fontSize = 12.sp,
+                    color = Gray600,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            isAM = true
+                            if (selectedHour >= 12) {
+                                selectedHour = selectedHour - 12
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isAM) Blue600 else Gray200,
+                            contentColor = if (isAM) Color.White else Gray700
+                        ),
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Button(
-                            onClick = {
-                                isAM = true
-                                if (selectedHour >= 12) {
-                                    selectedHour = selectedHour - 12
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isAM) Blue600 else Gray200,
-                                contentColor = if (isAM) Color.White else Gray700
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                "AM",
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                        
-                        Button(
-                            onClick = {
-                                isAM = false
-                                if (selectedHour < 12) {
-                                    selectedHour = selectedHour + 12
-                                }
-                            },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (!isAM) Blue600 else Gray200,
-                                contentColor = if (!isAM) Color.White else Gray700
-                            ),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Text(
-                                "PM",
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
+                        Text(
+                            "AM",
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                    
+                    Button(
+                        onClick = {
+                            isAM = false
+                            if (selectedHour < 12) {
+                                selectedHour = selectedHour + 12
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (!isAM) Blue600 else Gray200,
+                            contentColor = if (!isAM) Color.White else Gray700
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            "PM",
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
 
@@ -569,13 +551,9 @@ fun NativeTimePickerDialog(
                     
                     Button(
                         onClick = {
-                            val timeString = if (is24HourFormat) {
-                                String.format("%02d:%02d", selectedHour, selectedMinute)
-                            } else {
-                                val hour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                val amPm = if (isAM) "AM" else "PM"
-                                String.format("%02d:%02d %s", hour, selectedMinute, amPm)
-                            }
+                            val hour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                            val amPm = if (isAM) "AM" else "PM"
+                            val timeString = String.format("%02d:%02d %s", hour, selectedMinute, amPm)
                             onTimeSelected(timeString)
                         },
                         modifier = Modifier.weight(1f),

@@ -38,7 +38,6 @@ fun PillTrackerScreen(
     val pendingCount by viewModel.pendingCount.collectAsState()
     val showAddForm by viewModel.showAddForm.collectAsState()
     val showEditForm by viewModel.showEditForm.collectAsState()
-    var is24HourFormat by remember { mutableStateOf(false) }
 
     val currentTime = remember { LocalDateTime.now() }
 
@@ -59,11 +58,7 @@ fun PillTrackerScreen(
         ) {
             // Header
             item {
-                HeaderSection(
-                    currentTime = currentTime,
-                    is24HourFormat = is24HourFormat,
-                    onTimeFormatChange = { is24HourFormat = it }
-                )
+                HeaderSection(currentTime = currentTime)
             }
 
             // Quick Stats
@@ -114,11 +109,7 @@ fun PillTrackerScreen(
 }
 
 @Composable
-fun HeaderSection(
-    currentTime: LocalDateTime,
-    is24HourFormat: Boolean,
-    onTimeFormatChange: (Boolean) -> Unit
-) {
+fun HeaderSection(currentTime: LocalDateTime) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -127,102 +118,53 @@ fun HeaderSection(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp)
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Medication,
-                            contentDescription = null,
-                            tint = Blue500,
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Text(
-                            text = "PillTracker",
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Gray800
-                        )
-                    }
-                    Text(
-                        text = currentTime.format(DateTimeFormatter.ofPattern("EEEE, MMM dd")),
-                        fontSize = 14.sp,
-                        color = Gray600,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-
-                Column(
-                    horizontalAlignment = Alignment.End
-                ) {
-                    Text(
-                        text = if (is24HourFormat) {
-                            currentTime.format(DateTimeFormatter.ofPattern("HH:mm"))
-                        } else {
-                            currentTime.format(DateTimeFormatter.ofPattern("hh:mm a"))
-                        },
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Blue600
-                    )
-                    Text(
-                        text = "Current Time",
-                        fontSize = 12.sp,
-                        color = Gray600
-                    )
-                }
-            }
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Time Format Toggle
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Time Format",
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Gray700
-                )
+            Column {
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Text(
-                        text = "12h",
-                        fontSize = 12.sp,
-                        color = if (!is24HourFormat) Blue600 else Gray600
-                    )
-                    Switch(
-                        checked = is24HourFormat,
-                        onCheckedChange = onTimeFormatChange,
-                        colors = SwitchDefaults.colors(
-                            checkedThumbColor = Blue600,
-                            checkedTrackColor = Blue100,
-                            uncheckedThumbColor = Gray600,
-                            uncheckedTrackColor = Gray200
-                        )
+                    Icon(
+                        imageVector = Icons.Default.Medication,
+                        contentDescription = null,
+                        tint = Blue500,
+                        modifier = Modifier.size(28.dp)
                     )
                     Text(
-                        text = "24h",
-                        fontSize = 12.sp,
-                        color = if (is24HourFormat) Blue600 else Gray600
+                        text = "PillTracker",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Gray800
                     )
                 }
+                Text(
+                    text = currentTime.format(DateTimeFormatter.ofPattern("EEEE, MMM dd")),
+                    fontSize = 14.sp,
+                    color = Gray600,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+
+            Column(
+                horizontalAlignment = Alignment.End
+            ) {
+                Text(
+                    text = currentTime.format(DateTimeFormatter.ofPattern("hh:mm a")),
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Blue600
+                )
+                Text(
+                    text = "Current Time",
+                    fontSize = 12.sp,
+                    color = Gray600
+                )
             }
         }
     }
