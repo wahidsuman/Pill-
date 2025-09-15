@@ -636,10 +636,19 @@ fun WheelTimeSelector(
     var currentMiddleItem by remember { mutableStateOf(selectedItem) }
     var isInitialized by remember { mutableStateOf(false) }
     
+    // Create infinite list by repeating items multiple times
+    val infiniteItems = remember(items) {
+        val repeatedItems = items.repeat(100) // Repeat 100 times for infinite effect
+        repeatedItems
+    }
+    
+    // Calculate the center index in the infinite list
+    val centerIndex = (infiniteItems.size / 2) + selectedIndex
+    
     // Scroll to selected item only once when component is first composed
     LaunchedEffect(selectedIndex) {
         if (selectedIndex >= 0 && !isInitialized) {
-            listState.animateScrollToItem(selectedIndex)
+            listState.animateScrollToItem(centerIndex)
             isInitialized = true
         }
     }
@@ -662,8 +671,8 @@ fun WheelTimeSelector(
                 visibleItemIndex + 1
             }
             
-            if (centerIndex < items.size && centerIndex >= 0) {
-                val newCenterItem = items[centerIndex]
+            if (centerIndex < infiniteItems.size && centerIndex >= 0) {
+                val newCenterItem = infiniteItems[centerIndex]
                 if (newCenterItem != currentMiddleItem) {
                     currentMiddleItem = newCenterItem
                     onItemSelected(newCenterItem)
@@ -686,8 +695,8 @@ fun WheelTimeSelector(
             contentPadding = PaddingValues(vertical = 75.dp), // Center the middle item
             verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
-            items(items.size) { index ->
-                val item = items[index]
+            items(infiniteItems.size) { index ->
+                val item = infiniteItems[index]
                 val isSelected = item == currentMiddleItem
                 
                 Box(
