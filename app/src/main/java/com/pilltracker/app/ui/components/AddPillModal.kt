@@ -374,62 +374,56 @@ fun NativeTimePickerDialog(
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // Wheel-style Time Picker
-                Box(
-                    modifier = Modifier.fillMaxWidth()
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceEvenly
-                    ) {
-                        // Hour Wheel
-                        WheelTimeSelector(
-                            items = (1..12).map { it.toString().padStart(2, '0') },
-                            selectedItem = run {
-                                val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                displayHour.toString().padStart(2, '0')
-                            },
-                            onItemSelected = { hourStr ->
-                                val hour = hourStr.toInt()
-                                selectedHour = if (isAM) hour else hour + 12
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
+                    // Hour Wheel
+                    WheelTimeSelector(
+                        items = (1..12).map { it.toString().padStart(2, '0') },
+                        selectedItem = run {
+                            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                            displayHour.toString().padStart(2, '0')
+                        },
+                        onItemSelected = { hourStr ->
+                            val hour = hourStr.toInt()
+                            selectedHour = if (isAM) hour else hour + 12
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
 
-                        // Minute Wheel
-                        WheelTimeSelector(
-                            items = (0..59).map { it.toString().padStart(2, '0') },
-                            selectedItem = selectedMinute.toString().padStart(2, '0'),
-                            onItemSelected = { minuteStr ->
-                                selectedMinute = minuteStr.toInt()
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-
-                        // AM/PM Wheel
-                        WheelTimeSelector(
-                            items = listOf("AM", "PM"),
-                            selectedItem = if (isAM) "AM" else "PM",
-                            onItemSelected = { amPmStr ->
-                                isAM = amPmStr == "AM"
-                                if (isAM && selectedHour >= 12) {
-                                    selectedHour = selectedHour - 12
-                                } else if (!isAM && selectedHour < 12) {
-                                    selectedHour = selectedHour + 12
-                                }
-                            },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    
-                    // Colon positioned in the middle of the gray selection zone
+                    // Colon between hour and minute
                     Text(
                         text = ":",
                         fontSize = 32.sp,
                         fontWeight = FontWeight.Bold,
                         color = Blue600,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .offset(x = 0.dp, y = 0.dp) // Center in the gray zone
+                        modifier = Modifier.padding(vertical = 75.dp) // Center vertically with the gray zone
+                    )
+
+                    // Minute Wheel
+                    WheelTimeSelector(
+                        items = (0..59).map { it.toString().padStart(2, '0') },
+                        selectedItem = selectedMinute.toString().padStart(2, '0'),
+                        onItemSelected = { minuteStr ->
+                            selectedMinute = minuteStr.toInt()
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
+
+                    // AM/PM Wheel
+                    WheelTimeSelector(
+                        items = listOf("AM", "PM"),
+                        selectedItem = if (isAM) "AM" else "PM",
+                        onItemSelected = { amPmStr ->
+                            isAM = amPmStr == "AM"
+                            if (isAM && selectedHour >= 12) {
+                                selectedHour = selectedHour - 12
+                            } else if (!isAM && selectedHour < 12) {
+                                selectedHour = selectedHour + 12
+                            }
+                        },
+                        modifier = Modifier.weight(1f)
                     )
                 }
 
@@ -712,13 +706,13 @@ fun WheelTimeSelector(
             }
         }
         
-        // Selection indicator lines
+        // Selection indicator lines - gray zone
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(50.dp)
                 .background(
-                    color = Blue600.copy(alpha = 0.1f),
+                    color = Gray600.copy(alpha = 0.2f),
                     shape = RoundedCornerShape(8.dp)
                 )
                 .align(Alignment.Center)
