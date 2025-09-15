@@ -7,7 +7,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,8 +22,11 @@ import com.pilltracker.app.ui.theme.*
 fun PillCard(
     pill: Pill,
     onMarkAsTaken: () -> Unit,
-    onDeletePill: () -> Unit
+    onDeletePill: () -> Unit,
+    onEditPill: () -> Unit
 ) {
+    var showDeleteDialog by remember { mutableStateOf(false) }
+    var showEditDialog by remember { mutableStateOf(false) }
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -104,9 +107,22 @@ fun PillCard(
                             )
                         }
                         
+                        // Edit Button
+                        IconButton(
+                            onClick = { showEditDialog = true },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Edit,
+                                contentDescription = "Edit",
+                                tint = Blue600,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                        
                         // Delete Button
                         IconButton(
-                            onClick = onDeletePill,
+                            onClick = { showDeleteDialog = true },
                             modifier = Modifier.size(32.dp)
                         ) {
                             Icon(
@@ -168,5 +184,79 @@ fun PillCard(
                 }
             }
         }
+    }
+    
+    // Delete Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = {
+                Text(
+                    text = "Delete Medication",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to delete ${pill.name}? This action cannot be undone.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDeletePill()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Red500,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Delete")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showDeleteDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    
+    // Edit Confirmation Dialog
+    if (showEditDialog) {
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = {
+                Text(
+                    text = "Edit Medication",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text("Are you sure you want to edit ${pill.name}? This will open the edit form.")
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onEditPill()
+                        showEditDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Blue600,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text("Edit")
+                }
+            },
+            dismissButton = {
+                OutlinedButton(
+                    onClick = { showEditDialog = false }
+                ) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
