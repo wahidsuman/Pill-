@@ -167,10 +167,15 @@ fun AddPillModal(
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    val frequencies = listOf("daily", "weekly", "monthly", "custom")
-                    frequencies.forEach { freq ->
+                    val frequencies = listOf(
+                        "daily" to "Daily",
+                        "weekly" to "Weekly", 
+                        "monthly" to "Monthly",
+                        "custom" to "Custom"
+                    )
+                    frequencies.forEach { (freq, displayText) ->
                         FilterChip(
                             onClick = { 
                                 frequency = freq
@@ -180,8 +185,9 @@ fun AddPillModal(
                             },
                             label = { 
                                 Text(
-                                    text = freq.replaceFirstChar { it.uppercase() },
-                                    fontSize = 12.sp
+                                    text = displayText,
+                                    fontSize = 11.sp,
+                                    maxLines = 1
                                 )
                             },
                             selected = frequency == freq,
@@ -320,9 +326,18 @@ fun AddPillModal(
                         },
                         modifier = Modifier.weight(1f),
                         enabled = name.isNotBlank() && dosage.isNotBlank() && times.any { it.isNotBlank() } && 
-                                (frequency != "custom" || customDays.isNotEmpty())
+                                (frequency != "custom" || customDays.isNotEmpty()),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Blue600,
+                            contentColor = Color.White,
+                            disabledContainerColor = Gray200,
+                            disabledContentColor = Gray600
+                        )
                     ) {
-                        Text("Add Pill")
+                        Text(
+                            "Add Pill",
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
@@ -401,7 +416,7 @@ fun CustomDaysPickerDialog(
     onDaysSelected: (List<String>) -> Unit,
     selectedDays: List<String>
 ) {
-    var tempSelectedDays by remember { mutableStateOf(selectedDays.toMutableSet()) }
+    var tempSelectedDays by remember { mutableStateOf(selectedDays.toSet()) }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -440,10 +455,10 @@ fun CustomDaysPickerDialog(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
-                                if (tempSelectedDays.contains(fullDay)) {
-                                    tempSelectedDays.remove(fullDay)
+                                tempSelectedDays = if (tempSelectedDays.contains(fullDay)) {
+                                    tempSelectedDays - fullDay
                                 } else {
-                                    tempSelectedDays.add(fullDay)
+                                    tempSelectedDays + fullDay
                                 }
                             }
                             .padding(vertical = 8.dp),
@@ -459,10 +474,10 @@ fun CustomDaysPickerDialog(
                         Checkbox(
                             checked = tempSelectedDays.contains(fullDay),
                             onCheckedChange = { isChecked ->
-                                if (isChecked) {
-                                    tempSelectedDays.add(fullDay)
+                                tempSelectedDays = if (isChecked) {
+                                    tempSelectedDays + fullDay
                                 } else {
-                                    tempSelectedDays.remove(fullDay)
+                                    tempSelectedDays - fullDay
                                 }
                             },
                             colors = CheckboxDefaults.colors(
@@ -491,9 +506,18 @@ fun CustomDaysPickerDialog(
                             onDaysSelected(tempSelectedDays.toList())
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = tempSelectedDays.isNotEmpty()
+                        enabled = tempSelectedDays.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Blue600,
+                            contentColor = Color.White,
+                            disabledContainerColor = Gray200,
+                            disabledContentColor = Gray600
+                        )
                     ) {
-                        Text("Done")
+                        Text(
+                            "Done",
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
