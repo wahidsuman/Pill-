@@ -128,17 +128,20 @@ fun AddPillModal(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
-                Row(
+                val frequencies = listOf(
+                    "daily" to "Daily",
+                    "weekly" to "Weekly", 
+                    "monthly" to "Monthly",
+                    "custom" to "Custom"
+                )
+                
+                LazyRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 4.dp)
                 ) {
-                    val frequencies = listOf(
-                        "daily" to "Daily",
-                        "weekly" to "Weekly", 
-                        "monthly" to "Monthly",
-                        "custom" to "Custom"
-                    )
-                    frequencies.forEach { (freq, displayText) ->
+                    items(frequencies.size) { index ->
+                        val (freq, displayText) = frequencies[index]
                         FilterChip(
                             onClick = { 
                                 frequency = freq
@@ -149,12 +152,12 @@ fun AddPillModal(
                             label = { 
                                 Text(
                                     text = displayText,
-                                    fontSize = 11.sp,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Medium,
                                     maxLines = 1
                                 )
                             },
                             selected = frequency == freq,
-                            modifier = Modifier.weight(1f),
                             colors = FilterChipDefaults.filterChipColors(
                                 selectedContainerColor = Blue100,
                                 selectedLabelColor = Blue600,
