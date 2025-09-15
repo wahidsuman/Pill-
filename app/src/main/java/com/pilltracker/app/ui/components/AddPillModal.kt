@@ -3,6 +3,7 @@ package com.pilltracker.app.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -12,7 +13,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -22,6 +28,7 @@ import com.pilltracker.app.data.model.Pill
 import com.pilltracker.app.ui.theme.*
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlin.math.*
 
 @Composable
 fun AddPillModal(
@@ -244,7 +251,7 @@ fun TimePickerDialog(
 ) {
     var selectedHour by remember { mutableStateOf(8) }
     var selectedMinute by remember { mutableStateOf(0) }
-    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    var isSelectingHour by remember { mutableStateOf(true) }
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -277,58 +284,51 @@ fun TimePickerDialog(
                     modifier = Modifier.padding(16.dp)
                 )
 
-                // Hour Picker
+                // Mode Selector
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly,
-                    verticalAlignment = Alignment.CenterVertically
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 32.dp),
+                    horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Hour", fontSize = 14.sp, color = Gray600)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { 
-                                selectedHour = if (selectedHour > 0) selectedHour - 1 else 23 
-                            }) {
-                                Icon(Icons.Default.Remove, contentDescription = "Decrease hour")
-                            }
-                            Text(
-                                text = selectedHour.toString(),
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                            IconButton(onClick = { 
-                                selectedHour = if (selectedHour < 23) selectedHour + 1 else 0 
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = "Increase hour")
-                            }
-                        }
+                    Button(
+                        onClick = { isSelectingHour = true },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isSelectingHour) Blue500 else Gray200,
+                            contentColor = if (isSelectingHour) Color.White else Gray600
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Hour")
                     }
-
-                    Text(":", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("Minute", fontSize = 14.sp, color = Gray600)
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            IconButton(onClick = { 
-                                selectedMinute = if (selectedMinute > 0) selectedMinute - 1 else 59 
-                            }) {
-                                Icon(Icons.Default.Remove, contentDescription = "Decrease minute")
-                            }
-                            Text(
-                                text = String.format("%02d", selectedMinute),
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(horizontal = 16.dp)
-                            )
-                            IconButton(onClick = { 
-                                selectedMinute = if (selectedMinute < 59) selectedMinute + 1 else 0 
-                            }) {
-                                Icon(Icons.Default.Add, contentDescription = "Increase minute")
-                            }
-                        }
+                    
+                    Button(
+                        onClick = { isSelectingHour = false },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (!isSelectingHour) Blue500 else Gray200,
+                            contentColor = if (!isSelectingHour) Color.White else Gray600
+                        ),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Minute")
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Round Clock
+                RoundClockPicker(
+                    selectedValue = if (isSelectingHour) selectedHour else selectedMinute,
+                    maxValue = if (isSelectingHour) 23 else 59,
+                    onValueSelected = { value ->
+                        if (isSelectingHour) {
+                            selectedHour = value
+                        } else {
+                            selectedMinute = value
+                        }
+                    },
+                    modifier = Modifier.size(280.dp)
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -356,6 +356,94 @@ fun TimePickerDialog(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun RoundClockPicker(
+    selectedValue: Int,
+    maxValue: Int,
+    onValueSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val density = LocalDensity.current
+    
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .background(Color.White)
+            .pointerInput(Unit) {
+                detectDragGestures { change ->
+                    val centerX = size.width / 2f
+                    val centerY = size.height / 2f
+                    val x = change.position.x - centerX
+                    val y = change.position.y - centerY
+                    
+                    val angle = atan2(y, x) * 180 / PI
+                    val normalizedAngle = (angle + 90 + 360) % 360
+                    
+                    val value = if (maxValue == 23) {
+                        // For hours: 0-23
+                        ((normalizedAngle / 360) * 24).toInt().coerceIn(0, 23)
+                    } else {
+                        // For minutes: 0-59
+                        ((normalizedAngle / 360) * 60).toInt().coerceIn(0, 59)
+                    }
+                    
+                    onValueSelected(value)
+                }
+            },
+        contentAlignment = Alignment.Center
+    ) {
+        // Clock face
+        Box(
+            modifier = Modifier
+                .size(260.dp)
+                .clip(CircleShape)
+                .background(Blue50)
+        )
+        
+        // Hour markers
+        for (i in 0 until 12) {
+            val angle = (i * 30 - 90) * PI / 180
+            val radius = 100.dp
+            val x = (cos(angle) * radius.value).dp
+            val y = (sin(angle) * radius.value).dp
+            
+            Box(
+                modifier = Modifier
+                    .offset(x, y)
+                    .size(8.dp)
+                    .clip(CircleShape)
+                    .background(if (i % 3 == 0) Blue600 else Blue300)
+            )
+        }
+        
+        // Selected value indicator
+        val angle = if (maxValue == 23) {
+            (selectedValue * 15 - 90) * PI / 180 // 24 hours = 360 degrees
+        } else {
+            (selectedValue * 6 - 90) * PI / 180 // 60 minutes = 360 degrees
+        }
+        val radius = 80.dp
+        val x = (cos(angle) * radius.value).dp
+        val y = (sin(angle) * radius.value).dp
+        
+        Box(
+            modifier = Modifier
+                .offset(x, y)
+                .size(20.dp)
+                .clip(CircleShape)
+                .background(Blue600)
+        )
+        
+        // Center dot
+        Box(
+            modifier = Modifier
+                .size(12.dp)
+                .clip(CircleShape)
+                .background(Blue600)
+        )
     }
 }
 
