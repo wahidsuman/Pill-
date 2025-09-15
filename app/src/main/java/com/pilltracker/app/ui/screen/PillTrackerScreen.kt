@@ -155,7 +155,13 @@ fun HeaderSection(currentTime: LocalDateTime) {
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = currentTime.format(DateTimeFormatter.ofPattern("hh:mm a")),
+                    text = currentTime.format(DateTimeFormatter.ofPattern("a")),
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Blue600
+                )
+                Text(
+                    text = currentTime.format(DateTimeFormatter.ofPattern("hh:mm")),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = Blue600
