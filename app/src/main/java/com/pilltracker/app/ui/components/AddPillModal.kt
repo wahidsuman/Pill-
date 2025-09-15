@@ -448,10 +448,17 @@ fun NativeTimePickerDialog(
             initialHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour,
             initialMinute = selectedMinute,
             isAM = isAM,
-            onTimeSelected = { hour, minute, am ->
-                selectedHour = if (am) hour else hour + 12
+            onTimeSelected = { timeString ->
+                // Parse the time string to update our state
+                val parts = timeString.split(":")
+                val timePart = parts[1].split(" ")
+                val hour = parts[0].toInt()
+                val minute = timePart[0].toInt()
+                val ampm = timePart[1]
+                
+                selectedHour = if (ampm == "AM") hour else hour + 12
                 selectedMinute = minute
-                isAM = am
+                isAM = ampm == "AM"
             },
             onDismiss = { showTimePicker = false }
         )
