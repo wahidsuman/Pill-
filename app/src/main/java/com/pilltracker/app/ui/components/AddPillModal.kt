@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -344,9 +345,9 @@ fun AddPillModal(
         }
     }
 
-    // Native Time Picker Dialog
+    // Custom Time Picker Dialog
     if (showTimePicker) {
-        NativeTimePickerDialog(
+        CustomTimePickerDialog(
             onDismiss = { showTimePicker = false },
             onTimeSelected = { selectedTime ->
                 val newTimes = times.toMutableList()
@@ -372,41 +373,264 @@ fun AddPillModal(
 }
 
 @Composable
-fun NativeTimePickerDialog(
+fun CustomTimePickerDialog(
     onDismiss: () -> Unit,
     onTimeSelected: (String) -> Unit,
     is24HourFormat: Boolean = false
 ) {
-    val context = LocalContext.current
     val calendar = remember { Calendar.getInstance() }
+    var selectedHour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY)) }
+    var selectedMinute by remember { mutableStateOf(calendar.get(Calendar.MINUTE)) }
+    var isAM by remember { mutableStateOf(selectedHour < 12) }
     
-    LaunchedEffect(Unit) {
-        val timePickerDialog = android.app.TimePickerDialog(
-            context,
-            { _, hourOfDay, minute ->
-                val timeString = if (is24HourFormat) {
-                    String.format("%02d:%02d", hourOfDay, minute)
-                } else {
-                    val hour = if (hourOfDay == 0) 12 else if (hourOfDay > 12) hourOfDay - 12 else hourOfDay
-                    val amPm = if (hourOfDay < 12) "AM" else "PM"
-                    String.format("%02d:%02d %s", hour, minute, amPm)
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Select Time",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray800
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Time Display
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    // Hour
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Hour",
+                            fontSize = 12.sp,
+                            color = Gray600,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    val displayHour = if (is24HourFormat) selectedHour else {
+                                        if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                                    }
+                                    if (displayHour > 1) {
+                                        if (is24HourFormat) {
+                                            selectedHour = (selectedHour - 1 + 24) % 24
+                                        } else {
+                                            val newHour = if (displayHour == 12) 1 else displayHour - 1
+                                            selectedHour = if (isAM) newHour else newHour + 12
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowUp,
+                                    contentDescription = "Increase hour",
+                                    tint = Blue600
+                                )
+                            }
+                            
+                            Text(
+                                text = if (is24HourFormat) {
+                                    String.format("%02d", selectedHour)
+                                } else {
+                                    val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                                    String.format("%02d", displayHour)
+                                },
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Gray800,
+                                modifier = Modifier.width(48.dp),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            IconButton(
+                                onClick = {
+                                    val displayHour = if (is24HourFormat) selectedHour else {
+                                        if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                                    }
+                                    if (displayHour < 12) {
+                                        if (is24HourFormat) {
+                                            selectedHour = (selectedHour + 1) % 24
+                                        } else {
+                                            val newHour = if (displayHour == 11) 12 else displayHour + 1
+                                            selectedHour = if (isAM) newHour else newHour + 12
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "Decrease hour",
+                                    tint = Blue600
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = ":",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Gray800
+                    )
+
+                    // Minute
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "Minute",
+                            fontSize = 12.sp,
+                            color = Gray600,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    selectedMinute = (selectedMinute - 1 + 60) % 60
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowUp,
+                                    contentDescription = "Increase minute",
+                                    tint = Blue600
+                                )
+                            }
+                            
+                            Text(
+                                text = String.format("%02d", selectedMinute),
+                                fontSize = 24.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Gray800,
+                                modifier = Modifier.width(48.dp),
+                                textAlign = TextAlign.Center
+                            )
+                            
+                            IconButton(
+                                onClick = {
+                                    selectedMinute = (selectedMinute + 1) % 60
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "Decrease minute",
+                                    tint = Blue600
+                                )
+                            }
+                        }
+                    }
                 }
-                onTimeSelected(timeString)
-            },
-            calendar.get(Calendar.HOUR_OF_DAY),
-            calendar.get(Calendar.MINUTE),
-            is24HourFormat
-        )
-        
-        timePickerDialog.setOnCancelListener {
-            onDismiss()
+
+                // AM/PM Selection (only for 12-hour format)
+                if (!is24HourFormat) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text(
+                        text = "AM/PM",
+                        fontSize = 12.sp,
+                        color = Gray600,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                isAM = true
+                                if (selectedHour >= 12) {
+                                    selectedHour = selectedHour - 12
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isAM) Blue600 else Gray200,
+                                contentColor = if (isAM) Color.White else Gray700
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "AM",
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                        
+                        Button(
+                            onClick = {
+                                isAM = false
+                                if (selectedHour < 12) {
+                                    selectedHour = selectedHour + 12
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!isAM) Blue600 else Gray200,
+                                contentColor = if (!isAM) Color.White else Gray700
+                            ),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text(
+                                "PM",
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Action Buttons
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+                    
+                    Button(
+                        onClick = {
+                            val timeString = if (is24HourFormat) {
+                                String.format("%02d:%02d", selectedHour, selectedMinute)
+                            } else {
+                                val hour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                                val amPm = if (isAM) "AM" else "PM"
+                                String.format("%02d:%02d %s", hour, selectedMinute, amPm)
+                            }
+                            onTimeSelected(timeString)
+                        },
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Blue600,
+                            contentColor = Color.White
+                        )
+                    ) {
+                        Text(
+                            "OK",
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
         }
-        
-        timePickerDialog.setOnDismissListener {
-            onDismiss()
-        }
-        
-        timePickerDialog.show()
     }
 }
 
