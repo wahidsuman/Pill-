@@ -1,5 +1,6 @@
 package com.pilltracker.app.ui.components
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -367,33 +368,10 @@ fun RoundClockPicker(
     onValueSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val density = LocalDensity.current
-    
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .background(Color.White)
-            .pointerInput(Unit) {
-                detectDragGestures { change ->
-                    val centerX = size.width / 2f
-                    val centerY = size.height / 2f
-                    val x = change.position.x - centerX
-                    val y = change.position.y - centerY
-                    
-                    val angle = atan2(y, x) * 180 / PI
-                    val normalizedAngle = (angle + 90 + 360) % 360
-                    
-                    val value = if (maxValue == 23) {
-                        // For hours: 0-23
-                        ((normalizedAngle / 360) * 24).toInt().coerceIn(0, 23)
-                    } else {
-                        // For minutes: 0-59
-                        ((normalizedAngle / 360) * 60).toInt().coerceIn(0, 59)
-                    }
-                    
-                    onValueSelected(value)
-                }
-            },
+            .background(Color.White),
         contentAlignment = Alignment.Center
     ) {
         // Clock face
@@ -445,6 +423,40 @@ fun RoundClockPicker(
                 .clip(CircleShape)
                 .background(Blue600)
         )
+        
+        // Simple +/- buttons for easier interaction
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            IconButton(
+                onClick = { 
+                    val newValue = if (selectedValue > 0) selectedValue - 1 else maxValue
+                    onValueSelected(newValue)
+                }
+            ) {
+                Icon(
+                    Icons.Default.Remove,
+                    contentDescription = "Decrease",
+                    tint = Blue600,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+            
+            IconButton(
+                onClick = { 
+                    val newValue = if (selectedValue < maxValue) selectedValue + 1 else 0
+                    onValueSelected(newValue)
+                }
+            ) {
+                Icon(
+                    Icons.Default.Add,
+                    contentDescription = "Increase",
+                    tint = Blue600,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+        }
     }
 }
 
@@ -470,7 +482,7 @@ fun ColorOption(
         colors = CardDefaults.cardColors(containerColor = colorValue),
         shape = RoundedCornerShape(8.dp),
         border = if (isSelected) {
-            androidx.compose.foundation.BorderStroke(3.dp, Color.White)
+            BorderStroke(3.dp, Color.White)
         } else null,
         elevation = CardDefaults.cardElevation(
             defaultElevation = if (isSelected) 8.dp else 2.dp
