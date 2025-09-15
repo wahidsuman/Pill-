@@ -633,34 +633,41 @@ fun WheelTimeSelector(
     val listState = rememberLazyListState()
     val selectedIndex = items.indexOf(selectedItem)
     var currentMiddleItem by remember { mutableStateOf(selectedItem) }
+    var isInitialized by remember { mutableStateOf(false) }
     
-    // Scroll to selected item when component is first composed
+    // Scroll to selected item only once when component is first composed
     LaunchedEffect(selectedIndex) {
-        if (selectedIndex >= 0) {
+        if (selectedIndex >= 0 && !isInitialized) {
             listState.animateScrollToItem(selectedIndex)
+            isInitialized = true
         }
     }
     
-    // Track which item is currently in the middle
+    // Track which item is currently in the middle - only when user scrolls
     LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
-        val visibleItemIndex = listState.firstVisibleItemIndex
-        val scrollOffset = listState.firstVisibleItemScrollOffset
-        val itemHeight = 50.dp.value + 2.dp.value // height + spacing
-        
-        // Calculate which item is in the middle (considering 200dp total height, so 100dp from top is middle)
-        val middlePosition = 100.dp.value
-        val currentItemOffset = scrollOffset
-        val nextItemOffset = currentItemOffset + itemHeight
-        
-        val middleIndex = if (middlePosition <= currentItemOffset + itemHeight / 2) {
-            visibleItemIndex
-        } else {
-            visibleItemIndex + 1
-        }
-        
-        if (middleIndex < items.size) {
-            currentMiddleItem = items[middleIndex]
-            onItemSelected(currentMiddleItem)
+        if (isInitialized) {
+            val visibleItemIndex = listState.firstVisibleItemIndex
+            val scrollOffset = listState.firstVisibleItemScrollOffset
+            val itemHeight = 50.dp.value + 2.dp.value // height + spacing
+            
+            // Calculate which item is in the middle (considering 200dp total height, so 100dp from top is middle)
+            val middlePosition = 100.dp.value
+            val currentItemOffset = scrollOffset
+            val nextItemOffset = currentItemOffset + itemHeight
+            
+            val middleIndex = if (middlePosition <= currentItemOffset + itemHeight / 2) {
+                visibleItemIndex
+            } else {
+                visibleItemIndex + 1
+            }
+            
+            if (middleIndex < items.size && middleIndex >= 0) {
+                val newMiddleItem = items[middleIndex]
+                if (newMiddleItem != currentMiddleItem) {
+                    currentMiddleItem = newMiddleItem
+                    onItemSelected(newMiddleItem)
+                }
+            }
         }
     }
     
