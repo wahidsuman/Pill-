@@ -39,7 +39,15 @@ fun PillTrackerScreen(
     val showAddForm by viewModel.showAddForm.collectAsState()
     val showEditForm by viewModel.showEditForm.collectAsState()
 
-    val currentTime = remember { LocalDateTime.now() }
+    var currentTime by remember { mutableStateOf(LocalDateTime.now()) }
+    
+    // Update current time every second
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1000) // Update every second
+            currentTime = LocalDateTime.now()
+        }
+    }
 
     Box(
         modifier = modifier
