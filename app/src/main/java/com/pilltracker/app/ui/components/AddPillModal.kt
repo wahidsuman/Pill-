@@ -368,21 +368,6 @@ fun NativeTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Selected Time Display
-                Text(
-                    text = run {
-                        val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                        val amPm = if (isAM) "AM" else "PM"
-                        String.format("%02d:%02d %s", displayHour, selectedMinute, amPm)
-                    },
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Blue600,
-                    modifier = Modifier.padding(vertical = 16.dp)
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
                 // Scrollable Hour and Minute Selectors
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -727,27 +712,42 @@ fun ScrollableTimeSelector(
         ) {
             items(items.size) { index ->
                 val item = items[index]
-                val isSelected = item == selectedItem
                 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(40.dp)
-                        .background(
-                            color = if (isSelected) Blue600 else Color.Transparent,
-                            shape = RoundedCornerShape(8.dp)
-                        )
                         .clickable { onItemSelected(item) },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = item,
                         fontSize = 18.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) Color.White else Gray700
+                        fontWeight = FontWeight.Normal,
+                        color = Gray700
                     )
                 }
             }
+        }
+        
+        // Fixed selection indicator in the middle
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .background(
+                    color = Gray600,
+                    shape = RoundedCornerShape(8.dp)
+                )
+                .align(Alignment.Center),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = selectedItem,
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
         }
     }
 }
