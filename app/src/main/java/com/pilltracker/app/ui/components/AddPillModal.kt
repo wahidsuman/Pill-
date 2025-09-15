@@ -368,36 +368,24 @@ fun NativeTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Scrollable Hour and Minute Selectors
+                // Wheel-style Time Picker
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                    // Hour Selector
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                    // Hour Wheel
+                    WheelTimeSelector(
+                        items = (1..12).map { it.toString().padStart(2, '0') },
+                        selectedItem = run {
+                            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                            displayHour.toString().padStart(2, '0')
+                        },
+                        onItemSelected = { hourStr ->
+                            val hour = hourStr.toInt()
+                            selectedHour = if (isAM) hour else hour + 12
+                        },
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Hour",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Gray700,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        ScrollableTimeSelector(
-                            items = (1..12).map { it.toString().padStart(2, '0') },
-                            selectedItem = run {
-                                val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                displayHour.toString().padStart(2, '0')
-                            },
-                            onItemSelected = { hourStr ->
-                                val hour = hourStr.toInt()
-                                selectedHour = if (isAM) hour else hour + 12
-                            },
-                            modifier = Modifier.height(120.dp)
-                        )
-                    }
+                    )
 
                     Text(
                         text = ":",
@@ -407,79 +395,30 @@ fun NativeTimePickerDialog(
                         modifier = Modifier.padding(vertical = 40.dp)
                     )
 
-                    // Minute Selector
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            text = "Minute",
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = Gray700,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-                        ScrollableTimeSelector(
-                            items = (0..59).map { it.toString().padStart(2, '0') },
-                            selectedItem = selectedMinute.toString().padStart(2, '0'),
-                            onItemSelected = { minuteStr ->
-                                selectedMinute = minuteStr.toInt()
-                            },
-                            modifier = Modifier.height(120.dp)
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // AM/PM Selection with clear differentiation
-                Text(
-                    text = "AM/PM",
-                    fontSize = 12.sp,
-                    color = Gray600,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = {
-                            isAM = true
-                            if (selectedHour >= 12) {
-                                selectedHour = selectedHour - 12
-                            }
+                    // Minute Wheel
+                    WheelTimeSelector(
+                        items = (0..59).map { it.toString().padStart(2, '0') },
+                        selectedItem = selectedMinute.toString().padStart(2, '0'),
+                        onItemSelected = { minuteStr ->
+                            selectedMinute = minuteStr.toInt()
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isAM) Blue600 else Gray200,
-                            contentColor = if (isAM) Color.White else Gray700
-                        ),
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            "AM",
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                    
-                    Button(
-                        onClick = {
-                            isAM = false
-                            if (selectedHour < 12) {
+                    )
+
+                    // AM/PM Wheel
+                    WheelTimeSelector(
+                        items = listOf("AM", "PM"),
+                        selectedItem = if (isAM) "AM" else "PM",
+                        onItemSelected = { amPmStr ->
+                            isAM = amPmStr == "AM"
+                            if (isAM && selectedHour >= 12) {
+                                selectedHour = selectedHour - 12
+                            } else if (!isAM && selectedHour < 12) {
                                 selectedHour = selectedHour + 12
                             }
                         },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (!isAM) Blue600 else Gray200,
-                            contentColor = if (!isAM) Color.White else Gray700
-                        ),
                         modifier = Modifier.weight(1f)
-                    ) {
-                        Text(
-                            "PM",
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
@@ -680,7 +619,7 @@ fun ColorOption(
 }
 
 @Composable
-fun ScrollableTimeSelector(
+fun WheelTimeSelector(
     items: List<String>,
     selectedItem: String,
     onItemSelected: (String) -> Unit,
@@ -701,10 +640,10 @@ fun ScrollableTimeSelector(
     LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
         val visibleItemIndex = listState.firstVisibleItemIndex
         val scrollOffset = listState.firstVisibleItemScrollOffset
-        val itemHeight = 40.dp.value + 4.dp.value // height + spacing
+        val itemHeight = 50.dp.value + 2.dp.value // height + spacing
         
-        // Calculate which item is in the middle (considering 120dp total height, so 60dp from top is middle)
-        val middlePosition = 60.dp.value
+        // Calculate which item is in the middle (considering 200dp total height, so 100dp from top is middle)
+        val middlePosition = 100.dp.value
         val currentItemOffset = scrollOffset
         val nextItemOffset = currentItemOffset + itemHeight
         
@@ -722,7 +661,7 @@ fun ScrollableTimeSelector(
     
     Box(
         modifier = modifier
-            .fillMaxWidth()
+            .height(200.dp)
             .background(
                 color = Gray50,
                 shape = RoundedCornerShape(12.dp)
@@ -731,46 +670,64 @@ fun ScrollableTimeSelector(
         LazyColumn(
             state = listState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            contentPadding = PaddingValues(vertical = 75.dp), // Center the middle item
+            verticalArrangement = Arrangement.spacedBy(2.dp)
         ) {
             items(items.size) { index ->
                 val item = items[index]
+                val isSelected = item == currentMiddleItem
                 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(40.dp),
+                        .height(50.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
                         text = item,
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = Gray700
+                        fontSize = if (isSelected) 20.sp else 16.sp,
+                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isSelected) Blue600 else Gray600
                     )
                 }
             }
         }
         
-        // Fixed selection indicator in the middle
+        // Selection indicator lines
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(50.dp)
                 .background(
-                    color = Gray600,
+                    color = Blue600.copy(alpha = 0.1f),
                     shape = RoundedCornerShape(8.dp)
                 )
-                .align(Alignment.Center),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = currentMiddleItem,
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        }
+                .align(Alignment.Center)
+        )
+        
+        // Top and bottom fade effects
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.White, Color.Transparent)
+                    )
+                )
+                .align(Alignment.TopCenter)
+        )
+        
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(75.dp)
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, Color.White)
+                    )
+                )
+                .align(Alignment.BottomCenter)
+        )
     }
 }
