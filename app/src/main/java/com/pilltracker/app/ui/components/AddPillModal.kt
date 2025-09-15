@@ -1,6 +1,7 @@
 package com.pilltracker.app.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -462,22 +463,31 @@ fun ColorOption(
         else -> Blue500
     }
 
-    Box(
+    Card(
         modifier = Modifier
             .size(40.dp)
-            .background(
-                color = colorValue,
-                shape = RoundedCornerShape(8.dp)
-            ),
-        contentAlignment = Alignment.Center
+            .clickable { onClick() },
+        colors = CardDefaults.cardColors(containerColor = colorValue),
+        shape = RoundedCornerShape(8.dp),
+        border = if (isSelected) {
+            androidx.compose.foundation.BorderStroke(3.dp, Color.White)
+        } else null,
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = if (isSelected) 8.dp else 2.dp
+        )
     ) {
-        if (isSelected) {
-            Icon(
-                imageVector = Icons.Default.Check,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(20.dp)
-            )
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            if (isSelected) {
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
