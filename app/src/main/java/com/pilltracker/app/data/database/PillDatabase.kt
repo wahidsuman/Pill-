@@ -11,7 +11,7 @@ import com.pilltracker.app.data.model.Pill
 
 @Database(
     entities = [Pill::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -28,7 +28,9 @@ abstract class PillDatabase : RoomDatabase() {
                     context.applicationContext,
                     PillDatabase::class.java,
                     "pill_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration() // For development - in production, use proper migrations
+                .build()
                 INSTANCE = instance
                 instance
             }

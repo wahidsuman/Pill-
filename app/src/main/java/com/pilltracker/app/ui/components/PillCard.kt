@@ -126,6 +126,24 @@ fun PillCard(
                     modifier = Modifier.padding(top = 4.dp)
                 )
                 
+                // Frequency info
+                val frequencyText = when (pill.frequency) {
+                    "daily" -> "Daily"
+                    "weekly" -> "Weekly"
+                    "monthly" -> "Monthly"
+                    "custom" -> if (pill.customDays.isNotEmpty()) {
+                        "Custom (${pill.customDays.joinToString(", ") { it.take(3) }})"
+                    } else "Custom"
+                    else -> "Daily"
+                }
+                
+                Text(
+                    text = frequencyText,
+                    fontSize = 12.sp,
+                    color = Blue600,
+                    modifier = Modifier.padding(top = 2.dp)
+                )
+                
                 // Time slots
                 Row(
                     modifier = Modifier.padding(top = 8.dp),
