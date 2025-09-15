@@ -688,11 +688,35 @@ fun ScrollableTimeSelector(
 ) {
     val listState = rememberLazyListState()
     val selectedIndex = items.indexOf(selectedItem)
+    var currentMiddleItem by remember { mutableStateOf(selectedItem) }
     
     // Scroll to selected item when component is first composed
     LaunchedEffect(selectedIndex) {
         if (selectedIndex >= 0) {
             listState.animateScrollToItem(selectedIndex)
+        }
+    }
+    
+    // Track which item is currently in the middle
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val visibleItemIndex = listState.firstVisibleItemIndex
+        val scrollOffset = listState.firstVisibleItemScrollOffset
+        val itemHeight = 40.dp.value + 4.dp.value // height + spacing
+        
+        // Calculate which item is in the middle (considering 120dp total height, so 60dp from top is middle)
+        val middlePosition = 60.dp.value
+        val currentItemOffset = scrollOffset
+        val nextItemOffset = currentItemOffset + itemHeight
+        
+        val middleIndex = if (middlePosition <= currentItemOffset + itemHeight / 2) {
+            visibleItemIndex
+        } else {
+            visibleItemIndex + 1
+        }
+        
+        if (middleIndex < items.size) {
+            currentMiddleItem = items[middleIndex]
+            onItemSelected(currentMiddleItem)
         }
     }
     
@@ -716,8 +740,7 @@ fun ScrollableTimeSelector(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(40.dp)
-                        .clickable { onItemSelected(item) },
+                        .height(40.dp),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -743,7 +766,7 @@ fun ScrollableTimeSelector(
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = selectedItem,
+                text = currentMiddleItem,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 color = Color.White
