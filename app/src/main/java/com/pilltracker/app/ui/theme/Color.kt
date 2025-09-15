@@ -13,6 +13,7 @@ val Pink40 = Color(0xFF7D5260)
 // Pill Tracker Colors
 val Blue50 = Color(0xFFEFF6FF)
 val Blue100 = Color(0xFFDBEAFE)
+val Blue300 = Color(0xFF93C5FD)
 val Blue500 = Color(0xFF3B82F6)
 val Blue600 = Color(0xFF2563EB)
 val Blue700 = Color(0xFF1D4ED8)
