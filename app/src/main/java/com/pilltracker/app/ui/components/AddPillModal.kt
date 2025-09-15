@@ -18,7 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -414,38 +414,78 @@ fun RoundClockPicker(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                // Clock numbers
+                // Touchable Clock numbers
                 if (maxValue == 23) {
-                    // Hour numbers (1-12)
+                    // Hour numbers (1-12) - clickable
                     for (i in 1..12) {
                         val angle = (i * 30 - 90) * PI / 180
                         val radius = 110.dp
                         val x = (cos(angle) * radius.value).dp
                         val y = (sin(angle) * radius.value).dp
                         
-                        Text(
-                            text = i.toString(),
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (i == selectedValue || (i == 12 && selectedValue == 0)) Blue600 else Gray600,
-                            modifier = Modifier.offset(x, y)
-                        )
+                        val isSelected = i == selectedValue || (i == 12 && selectedValue == 0)
+                        
+                        Card(
+                            modifier = Modifier
+                                .offset(x, y)
+                                .size(40.dp)
+                                .clickable { onValueSelected(i) },
+                            shape = CircleShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) Blue500 else Color.Transparent
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = if (isSelected) 6.dp else 2.dp
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = i.toString(),
+                                    fontSize = 18.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.White else Blue600
+                                )
+                            }
+                        }
                     }
                 } else {
-                    // Minute numbers (0, 5, 10, 15, etc.)
+                    // Minute numbers (0, 5, 10, 15, etc.) - clickable
                     for (i in 0..59 step 5) {
                         val angle = (i * 6 - 90) * PI / 180
                         val radius = 110.dp
                         val x = (cos(angle) * radius.value).dp
                         val y = (sin(angle) * radius.value).dp
                         
-                        Text(
-                            text = i.toString(),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = if (i == selectedValue) Blue600 else Gray600,
-                            modifier = Modifier.offset(x, y)
-                        )
+                        val isSelected = i == selectedValue
+                        
+                        Card(
+                            modifier = Modifier
+                                .offset(x, y)
+                                .size(36.dp)
+                                .clickable { onValueSelected(i) },
+                            shape = CircleShape,
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) Blue500 else Color.Transparent
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = if (isSelected) 6.dp else 2.dp
+                            )
+                        ) {
+                            Box(
+                                modifier = Modifier.fillMaxSize(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = i.toString(),
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = if (isSelected) Color.White else Blue600
+                                )
+                            }
+                        }
                     }
                 }
                 
@@ -505,58 +545,6 @@ fun RoundClockPicker(
                     colors = CardDefaults.cardColors(containerColor = Blue600),
                     elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
                 ) {}
-            }
-        }
-        
-        // +/- buttons with 3D effect
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .offset(y = 160.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            Card(
-                modifier = Modifier.size(48.dp),
-                shape = CircleShape,
-                colors = CardDefaults.cardColors(containerColor = Blue500),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-            ) {
-                IconButton(
-                    onClick = { 
-                        val newValue = if (selectedValue > 0) selectedValue - 1 else maxValue
-                        onValueSelected(newValue)
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        Icons.Default.Remove,
-                        contentDescription = "Decrease",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
-            }
-            
-            Card(
-                modifier = Modifier.size(48.dp),
-                shape = CircleShape,
-                colors = CardDefaults.cardColors(containerColor = Blue500),
-                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
-            ) {
-                IconButton(
-                    onClick = { 
-                        val newValue = if (selectedValue < maxValue) selectedValue + 1 else 0
-                        onValueSelected(newValue)
-                    },
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    Icon(
-                        Icons.Default.Add,
-                        contentDescription = "Increase",
-                        tint = Color.White,
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
             }
         }
     }
