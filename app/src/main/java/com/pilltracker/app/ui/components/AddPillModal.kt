@@ -368,44 +368,20 @@ fun NativeTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Round Clock Time Display
-                Box(
-                    modifier = Modifier
-                        .size(200.dp)
-                        .background(
-                            color = Gray50,
-                            shape = CircleShape
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text(
-                            text = run {
-                                val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                String.format("%02d", displayHour)
-                            },
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Blue600
-                        )
-                        Text(
-                            text = ":",
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Blue600
-                        )
-                        Text(
-                            text = String.format("%02d", selectedMinute),
-                            fontSize = 48.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = Blue600
-                        )
-                    }
-                }
+                // Selected Time Display
+                Text(
+                    text = run {
+                        val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                        val amPm = if (isAM) "AM" else "PM"
+                        String.format("%02d:%02d %s", displayHour, selectedMinute, amPm)
+                    },
+                    fontSize = 32.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Blue600,
+                    modifier = Modifier.padding(vertical = 16.dp)
+                )
 
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Scrollable Hour and Minute Selectors
                 Row(
