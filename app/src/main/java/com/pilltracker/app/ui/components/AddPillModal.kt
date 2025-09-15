@@ -349,6 +349,7 @@ fun NativeTimePickerDialog(
     var selectedHour by remember { mutableStateOf(calendar.get(Calendar.HOUR_OF_DAY)) }
     var selectedMinute by remember { mutableStateOf(calendar.get(Calendar.MINUTE)) }
     var isAM by remember { mutableStateOf(selectedHour < 12) }
+    var showTimePicker by remember { mutableStateOf(false) }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -373,7 +374,36 @@ fun NativeTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Time picker section removed - to be rebuilt from scratch
+                // Time Selection
+                Text(
+                    text = "Select Time",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Gray800
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Time Picker Button
+                OutlinedButton(
+                    onClick = { showTimePicker = true },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = if (isAM) {
+                            String.format("%02d:%02d AM", 
+                                if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour,
+                                selectedMinute
+                            )
+                        } else {
+                            String.format("%02d:%02d PM", 
+                                if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour,
+                                selectedMinute
+                            )
+                        },
+                        fontSize = 16.sp
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 
@@ -410,6 +440,21 @@ fun NativeTimePickerDialog(
                 }
             }
         }
+    }
+    
+    // Custom Time Picker Dialog
+    if (showTimePicker) {
+        CustomTimePickerDialog(
+            initialHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour,
+            initialMinute = selectedMinute,
+            isAM = isAM,
+            onTimeSelected = { hour, minute, am ->
+                selectedHour = if (am) hour else hour + 12
+                selectedMinute = minute
+                isAM = am
+            },
+            onDismiss = { showTimePicker = false }
+        )
     }
 }
 
