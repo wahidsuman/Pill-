@@ -365,12 +365,51 @@ fun NativeTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Native-style time display with AM/PM differentiation
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                // Round Clock Time Display
+                Box(
+                    modifier = Modifier
+                        .size(200.dp)
+                        .background(
+                            color = Gray50,
+                            shape = CircleShape
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
-                    // Hour
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = run {
+                                val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                                String.format("%02d", displayHour)
+                            },
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Blue600
+                        )
+                        Text(
+                            text = ":",
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Blue600
+                        )
+                        Text(
+                            text = String.format("%02d", selectedMinute),
+                            fontSize = 48.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Blue600
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // Hour and Minute Controls
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    // Hour Controls
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "Hour",
@@ -398,18 +437,6 @@ fun NativeTimePickerDialog(
                                 )
                             }
                             
-                            Text(
-                                text = run {
-                                    val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                    String.format("%02d", displayHour)
-                                },
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Gray800,
-                                modifier = Modifier.width(48.dp),
-                                textAlign = TextAlign.Center
-                            )
-                            
                             IconButton(
                                 onClick = {
                                     val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
@@ -428,14 +455,7 @@ fun NativeTimePickerDialog(
                         }
                     }
 
-                    Text(
-                        text = ":",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Gray800
-                    )
-
-                    // Minute
+                    // Minute Controls
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
                             text = "Minute",
@@ -459,15 +479,6 @@ fun NativeTimePickerDialog(
                                 )
                             }
                             
-                            Text(
-                                text = String.format("%02d", selectedMinute),
-                                fontSize = 24.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Gray800,
-                                modifier = Modifier.width(48.dp),
-                                textAlign = TextAlign.Center
-                            )
-                            
                             IconButton(
                                 onClick = {
                                     selectedMinute = (selectedMinute + 1) % 60
@@ -483,9 +494,9 @@ fun NativeTimePickerDialog(
                     }
                 }
 
-                // AM/PM Selection with clear differentiation
                 Spacer(modifier = Modifier.height(24.dp))
-                
+
+                // AM/PM Selection with clear differentiation
                 Text(
                     text = "AM/PM",
                     fontSize = 12.sp,
