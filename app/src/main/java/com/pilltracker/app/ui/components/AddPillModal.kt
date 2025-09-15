@@ -638,7 +638,7 @@ fun WheelTimeSelector(
     
     // Create infinite list by repeating items multiple times
     val infiniteItems = remember(items) {
-        val repeatedItems = items.repeat(100) // Repeat 100 times for infinite effect
+        val repeatedItems = items.flatMap { item -> List(100) { item } } // Repeat 100 times for infinite effect
         repeatedItems
     }
     
@@ -709,7 +709,8 @@ fun WheelTimeSelector(
                         text = item,
                         fontSize = if (isSelected) 20.sp else 16.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) Blue600 else Gray400 // Fade non-selected items
+                        color = if (isSelected) Blue600 else Gray400, // Fade non-selected items
+                        modifier = Modifier
                     )
                 }
             }
