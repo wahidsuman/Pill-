@@ -268,14 +268,19 @@ fun TimePickerDialog(
                 )
 
                 // Time Picker
+                val timePickerState = rememberTimePickerState(
+                    initialHour = selectedTime.hour,
+                    initialMinute = selectedTime.minute,
+                    is24Hour = true
+                )
+                
                 TimePicker(
-                    state = rememberTimePickerState(
-                        initialHour = selectedTime.hour,
-                        initialMinute = selectedTime.minute,
-                        is24Hour = true
-                    ),
+                    state = timePickerState,
                     modifier = Modifier.padding(16.dp)
-                ) { timePickerState ->
+                )
+                
+                // Update selected time when picker changes
+                LaunchedEffect(timePickerState.hour, timePickerState.minute) {
                     selectedTime = LocalTime.of(
                         timePickerState.hour,
                         timePickerState.minute
