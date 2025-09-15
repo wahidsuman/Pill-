@@ -35,6 +35,9 @@ class PillViewModel @Inject constructor(
     private val _showAddForm = MutableStateFlow(false)
     val showAddForm: StateFlow<Boolean> = _showAddForm.asStateFlow()
 
+    private val _showEditForm = MutableStateFlow<Pill?>(null)
+    val showEditForm: StateFlow<Pill?> = _showEditForm.asStateFlow()
+
     init {
         loadPills()
     }
@@ -98,5 +101,13 @@ class PillViewModel @Inject constructor(
 
     fun hideAddForm() {
         _showAddForm.value = false
+    }
+
+    fun showEditForm(pill: Pill) {
+        _showEditForm.value = pill
+    }
+
+    fun hideEditForm() {
+        _showEditForm.value = null
     }
 }

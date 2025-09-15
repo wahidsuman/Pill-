@@ -32,17 +32,17 @@ import java.util.*
 @Composable
 fun AddPillModal(
     onDismiss: () -> Unit,
-    onAddPill: (Pill) -> Unit
+    onAddPill: (Pill) -> Unit,
+    editPill: Pill? = null
 ) {
-    var name by remember { mutableStateOf("") }
-    var dosage by remember { mutableStateOf("") }
-    var color by remember { mutableStateOf("blue") }
-    var times by remember { mutableStateOf(listOf("")) }
+    var name by remember { mutableStateOf(editPill?.name ?: "") }
+    var dosage by remember { mutableStateOf(editPill?.dosage ?: "") }
+    var color by remember { mutableStateOf(editPill?.color ?: "blue") }
+    var times by remember { mutableStateOf(editPill?.times ?: listOf("")) }
     var showTimePicker by remember { mutableStateOf(false) }
     var selectedTimeIndex by remember { mutableStateOf(0) }
-    var is24HourFormat by remember { mutableStateOf(false) }
-    var frequency by remember { mutableStateOf("daily") }
-    var customDays by remember { mutableStateOf(listOf<String>()) }
+    var frequency by remember { mutableStateOf(editPill?.frequency ?: "daily") }
+    var customDays by remember { mutableStateOf(editPill?.customDays ?: listOf<String>()) }
     var showCustomDaysPicker by remember { mutableStateOf(false) }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -110,47 +110,6 @@ fun AddPillModal(
                             color = colorOption,
                             isSelected = color == colorOption,
                             onClick = { color = colorOption }
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Time Format Toggle
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "Time Format",
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Medium,
-                        color = Gray700
-                    )
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = "12h",
-                            fontSize = 12.sp,
-                            color = if (!is24HourFormat) Blue600 else Gray600
-                        )
-                        Switch(
-                            checked = is24HourFormat,
-                            onCheckedChange = { is24HourFormat = it },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = Blue600,
-                                checkedTrackColor = Blue100,
-                                uncheckedThumbColor = Gray600,
-                                uncheckedTrackColor = Gray200
-                            )
-                        )
-                        Text(
-                            text = "24h",
-                            fontSize = 12.sp,
-                            color = if (is24HourFormat) Blue600 else Gray600
                         )
                     }
                 }
@@ -345,9 +304,9 @@ fun AddPillModal(
         }
     }
 
-    // Custom Time Picker Dialog
+    // Native Time Picker Dialog
     if (showTimePicker) {
-        CustomTimePickerDialog(
+        NativeTimePickerDialog(
             onDismiss = { showTimePicker = false },
             onTimeSelected = { selectedTime ->
                 val newTimes = times.toMutableList()
@@ -355,7 +314,7 @@ fun AddPillModal(
                 times = newTimes
                 showTimePicker = false
             },
-            is24HourFormat = is24HourFormat
+            is24HourFormat = false
         )
     }
 
@@ -373,7 +332,7 @@ fun AddPillModal(
 }
 
 @Composable
-fun CustomTimePickerDialog(
+fun NativeTimePickerDialog(
     onDismiss: () -> Unit,
     onTimeSelected: (String) -> Unit,
     is24HourFormat: Boolean = false
@@ -406,7 +365,7 @@ fun CustomTimePickerDialog(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // Time Display
+                // Native-style time display with AM/PM differentiation
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -538,7 +497,7 @@ fun CustomTimePickerDialog(
                     }
                 }
 
-                // AM/PM Selection (only for 12-hour format)
+                // AM/PM Selection with clear differentiation (only for 12-hour format)
                 if (!is24HourFormat) {
                     Spacer(modifier = Modifier.height(24.dp))
                     
