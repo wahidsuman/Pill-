@@ -27,6 +27,7 @@ import com.pilltracker.app.data.model.Pill
 import com.pilltracker.app.ui.theme.*
 import java.util.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPillModal(
     onDismiss: () -> Unit,
