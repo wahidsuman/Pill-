@@ -60,7 +60,7 @@ fun AddPillModal(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Add New Medication",
+                    text = if (editPill != null) "Edit Medication" else "Add New Medication",
                     fontSize = 20.sp,
                     fontWeight = FontWeight.Bold,
                     color = Gray800
@@ -272,13 +272,15 @@ fun AddPillModal(
                                 val validTimes = times.filter { it.isNotBlank() }
                                 if (validTimes.isNotEmpty()) {
                                     val pill = Pill(
+                                        id = editPill?.id ?: 0,
                                         name = name,
                                         dosage = dosage,
                                         times = validTimes,
                                         color = color,
                                         nextDose = validTimes.first(),
                                         frequency = frequency,
-                                        customDays = if (frequency == "custom") customDays else emptyList()
+                                        customDays = if (frequency == "custom") customDays else emptyList(),
+                                        taken = editPill?.taken ?: false
                                     )
                                     onAddPill(pill)
                                 }
@@ -295,7 +297,7 @@ fun AddPillModal(
                         )
                     ) {
                         Text(
-                            "Add Pill",
+                            if (editPill != null) "Update Pill" else "Add Pill",
                             fontWeight = FontWeight.SemiBold
                         )
                     }

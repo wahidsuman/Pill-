@@ -106,7 +106,8 @@ fun PillTrackerScreen(
         if (showEditForm != null) {
             AddPillModal(
                 onDismiss = { viewModel.hideEditForm() },
-                onAddPill = { viewModel.updatePill(it) }
+                onAddPill = { viewModel.updatePill(it) },
+                editPill = showEditForm
             )
         }
     }
