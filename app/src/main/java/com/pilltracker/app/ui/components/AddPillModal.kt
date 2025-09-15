@@ -651,22 +651,22 @@ fun WheelTimeSelector(
             val scrollOffset = listState.firstVisibleItemScrollOffset
             val itemHeight = 50.dp.value + 2.dp.value // height + spacing
             
-            // Calculate which item is in the middle (considering 200dp total height, so 100dp from top is middle)
-            val middlePosition = 100.dp.value
+            // Calculate which item is in the center (200dp total height, 100dp from top is center)
+            val centerPosition = 100.dp.value
             val currentItemOffset = scrollOffset
-            val nextItemOffset = currentItemOffset + itemHeight
             
-            val middleIndex = if (middlePosition <= currentItemOffset + itemHeight / 2) {
+            // Determine which item is in the center
+            val centerIndex = if (centerPosition <= currentItemOffset + itemHeight / 2) {
                 visibleItemIndex
             } else {
                 visibleItemIndex + 1
             }
             
-            if (middleIndex < items.size && middleIndex >= 0) {
-                val newMiddleItem = items[middleIndex]
-                if (newMiddleItem != currentMiddleItem) {
-                    currentMiddleItem = newMiddleItem
-                    onItemSelected(newMiddleItem)
+            if (centerIndex < items.size && centerIndex >= 0) {
+                val newCenterItem = items[centerIndex]
+                if (newCenterItem != currentMiddleItem) {
+                    currentMiddleItem = newCenterItem
+                    onItemSelected(newCenterItem)
                 }
             }
         }
@@ -700,7 +700,7 @@ fun WheelTimeSelector(
                         text = item,
                         fontSize = if (isSelected) 20.sp else 16.sp,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) Blue600 else Gray600
+                        color = if (isSelected) Blue600 else Gray400 // Fade non-selected items
                     )
                 }
             }
