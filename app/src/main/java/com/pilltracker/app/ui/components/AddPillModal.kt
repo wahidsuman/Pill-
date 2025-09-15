@@ -286,33 +286,53 @@ fun TimePickerDialog(
                     modifier = Modifier.padding(16.dp)
                 )
 
-                // Mode Selector
-                Row(
+                // Mode Selector with better UX
+                Card(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 32.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
+                    colors = CardDefaults.cardColors(containerColor = Blue50),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Button(
-                        onClick = { isSelectingHour = true },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSelectingHour) Blue500 else Gray200,
-                            contentColor = if (isSelectingHour) Color.White else Gray600
-                        ),
-                        modifier = Modifier.weight(1f)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly
                     ) {
-                        Text("Hour")
-                    }
-                    
-                    Button(
-                        onClick = { isSelectingHour = false },
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (!isSelectingHour) Blue500 else Gray200,
-                            contentColor = if (!isSelectingHour) Color.White else Gray600
-                        ),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Minute")
+                        Button(
+                            onClick = { isSelectingHour = true },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isSelectingHour) Blue500 else Color.Transparent,
+                                contentColor = if (isSelectingHour) Color.White else Blue600
+                            ),
+                            modifier = Modifier.weight(1f),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = if (isSelectingHour) 4.dp else 0.dp
+                            )
+                        ) {
+                            Text(
+                                text = "Hour",
+                                fontWeight = if (isSelectingHour) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
+                        
+                        Button(
+                            onClick = { isSelectingHour = false },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (!isSelectingHour) Blue500 else Color.Transparent,
+                                contentColor = if (!isSelectingHour) Color.White else Blue600
+                            ),
+                            modifier = Modifier.weight(1f),
+                            elevation = ButtonDefaults.buttonElevation(
+                                defaultElevation = if (!isSelectingHour) 4.dp else 0.dp
+                            )
+                        ) {
+                            Text(
+                                text = "Minute",
+                                fontWeight = if (!isSelectingHour) FontWeight.Bold else FontWeight.Normal
+                            )
+                        }
                     }
                 }
 
@@ -369,92 +389,174 @@ fun RoundClockPicker(
     modifier: Modifier = Modifier
 ) {
     Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(Color.White),
+        modifier = modifier,
         contentAlignment = Alignment.Center
     ) {
-        // Clock face
-        Box(
-            modifier = Modifier
-                .size(260.dp)
-                .clip(CircleShape)
-                .background(Blue50)
-        )
-        
-        // Hour markers
-        for (i in 0 until 12) {
-            val angle = (i * 30 - 90) * PI / 180
-            val radius = 100.dp
-            val x = (cos(angle) * radius.value).dp
-            val y = (sin(angle) * radius.value).dp
-            
+        // 3D Clock face with shadow
+        Card(
+            modifier = Modifier.size(280.dp),
+            shape = CircleShape,
+            colors = CardDefaults.cardColors(containerColor = Color.White),
+            elevation = CardDefaults.cardElevation(defaultElevation = 12.dp)
+        ) {
             Box(
                 modifier = Modifier
-                    .offset(x, y)
-                    .size(8.dp)
-                    .clip(CircleShape)
-                    .background(if (i % 3 == 0) Blue600 else Blue300)
-            )
+                    .fillMaxSize()
+                    .background(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                Color.White,
+                                Blue50,
+                                Blue100
+                            ),
+                            radius = 300f
+                        )
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                // Clock numbers
+                if (maxValue == 23) {
+                    // Hour numbers (1-12)
+                    for (i in 1..12) {
+                        val angle = (i * 30 - 90) * PI / 180
+                        val radius = 110.dp
+                        val x = (cos(angle) * radius.value).dp
+                        val y = (sin(angle) * radius.value).dp
+                        
+                        Text(
+                            text = i.toString(),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (i == selectedValue || (i == 12 && selectedValue == 0)) Blue600 else Gray600,
+                            modifier = Modifier.offset(x, y)
+                        )
+                    }
+                } else {
+                    // Minute numbers (0, 5, 10, 15, etc.)
+                    for (i in 0..59 step 5) {
+                        val angle = (i * 6 - 90) * PI / 180
+                        val radius = 110.dp
+                        val x = (cos(angle) * radius.value).dp
+                        val y = (sin(angle) * radius.value).dp
+                        
+                        Text(
+                            text = i.toString(),
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (i == selectedValue) Blue600 else Gray600,
+                            modifier = Modifier.offset(x, y)
+                        )
+                    }
+                }
+                
+                // Hour markers (dots)
+                for (i in 0 until 60) {
+                    val angle = (i * 6 - 90) * PI / 180
+                    val radius = if (i % 5 == 0) 95.dp else 100.dp
+                    val size = if (i % 5 == 0) 6.dp else 3.dp
+                    val x = (cos(angle) * radius.value).dp
+                    val y = (sin(angle) * radius.value).dp
+                    
+                    Box(
+                        modifier = Modifier
+                            .offset(x, y)
+                            .size(size)
+                            .clip(CircleShape)
+                            .background(if (i % 5 == 0) Blue600 else Blue300)
+                    )
+                }
+                
+                // Selected value indicator (hand)
+                val angle = if (maxValue == 23) {
+                    (selectedValue * 15 - 90) * PI / 180 // 24 hours = 360 degrees
+                } else {
+                    (selectedValue * 6 - 90) * PI / 180 // 60 minutes = 360 degrees
+                }
+                val radius = 70.dp
+                val x = (cos(angle) * radius.value).dp
+                val y = (sin(angle) * radius.value).dp
+                
+                // 3D Hand with shadow
+                Card(
+                    modifier = Modifier
+                        .offset(x, y)
+                        .size(24.dp),
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(containerColor = Blue600),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = selectedValue.toString(),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+                
+                // Center dot with 3D effect
+                Card(
+                    modifier = Modifier.size(16.dp),
+                    shape = CircleShape,
+                    colors = CardDefaults.cardColors(containerColor = Blue600),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {}
+            }
         }
         
-        // Selected value indicator
-        val angle = if (maxValue == 23) {
-            (selectedValue * 15 - 90) * PI / 180 // 24 hours = 360 degrees
-        } else {
-            (selectedValue * 6 - 90) * PI / 180 // 60 minutes = 360 degrees
-        }
-        val radius = 80.dp
-        val x = (cos(angle) * radius.value).dp
-        val y = (sin(angle) * radius.value).dp
-        
-        Box(
-            modifier = Modifier
-                .offset(x, y)
-                .size(20.dp)
-                .clip(CircleShape)
-                .background(Blue600)
-        )
-        
-        // Center dot
-        Box(
-            modifier = Modifier
-                .size(12.dp)
-                .clip(CircleShape)
-                .background(Blue600)
-        )
-        
-        // Simple +/- buttons for easier interaction
+        // +/- buttons with 3D effect
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .offset(y = 160.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            IconButton(
-                onClick = { 
-                    val newValue = if (selectedValue > 0) selectedValue - 1 else maxValue
-                    onValueSelected(newValue)
-                }
+            Card(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(containerColor = Blue500),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Icon(
-                    Icons.Default.Remove,
-                    contentDescription = "Decrease",
-                    tint = Blue600,
-                    modifier = Modifier.size(24.dp)
-                )
+                IconButton(
+                    onClick = { 
+                        val newValue = if (selectedValue > 0) selectedValue - 1 else maxValue
+                        onValueSelected(newValue)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        Icons.Default.Remove,
+                        contentDescription = "Decrease",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
             
-            IconButton(
-                onClick = { 
-                    val newValue = if (selectedValue < maxValue) selectedValue + 1 else 0
-                    onValueSelected(newValue)
-                }
+            Card(
+                modifier = Modifier.size(48.dp),
+                shape = CircleShape,
+                colors = CardDefaults.cardColors(containerColor = Blue500),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
             ) {
-                Icon(
-                    Icons.Default.Add,
-                    contentDescription = "Increase",
-                    tint = Blue600,
-                    modifier = Modifier.size(24.dp)
-                )
+                IconButton(
+                    onClick = { 
+                        val newValue = if (selectedValue < maxValue) selectedValue + 1 else 0
+                        onValueSelected(newValue)
+                    },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Icon(
+                        Icons.Default.Add,
+                        contentDescription = "Increase",
+                        tint = Color.White,
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
     }
