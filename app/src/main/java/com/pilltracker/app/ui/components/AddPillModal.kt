@@ -482,11 +482,32 @@ fun ScrollablePicker(
     onItemSelected: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+    val middleIndex = Int.MAX_VALUE / 2
+    val startIndex = middleIndex - (middleIndex % items.size) + initialIndex
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = startIndex)
 
-    LaunchedEffect(items) {
-        // When the items change, scroll to the initial index
-        listState.scrollToItem(initialIndex)
+    // This derived state will recompose only when the centered item index changes.
+    val centeredItemIndex by remember {
+        derivedStateOf {
+            if (listState.isScrollInProgress) -1 else {
+                val layoutInfo = listState.layoutInfo
+                val visibleItemsInfo = layoutInfo.visibleItemsInfo
+                if (visibleItemsInfo.isEmpty()) {
+                    -1
+                } else {
+                    val viewportCenter = (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2
+                    val centerItem = visibleItemsInfo.minByOrNull { (it.offset + it.size / 2) - viewportCenter }
+                    centerItem?.index ?: -1
+                }
+            }
+        }
+    }
+
+    // Report the selected item when scrolling stops and the centered item is valid.
+    LaunchedEffect(centeredItemIndex) {
+        if (centeredItemIndex != -1) {
+            onItemSelected(centeredItemIndex % items.size)
+        }
     }
 
     Box(
@@ -500,9 +521,10 @@ fun ScrollablePicker(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(items.size) { index ->
+            items(Int.MAX_VALUE) { index ->
+                val actualIndex = index % items.size
                 Text(
-                    text = items[index],
+                    text = items[actualIndex],
                     fontSize = 20.sp,
                     color = Color.White,
                     modifier = Modifier.padding(vertical = 4.dp)
@@ -518,18 +540,6 @@ fun ScrollablePicker(
                     RoundedCornerShape(8.dp)
                 )
         )
-    }
-
-    // This logic is tricky. A simple LazyColumn doesn't easily give you the "snapped" center item.
-    // A full implementation would require more complex state management, possibly using derivedStateOf
-    // to report the center item back. For this fix, we will rely on the initial scroll and assume
-    // the user's selection is what's visible. A more robust solution would be needed for a production app.
-    // For now, we can use the scroll state to estimate the selected item.
-    LaunchedEffect(listState.isScrollInProgress) {
-        if (!listState.isScrollInProgress) {
-            val centerIndex = listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size / 2
-            onItemSelected(centerIndex.coerceIn(0, items.size - 1))
-        }
     }
 }
 
