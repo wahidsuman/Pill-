@@ -10,10 +10,11 @@ class PillReminderReceiver : BroadcastReceiver() {
         val pillName = intent.getStringExtra("pill_name") ?: return
         val pillDosage = intent.getStringExtra("pill_dosage") ?: return
         val pillId = intent.getLongExtra("pill_id", -1)
+        val imagePath = intent.getStringExtra("pill_image_path") ?: ""
         
         if (pillId != -1L) {
             val notificationService = PillNotificationService(context)
-            notificationService.showPillReminder(pillName, pillDosage, pillId)
+            notificationService.showPillReminder(pillName, pillDosage, pillId, imagePath)
         }
     }
 }
