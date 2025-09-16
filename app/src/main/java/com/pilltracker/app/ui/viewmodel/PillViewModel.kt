@@ -135,4 +135,15 @@ class PillViewModel @Inject constructor(
             }
         }
     }
+    
+    fun testAlarmService() {
+        viewModelScope.launch {
+            try {
+                // Test the alarm service directly with immediate alarm
+                alarmManager.scheduleImmediateTest()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 }

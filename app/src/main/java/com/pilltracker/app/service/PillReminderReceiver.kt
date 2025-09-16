@@ -20,10 +20,27 @@ class PillReminderReceiver : BroadcastReceiver() {
         Log.d("PillReminderReceiver", "Pill: $pillName, Dosage: $pillDosage, ID: $pillId")
         
         if (pillId != -1L) {
-            val notificationService = PillNotificationService(context)
-            notificationService.showPillReminder(pillName, pillDosage, pillId, imagePath)
+            // Start the alarm service with actual alarm sound
+            val alarmServiceIntent = Intent(context, AlarmService::class.java).apply {
+                action = AlarmService.ACTION_START_ALARM
+                putExtra(AlarmService.EXTRA_PILL_NAME, pillName)
+                putExtra(AlarmService.EXTRA_PILL_DOSAGE, pillDosage)
+                putExtra(AlarmService.EXTRA_PILL_ID, pillId)
+                putExtra(AlarmService.EXTRA_PILL_TIME, timeString)
+                putExtra(AlarmService.EXTRA_PILL_IMAGE_PATH, imagePath)
+            }
             
-            // Reschedule for next day if this is not a snooze
+            try {
+                context.startForegroundService(alarmServiceIntent)
+                Log.d("PillReminderReceiver", "Started AlarmService")
+            } catch (e: Exception) {
+                Log.e("PillReminderReceiver", "Failed to start AlarmService", e)
+                // Fallback to notification only
+                val notificationService = PillNotificationService(context)
+                notificationService.showPillReminder(pillName, pillDosage, pillId, imagePath)
+            }
+            
+            // Reschedule for next day if this is not a snooze or test
             if (timeString != "snooze" && timeString != "test") {
                 val alarmManager = PillAlarmManager(context)
                 val pill = Pill(

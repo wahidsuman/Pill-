@@ -13,6 +13,7 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
@@ -39,12 +40,14 @@ class AlarmService : Service() {
     
     private var mediaPlayer: MediaPlayer? = null
     private var vibrator: Vibrator? = null
+    private var wakeLock: PowerManager.WakeLock? = null
     private var isAlarmPlaying = false
     
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         setupVibrator()
+        setupWakeLock()
     }
     
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -103,10 +106,21 @@ class AlarmService : Service() {
         }
     }
     
+    private fun setupWakeLock() {
+        val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+        wakeLock = powerManager.newWakeLock(
+            PowerManager.PARTIAL_WAKE_LOCK,
+            "PillTracker::AlarmWakeLock"
+        )
+    }
+    
     private fun startAlarm(pillName: String, pillDosage: String, pillId: Long, pillTime: String, imagePath: String) {
         if (isAlarmPlaying) return
         
         Log.d("AlarmService", "Starting alarm for: $pillName")
+        
+        // Acquire wake lock to keep device awake
+        wakeLock?.acquire(10 * 60 * 1000L /*10 minutes*/)
         
         // Start foreground service
         startForeground(NOTIFICATION_ID, createAlarmNotification(pillName, pillDosage, pillId, pillTime, imagePath))
@@ -183,6 +197,11 @@ class AlarmService : Service() {
         
         // Stop vibration
         vibrator?.cancel()
+        
+        // Release wake lock
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
         
         // Stop foreground service
         stopForeground(true)
@@ -278,5 +297,10 @@ class AlarmService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         stopAlarm()
+        
+        // Ensure wake lock is released
+        if (wakeLock?.isHeld == true) {
+            wakeLock?.release()
+        }
     }
 }
