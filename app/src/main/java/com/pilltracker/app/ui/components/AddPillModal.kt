@@ -250,7 +250,7 @@ fun AddPillModal(
                                         )
                                         Text(
                                             text = ampm,
-                                            color = if (ampm == "AM") Blue600 else Red600,
+                                            color = Color.Black,
                                             fontSize = 14.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -408,7 +408,6 @@ fun AddPillModal(
                                 val timePicker = view ?: return
                                 
                                 // Try multiple approaches to access AM/PM button
-                                val isAM = hourOfDay < 12
                                 
                                 // Method 1: Try to access mAmPmButton field
                                 try {
@@ -417,8 +416,8 @@ fun AddPillModal(
                                     val amPmButton = amPmButtonField.get(timePicker) as? android.widget.Button
                                     
                                     amPmButton?.let { button ->
-                                        button.setBackgroundColor(if (isAM) Blue600.toArgb() else Red600.toArgb())
-                                        button.setTextColor(Color.White.toArgb())
+                                        button.setBackgroundColor(Gray200.toArgb())
+                                        button.setTextColor(Color.Black.toArgb())
                                         button.textSize = 16f
                                         button.typeface = android.graphics.Typeface.DEFAULT_BOLD
                                     }
@@ -432,8 +431,8 @@ fun AddPillModal(
                                                 if (child is android.widget.Button) {
                                                     val buttonText = child.text.toString()
                                                     if (buttonText == "AM" || buttonText == "PM") {
-                                                        child.setBackgroundColor(if (isAM) Blue600.toArgb() else Red600.toArgb())
-                                                        child.setTextColor(Color.White.toArgb())
+                                                        child.setBackgroundColor(Gray200.toArgb())
+                                                        child.setTextColor(Color.Black.toArgb())
                                                         child.textSize = 16f
                                                         child.typeface = android.graphics.Typeface.DEFAULT_BOLD
                                                     }
