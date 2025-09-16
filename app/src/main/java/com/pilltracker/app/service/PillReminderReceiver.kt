@@ -53,7 +53,7 @@ class PillReminderReceiver : BroadcastReceiver() {
                     nextDose = "",
                     taken = false
                 )
-                alarmManager.rescheduleNextDay(pill, timeString)
+                alarmManager.scheduleAlarmForTomorrow(pill, timeString)
             }
         }
     }

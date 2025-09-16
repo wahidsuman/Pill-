@@ -41,6 +41,14 @@ class PillViewModel @Inject constructor(
 
     init {
         loadPills()
+        // Reschedule all alarms when the app starts
+        viewModelScope.launch {
+            repository.getAllPills().collect { pillsList ->
+                if (pillsList.isNotEmpty()) {
+                    alarmManager.scheduleAllPills(pillsList)
+                }
+            }
+        }
     }
 
     private fun loadPills() {
@@ -141,6 +149,19 @@ class PillViewModel @Inject constructor(
             try {
                 // Test the alarm service directly with immediate alarm
                 alarmManager.scheduleImmediateTest()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+    
+    fun rescheduleAllAlarms() {
+        viewModelScope.launch {
+            try {
+                val pillsList = _pills.value
+                if (pillsList.isNotEmpty()) {
+                    alarmManager.scheduleAllPills(pillsList)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
