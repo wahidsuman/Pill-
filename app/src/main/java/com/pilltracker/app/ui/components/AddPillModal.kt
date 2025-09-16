@@ -425,110 +425,40 @@ fun AddPillModal(
     }
 
 
-    // Native Time Picker Dialog with custom AM/PM selector
     if (showTimePicker) {
-        val context = LocalContext.current
-        
-        // Parse current time if available
-        val currentTime = times[selectedTimeIndex]
-        var hour: Int
-        var minute: Int
-        
-        if (currentTime.isNotBlank() && currentTime != "Select Time") {
+        val currentTime24 = times.getOrElse(selectedTimeIndex) { "" }
+        val displayTime = if (currentTime24.isNotBlank()) {
             try {
-                // Parse 24-hour format (HH:MM)
-                val timeParts = currentTime.split(":")
-                hour = timeParts[0].toInt()
-                minute = timeParts[1].toInt()
+                val inputFormat = SimpleDateFormat("HH:mm", Locale.US)
+                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                val date = inputFormat.parse(currentTime24)
+                outputFormat.format(date!!)
             } catch (e: Exception) {
-                hour = 12
-                minute = 0
+                "" // Default if parsing fails
             }
         } else {
-            hour = 12
-            minute = 0
+            ""
         }
-        
-        // Use LaunchedEffect to show the time picker with selectedTimeIndex as key
-        LaunchedEffect(showTimePicker, selectedTimeIndex) {
-            if (showTimePicker) {
+
+        CustomTimePickerDialog(
+            onDismiss = { showTimePicker = false },
+            onTimeSelected = { timeString12hr ->
                 try {
-                    // Create a custom styled TimePickerDialog
-                    val timePickerDialog = object : TimePickerDialog(
-                        context,
-                        { _, selectedHour, selectedMinute ->
-                            // selectedHour is already in 24-hour format from TimePickerDialog
-                            // Convert to 24-hour format for alarm system
-                            val timeString = String.format("%02d:%02d", selectedHour, selectedMinute)
-                            
-                            val newTimes = times.toMutableList()
-                            newTimes[selectedTimeIndex] = timeString
-                            times = newTimes
-                            showTimePicker = false
-                        },
-                        hour,
-                        minute,
-                        false // 12-hour format (wheel style)
-                    ) {
-                        override fun onTimeChanged(view: android.widget.TimePicker?, hourOfDay: Int, minute: Int) {
-                            super.onTimeChanged(view, hourOfDay, minute)
-                            
-                            // Apply custom styling to AM/PM buttons
-                            try {
-                                val timePicker = view ?: return
-                                
-                                // Try multiple approaches to access AM/PM button
-                                
-                                // Method 1: Try to access mAmPmButton field
-                                try {
-                                    val amPmButtonField = timePicker.javaClass.getDeclaredField("mAmPmButton")
-                                    amPmButtonField.isAccessible = true
-                                    val amPmButton = amPmButtonField.get(timePicker) as? android.widget.Button
-                                    
-                                    amPmButton?.let { button ->
-                                        button.setBackgroundColor(Gray200.toArgb())
-                                        button.setTextColor(Color.Black.toArgb())
-                                        button.textSize = 16f
-                                        button.typeface = android.graphics.Typeface.DEFAULT_BOLD
-                                    }
-                                } catch (e: Exception) {
-                                    // Method 2: Try to find AM/PM button by text
-                                    try {
-                                        val parent = timePicker.parent as? android.view.ViewGroup
-                                        parent?.let { viewGroup ->
-                                            for (i in 0 until viewGroup.childCount) {
-                                                val child = viewGroup.getChildAt(i)
-                                                if (child is android.widget.Button) {
-                                                    val buttonText = child.text.toString()
-                                                    if (buttonText == "AM" || buttonText == "PM") {
-                                                        child.setBackgroundColor(Gray200.toArgb())
-                                                        child.setTextColor(Color.Black.toArgb())
-                                                        child.textSize = 16f
-                                                        child.typeface = android.graphics.Typeface.DEFAULT_BOLD
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    } catch (e2: Exception) {
-                                        // If all methods fail, just continue
-                                        e2.printStackTrace()
-                                    }
-                                }
-                            } catch (e: Exception) {
-                                // Fallback if reflection fails
-                                e.printStackTrace()
-                            }
-                        }
-                    }
-                    
-                    timePickerDialog.setTitle("Select Medication Time")
-                    timePickerDialog.show()
+                    val inputFormat = SimpleDateFormat("hh:mm a", Locale.US)
+                    val outputFormat = SimpleDateFormat("HH:mm", Locale.US)
+                    val date = inputFormat.parse(timeString12hr)
+                    val formattedTime24hr = outputFormat.format(date!!)
+
+                    val newTimes = times.toMutableList()
+                    newTimes[selectedTimeIndex] = formattedTime24hr
+                    times = newTimes
                 } catch (e: Exception) {
-                    // Fallback: just close the picker
-                    showTimePicker = false
+                    e.printStackTrace()
                 }
-            }
-        }
+                showTimePicker = false
+            },
+            currentTime = displayTime
+        )
     }
 
     // Custom Days Picker Dialog
@@ -945,58 +875,26 @@ fun CustomTimePickerDialog(
     onTimeSelected: (String) -> Unit,
     currentTime: String
 ) {
-    // Parse current time if available
-    var selectedHour by remember { 
-        mutableStateOf(
-            if (currentTime.isNotBlank() && currentTime != "Select Time") {
-                try {
-                    val timeParts = currentTime.split(" ")
-                    val timeOnly = timeParts[0].split(":")
-                    val ampm = timeParts[1]
-                    if (ampm == "AM") {
-                        if (timeOnly[0].toInt() == 12) 0 else timeOnly[0].toInt()
-                    } else {
-                        if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt() + 12
-                    }
-                } catch (e: Exception) {
-                    12
+    val initialCalendar = remember(currentTime) {
+        if (currentTime.isNotBlank()) {
+            try {
+                SimpleDateFormat("hh:mm a", Locale.US).parse(currentTime)?.let { date ->
+                    Calendar.getInstance().apply { time = date }
                 }
-            } else {
-                12
+            } catch (e: Exception) {
+                null
             }
-        )
+        } else {
+            null
+        } ?: Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 12)
+            set(Calendar.MINUTE, 0)
+        }
     }
-    
-    var selectedMinute by remember { 
-        mutableStateOf(
-            if (currentTime.isNotBlank() && currentTime != "Select Time") {
-                try {
-                    val timeParts = currentTime.split(" ")
-                    val timeOnly = timeParts[0].split(":")
-                    timeOnly[1].toInt()
-                } catch (e: Exception) {
-                    0
-                }
-            } else {
-                0
-            }
-        )
-    }
-    
-    var selectedAmPm by remember { 
-        mutableStateOf(
-            if (currentTime.isNotBlank() && currentTime != "Select Time") {
-                try {
-                    val timeParts = currentTime.split(" ")
-                    timeParts[1]
-                } catch (e: Exception) {
-                    "AM"
-                }
-            } else {
-                "AM"
-            }
-        )
-    }
+
+    var selectedHour by remember { mutableStateOf(initialCalendar.get(Calendar.HOUR_OF_DAY)) }
+    var selectedMinute by remember { mutableStateOf(initialCalendar.get(Calendar.MINUTE)) }
+    var selectedAmPm by remember { mutableStateOf(if (initialCalendar.get(Calendar.AM_PM) == Calendar.AM) "AM" else "PM") }
     
     Dialog(onDismissRequest = onDismiss) {
         Card(
