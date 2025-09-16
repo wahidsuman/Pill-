@@ -114,17 +114,25 @@ class PillViewModel @Inject constructor(
     
     fun scheduleTestAlarm() {
         viewModelScope.launch {
-            val testPill = Pill(
-                id = 999L,
-                name = "Test Medicine",
-                dosage = "1 tablet",
-                times = listOf("00:01"), // 1 minute from now
-                color = "#FF5722",
-                imagePath = "",
-                nextDose = "00:01",
-                taken = false
-            )
-            alarmManager.schedulePillReminder(testPill)
+            try {
+                // Schedule alarm for 1 minute from now
+                val calendar = Calendar.getInstance()
+                calendar.add(Calendar.MINUTE, 1)
+                
+                val testPill = Pill(
+                    id = 999L,
+                    name = "Test Medicine",
+                    dosage = "1 tablet",
+                    times = listOf("${calendar.get(Calendar.HOUR_OF_DAY).toString().padStart(2, '0')}:${calendar.get(Calendar.MINUTE).toString().padStart(2, '0')}"),
+                    color = "#FF5722",
+                    imagePath = "",
+                    nextDose = "Test",
+                    taken = false
+                )
+                alarmManager.schedulePillReminder(testPill)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 }
