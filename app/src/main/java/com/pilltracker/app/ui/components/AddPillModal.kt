@@ -38,10 +38,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -738,6 +736,28 @@ fun ImageCaptureSection(
         }
     }
     
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) {
+            try {
+                // Copy the selected image to our private storage
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val photoFile = File(imageFile, "pill_gallery_${timestamp}.jpg")
+                
+                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                    photoFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                onImageCaptured(photoFile.absolutePath)
+            } catch (e: Exception) {
+                // Handle error
+                e.printStackTrace()
+            }
+        }
+    }
+    
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -754,17 +774,22 @@ fun ImageCaptureSection(
                     ),
                 shape = RoundedCornerShape(8.dp)
             ) {
-                try {
-                    val bitmap = BitmapFactory.decodeFile(imagePath)
-                    if (bitmap != null) {
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Captured pill image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                val bitmap = remember(imagePath) {
+                    try {
+                        BitmapFactory.decodeFile(imagePath)
+                    } catch (e: Exception) {
+                        null
                     }
-                } catch (e: Exception) {
+                }
+                
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Captured pill image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
                     // Show placeholder if image can't be loaded
                     Box(
                         modifier = Modifier.fillMaxSize(),
@@ -795,30 +820,61 @@ fun ImageCaptureSection(
                 Text("Remove Image")
             }
         } else {
-            // Show camera capture button
-            OutlinedButton(
-                onClick = {
-                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                    val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                    imageUri = FileProvider.getUriForFile(
-                        context,
-                        "${context.packageName}.fileprovider",
-                        photoFile
-                    )
-                    cameraLauncher.launch(imageUri)
-                },
+            // Show camera and gallery options
+            Row(
                 modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = Blue600
-                )
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.CameraAlt,
-                    contentDescription = "Take photo",
-                    modifier = Modifier.size(20.dp)
-                )
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Take Photo of Medicine")
+                // Camera button
+                OutlinedButton(
+                    onClick = {
+                        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                        val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                        imageUri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            photoFile
+                        )
+                        cameraLauncher.launch(imageUri)
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Blue600
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.CameraAlt,
+                        contentDescription = "Take photo",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Camera",
+                        fontSize = 14.sp
+                    )
+                }
+                
+                // Gallery button
+                OutlinedButton(
+                    onClick = {
+                        galleryLauncher.launch("image/*")
+                    },
+                    modifier = Modifier.weight(1f),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Blue600
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.PhotoLibrary,
+                        contentDescription = "Select from gallery",
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Gallery",
+                        fontSize = 14.sp
+                    )
+                }
             }
         }
     }

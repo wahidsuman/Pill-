@@ -47,26 +47,24 @@ fun PillCard(
             Box {
                 if (pill.imagePath.isNotEmpty()) {
                     // Show captured image
-                    try {
-                        val bitmap = BitmapFactory.decodeFile(pill.imagePath)
-                        if (bitmap != null) {
-                            Image(
-                                bitmap = bitmap.asImageBitmap(),
-                                contentDescription = "Pill image",
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(12.dp)),
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            // Fallback to color icon if image can't be loaded
-                            PillIcon(
-                                color = pill.color,
-                                size = 48.dp,
-                                modifier = Modifier.clip(RoundedCornerShape(12.dp))
-                            )
+                    val bitmap = remember(pill.imagePath) {
+                        try {
+                            BitmapFactory.decodeFile(pill.imagePath)
+                        } catch (e: Exception) {
+                            null
                         }
-                    } catch (e: Exception) {
+                    }
+                    
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Pill image",
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(12.dp)),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
                         // Fallback to color icon if image can't be loaded
                         PillIcon(
                             color = pill.color,
