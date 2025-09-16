@@ -10,6 +10,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.pilltracker.app.MainActivity
 import com.pilltracker.app.R
+import com.pilltracker.app.ui.screen.PillReminderPopupActivity
 
 class PillNotificationService(private val context: Context) {
     
@@ -39,7 +40,19 @@ class PillNotificationService(private val context: Context) {
         }
     }
     
-    fun showPillReminder(pillName: String, dosage: String, pillId: Long) {
+    fun showPillReminder(pillName: String, dosage: String, pillId: Long, imagePath: String = "") {
+        // Launch the popup activity
+        val popupIntent = Intent(context, PillReminderPopupActivity::class.java).apply {
+            putExtra("pill_name", pillName)
+            putExtra("pill_dosage", dosage)
+            putExtra("pill_id", pillId)
+            putExtra("pill_image_path", imagePath)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        }
+        
+        context.startActivity(popupIntent)
+        
+        // Also show a regular notification as backup
         val intent = Intent(context, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }

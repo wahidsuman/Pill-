@@ -32,6 +32,7 @@ class PillAlarmManager(private val context: Context) {
                     putExtra("pill_dosage", pill.dosage)
                     putExtra("pill_id", pill.id)
                     putExtra("pill_time", timeString)
+                    putExtra("pill_image_path", pill.imagePath)
                 }
                 
                 val pendingIntent = PendingIntent.getBroadcast(
@@ -62,6 +63,31 @@ class PillAlarmManager(private val context: Context) {
             )
             alarmManager.cancel(pendingIntent)
         }
+    }
+    
+    fun snoozePillReminder(pill: Pill, snoozeMinutes: Int = 5) {
+        val snoozeTime = System.currentTimeMillis() + (snoozeMinutes * 60 * 1000)
+        
+        val intent = Intent(context, PillReminderReceiver::class.java).apply {
+            putExtra("pill_name", pill.name)
+            putExtra("pill_dosage", pill.dosage)
+            putExtra("pill_id", pill.id)
+            putExtra("pill_time", "snooze")
+            putExtra("pill_image_path", pill.imagePath)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (pill.id + "snooze".hashCode()).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        alarmManager.setExact(
+            AlarmManager.RTC_WAKEUP,
+            snoozeTime,
+            pendingIntent
+        )
     }
     
     private fun parseTime(timeString: String): Pair<Int, Int>? {
