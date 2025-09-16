@@ -185,48 +185,6 @@ class PillAlarmManager(private val context: Context) {
         }
     }
     
-    fun scheduleImmediateTest() {
-        val calendar = Calendar.getInstance().apply {
-            add(Calendar.SECOND, 5) // 5 seconds from now
-            set(Calendar.MILLISECOND, 0)
-        }
-        
-        Log.d("PillAlarmManager", "Scheduling immediate test alarm")
-        
-        val intent = Intent(context, PillReminderReceiver::class.java).apply {
-            putExtra("pill_name", "Test Medicine")
-            putExtra("pill_dosage", "1 tablet")
-            putExtra("pill_id", 999L)
-            putExtra("pill_time", "test")
-            putExtra("pill_image_path", "")
-        }
-        
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            999,
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
-            Log.d("PillAlarmManager", "Test alarm scheduled successfully")
-        } catch (e: Exception) {
-            Log.e("PillAlarmManager", "Failed to schedule test alarm", e)
-        }
-    }
     
     fun scheduleAllPills(pills: List<Pill>) {
         Log.d("PillAlarmManager", "Scheduling alarms for ${pills.size} pills")
