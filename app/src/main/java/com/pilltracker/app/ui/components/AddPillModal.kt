@@ -457,6 +457,7 @@ fun AddPillModal(
                     val timePickerDialog = object : TimePickerDialog(
                         context,
                         { _, selectedHour, selectedMinute ->
+                            // selectedHour is already in 24-hour format from TimePickerDialog
                             // Convert to 24-hour format for alarm system
                             val timeString = String.format("%02d:%02d", selectedHour, selectedMinute)
                             
@@ -467,7 +468,7 @@ fun AddPillModal(
                         },
                         hour,
                         minute,
-                        true // 24-hour format
+                        false // 12-hour format (wheel style)
                     ) {
                         override fun onTimeChanged(view: android.widget.TimePicker?, hourOfDay: Int, minute: Int) {
                             super.onTimeChanged(view, hourOfDay, minute)
