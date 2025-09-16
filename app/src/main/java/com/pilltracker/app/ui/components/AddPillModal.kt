@@ -349,18 +349,116 @@ fun AddPillModal(
     }
 
 
-    // Hybrid Time Picker Dialog - Native picker with custom scrollable AM/PM selector
+    // Native Time Picker Dialog with custom AM/PM selector
     if (showTimePicker) {
-        HybridTimePickerDialog(
-            onDismiss = { showTimePicker = false },
-            onTimeSelected = { timeString ->
-                val newTimes = times.toMutableList()
-                newTimes[selectedTimeIndex] = timeString
-                times = newTimes
-                showTimePicker = false
-            },
-            currentTime = times[selectedTimeIndex]
-        )
+        val context = LocalContext.current
+        
+        // Parse current time if available
+        val currentTime = times[selectedTimeIndex]
+        var hour: Int
+        var minute: Int
+        
+        if (currentTime.isNotBlank() && currentTime != "Select Time") {
+            try {
+                val timeParts = currentTime.split(" ")
+                val timeOnly = timeParts[0].split(":")
+                val ampm = timeParts[1]
+                
+                hour = if (ampm == "AM") {
+                    if (timeOnly[0].toInt() == 12) 0 else timeOnly[0].toInt()
+                } else {
+                    if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt() + 12
+                }
+                minute = timeOnly[1].toInt()
+            } catch (e: Exception) {
+                hour = 12
+                minute = 0
+            }
+        } else {
+            hour = 12
+            minute = 0
+        }
+        
+        // Use LaunchedEffect to show the time picker with selectedTimeIndex as key
+        LaunchedEffect(showTimePicker, selectedTimeIndex) {
+            if (showTimePicker) {
+                try {
+                    // Create a custom styled TimePickerDialog
+                    val timePickerDialog = object : TimePickerDialog(
+                        context,
+                        { _, selectedHour, selectedMinute ->
+                            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                            val ampm = if (selectedHour < 12) "AM" else "PM"
+                            val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, ampm)
+                            
+                            val newTimes = times.toMutableList()
+                            newTimes[selectedTimeIndex] = timeString
+                            times = newTimes
+                            showTimePicker = false
+                        },
+                        hour,
+                        minute,
+                        false // 12-hour format
+                    ) {
+                        override fun onTimeChanged(view: android.widget.TimePicker?, hourOfDay: Int, minute: Int) {
+                            super.onTimeChanged(view, hourOfDay, minute)
+                            
+                            // Apply custom styling to AM/PM buttons
+                            try {
+                                val timePicker = view ?: return
+                                
+                                // Try multiple approaches to access AM/PM button
+                                
+                                // Method 1: Try to access mAmPmButton field
+                                try {
+                                    val amPmButtonField = timePicker.javaClass.getDeclaredField("mAmPmButton")
+                                    amPmButtonField.isAccessible = true
+                                    val amPmButton = amPmButtonField.get(timePicker) as? android.widget.Button
+                                    
+                                    amPmButton?.let { button ->
+                                        button.setBackgroundColor(Gray200.toArgb())
+                                        button.setTextColor(Color.Black.toArgb())
+                                        button.textSize = 16f
+                                        button.typeface = android.graphics.Typeface.DEFAULT_BOLD
+                                    }
+                                } catch (e: Exception) {
+                                    // Method 2: Try to find AM/PM button by text
+                                    try {
+                                        val parent = timePicker.parent as? android.view.ViewGroup
+                                        parent?.let { viewGroup ->
+                                            for (i in 0 until viewGroup.childCount) {
+                                                val child = viewGroup.getChildAt(i)
+                                                if (child is android.widget.Button) {
+                                                    val buttonText = child.text.toString()
+                                                    if (buttonText == "AM" || buttonText == "PM") {
+                                                        child.setBackgroundColor(Gray200.toArgb())
+                                                        child.setTextColor(Color.Black.toArgb())
+                                                        child.textSize = 16f
+                                                        child.typeface = android.graphics.Typeface.DEFAULT_BOLD
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (e2: Exception) {
+                                        // If all methods fail, just continue
+                                        e2.printStackTrace()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                // Fallback if reflection fails
+                                e.printStackTrace()
+                            }
+                        }
+                    }
+                    
+                    timePickerDialog.setTitle("Select Medication Time")
+                    timePickerDialog.show()
+                } catch (e: Exception) {
+                    // Fallback: just close the picker
+                    showTimePicker = false
+                }
+            }
+        }
     }
 
     // Custom Days Picker Dialog
