@@ -45,7 +45,13 @@ class PillViewModel @Inject constructor(
         viewModelScope.launch {
             repository.getAllPills().collect { pillsList ->
                 if (pillsList.isNotEmpty()) {
-                    alarmManager.scheduleAllPills(pillsList)
+                    // Check alarm permissions first
+                    if (alarmManager.checkAlarmPermissions()) {
+                        alarmManager.scheduleAllPills(pillsList)
+                        android.util.Log.d("PillViewModel", "Rescheduled ${pillsList.size} pills")
+                    } else {
+                        android.util.Log.w("PillViewModel", "Cannot schedule exact alarms - permission denied")
+                    }
                 }
             }
         }
