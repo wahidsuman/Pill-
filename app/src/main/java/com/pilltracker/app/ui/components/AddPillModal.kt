@@ -752,10 +752,19 @@ fun ImageCaptureSection(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && imageUri != null) {
-            // Image was captured successfully
-            val filePath = imageUri!!.path ?: ""
-            if (filePath.isNotEmpty() && File(filePath).exists()) {
-                onImageCaptured(filePath)
+            try {
+                // Image was captured successfully
+                val capturedFile = File(imageUri!!.path ?: "")
+                if (capturedFile.exists() && capturedFile.length() > 0) {
+                    // Copy the captured image to our private storage (same as gallery)
+                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    val photoFile = File(imageFile, "pill_camera_${timestamp}.jpg")
+                    
+                    capturedFile.copyTo(photoFile, overwrite = true)
+                    onImageCaptured(photoFile.absolutePath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
         }
     }
