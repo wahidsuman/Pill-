@@ -95,8 +95,7 @@ fun PillTrackerScreen(
                     onAddPill = { viewModel.showAddForm() },
                     onMarkAsTaken = { viewModel.markAsTaken(it) },
                     onDeletePill = { viewModel.deletePill(it) },
-                    onEditPill = { viewModel.showEditForm(it) },
-                    onTestPopup = { viewModel.scheduleTestAlarm() }
+                    onEditPill = { viewModel.showEditForm(it) }
                 )
             }
         }
@@ -340,8 +339,7 @@ fun PillsListSection(
     onAddPill: () -> Unit,
     onMarkAsTaken: (Pill) -> Unit,
     onDeletePill: (Pill) -> Unit,
-    onEditPill: (Pill) -> Unit,
-    onTestPopup: () -> Unit
+    onEditPill: (Pill) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -364,15 +362,21 @@ fun PillsListSection(
             ) {
                 // Test popup button
                 val context = LocalContext.current
-                val notificationService = remember { PillNotificationService(context) }
                 
                 Button(
                     onClick = {
-                        // Test immediate popup
-                        notificationService.testPopup()
-                        
-                        // Also schedule a test alarm for 1 minute from now
-                        onTestPopup()
+                        try {
+                            // Test immediate popup
+                            val notificationService = PillNotificationService(context)
+                            notificationService.testPopup()
+                            
+                            // Also schedule a test alarm for 5 seconds from now
+                            val alarmManager = com.pilltracker.app.service.PillAlarmManager(context)
+                            alarmManager.scheduleImmediateTest()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            // Show a simple toast or log the error
+                        }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     modifier = Modifier.size(40.dp)
