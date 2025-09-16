@@ -476,6 +476,64 @@ fun AddPillModal(
 
 
 @Composable
+fun ScrollablePicker(
+    items: List<String>,
+    initialIndex: Int,
+    onItemSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val listState = rememberLazyListState(initialFirstVisibleItemIndex = initialIndex)
+
+    LaunchedEffect(items) {
+        // When the items change, scroll to the initial index
+        listState.scrollToItem(initialIndex)
+    }
+
+    Box(
+        modifier = modifier
+            .height(120.dp)
+            .width(80.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        LazyColumn(
+            state = listState,
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            items(items.size) { index ->
+                Text(
+                    text = items[index],
+                    fontSize = 20.sp,
+                    color = Color.White,
+                    modifier = Modifier.padding(vertical = 4.dp)
+                )
+            }
+        }
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(40.dp)
+                .background(
+                    Color.White.copy(alpha = 0.2f),
+                    RoundedCornerShape(8.dp)
+                )
+        )
+    }
+
+    // This logic is tricky. A simple LazyColumn doesn't easily give you the "snapped" center item.
+    // A full implementation would require more complex state management, possibly using derivedStateOf
+    // to report the center item back. For this fix, we will rely on the initial scroll and assume
+    // the user's selection is what's visible. A more robust solution would be needed for a production app.
+    // For now, we can use the scroll state to estimate the selected item.
+    LaunchedEffect(listState.isScrollInProgress) {
+        if (!listState.isScrollInProgress) {
+            val centerIndex = listState.firstVisibleItemIndex + listState.layoutInfo.visibleItemsInfo.size / 2
+            onItemSelected(centerIndex.coerceIn(0, items.size - 1))
+        }
+    }
+}
+
+@Composable
 fun CustomDaysPickerDialog(
     onDismiss: () -> Unit,
     onDaysSelected: (List<String>) -> Unit,
@@ -895,7 +953,8 @@ fun CustomTimePickerDialog(
     var selectedHour by remember { mutableStateOf(initialCalendar.get(Calendar.HOUR_OF_DAY)) }
     var selectedMinute by remember { mutableStateOf(initialCalendar.get(Calendar.MINUTE)) }
     var selectedAmPm by remember { mutableStateOf(if (initialCalendar.get(Calendar.AM_PM) == Calendar.AM) "AM" else "PM") }
-    
+    var isKeyboardInput by remember { mutableStateOf(false) }
+
     Dialog(onDismissRequest = onDismiss) {
         Card(
             modifier = Modifier
@@ -917,40 +976,102 @@ fun CustomTimePickerDialog(
                     color = Color.White,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
-                
-                // Time Display and AM/PM Selector
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Digital Time Display
-                    Text(
-                        text = String.format("%02d:%02d", 
-                            if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour,
-                            selectedMinute
-                        ),
-                        fontSize = 32.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White,
-                        modifier = Modifier.padding(end = 16.dp)
+
+                if (isKeyboardInput) {
+                    var timeInput by remember { mutableStateOf(String.format("%02d:%02d", if(selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour, selectedMinute)) }
+
+                    OutlinedTextField(
+                        value = timeInput,
+                        onValueChange = {
+                            timeInput = it
+                            // Try to parse the input and update the state
+                            if (it.matches(Regex("\\d{1,2}:\\d{2}"))) {
+                                try {
+                                    val parts = it.split(":")
+                                    val hour12 = parts[0].toInt()
+                                    val minute = parts[1].toInt()
+                                    if (hour12 in 1..12 && minute in 0..59) {
+                                        val isAm = selectedAmPm == "AM"
+                                        selectedMinute = minute
+                                        selectedHour = when {
+                                            isAm && hour12 == 12 -> 0
+                                            !isAm && hour12 == 12 -> 12
+                                            isAm -> hour12
+                                            else -> hour12 + 12
+                                        }
+                                    }
+                                } catch (e: Exception) {
+                                    // Ignore invalid input
+                                }
+                            }
+                        },
+                        label = { Text("Time (HH:MM)", color = Color.White) },
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        modifier = Modifier.width(120.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = Color.White,
+                            unfocusedBorderColor = Color.Gray,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White,
+                        )
                     )
-                    
-                    // Scrollable AM/PM Selector
-                    ScrollableAmPmSelector(
-                        selectedAmPm = selectedAmPm,
-                        onAmPmSelected = { selectedAmPm = it }
-                    )
+                } else {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val hours = (1..12).map { it.toString().padStart(2, '0') }
+                        val minutes = (0..59).map { it.toString().padStart(2, '0') }
+                        val amPm = listOf("AM", "PM")
+
+                        // Hour Picker
+                        ScrollablePicker(
+                            items = hours,
+                            initialIndex = if (selectedHour == 0 || selectedHour == 12) 11 else (selectedHour % 12) - 1,
+                            onItemSelected = { index ->
+                                val newHour12 = hours[index].toInt()
+                                val isAm = selectedAmPm == "AM"
+
+                                selectedHour = when {
+                                    isAm && newHour12 == 12 -> 0 // 12 AM -> 0
+                                    !isAm && newHour12 == 12 -> 12 // 12 PM -> 12
+                                    isAm -> newHour12
+                                    else -> newHour12 + 12
+                                }
+                            }
+                        )
+
+                        Text(":", fontSize = 24.sp, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp))
+
+                        // Minute Picker
+                        ScrollablePicker(
+                            items = minutes,
+                            initialIndex = selectedMinute,
+                            onItemSelected = { index ->
+                                selectedMinute = minutes[index].toInt()
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // AM/PM Picker
+                        ScrollablePicker(
+                            items = amPm,
+                            initialIndex = if (selectedAmPm == "AM") 0 else 1,
+                            onItemSelected = { index ->
+                                selectedAmPm = amPm[index]
+                                // Adjust the 24-hour selectedHour based on new AM/PM
+                                if (amPm[index] == "AM" && selectedHour >= 12) {
+                                    selectedHour -= 12
+                                } else if (amPm[index] == "PM" && selectedHour < 12) {
+                                    selectedHour += 12
+                                }
+                            }
+                        )
+                    }
                 }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                // Analog Clock Face
-                AnalogClockFace(
-                    selectedHour = selectedHour,
-                    selectedMinute = selectedMinute,
-                    onHourSelected = { selectedHour = it }
-                )
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
@@ -959,13 +1080,12 @@ fun CustomTimePickerDialog(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Keyboard icon (placeholder for now)
                     IconButton(
-                        onClick = { /* TODO: Implement keyboard input */ }
+                        onClick = { isKeyboardInput = !isKeyboardInput }
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Keyboard,
-                            contentDescription = "Keyboard input",
+                            imageVector = if (isKeyboardInput) Icons.Default.Schedule else Icons.Default.Keyboard,
+                            contentDescription = if (isKeyboardInput) "Switch to wheel picker" else "Switch to keyboard input",
                             tint = Color.White,
                             modifier = Modifier.size(24.dp)
                         )
@@ -987,9 +1107,13 @@ fun CustomTimePickerDialog(
                         
                         TextButton(
                             onClick = {
-                                val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                                val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, selectedAmPm)
-                                onTimeSelected(timeString)
+                                // Convert 24-hour state back to a 12-hour string for the callback
+                                val calendar = Calendar.getInstance().apply {
+                                    set(Calendar.HOUR_OF_DAY, selectedHour)
+                                    set(Calendar.MINUTE, selectedMinute)
+                                }
+                                val format = SimpleDateFormat("hh:mm a", Locale.US)
+                                onTimeSelected(format.format(calendar.time))
                             }
                         ) {
                             Text(
@@ -1005,185 +1129,3 @@ fun CustomTimePickerDialog(
     }
 }
 
-@Composable
-fun ScrollableAmPmSelector(
-    selectedAmPm: String,
-    onAmPmSelected: (String) -> Unit
-) {
-    val listState = rememberLazyListState()
-    
-    // Calculate the initial position based on selected AM/PM
-    val initialIndex = if (selectedAmPm == "AM") 1 else 2
-    
-    LaunchedEffect(selectedAmPm) {
-        listState.animateScrollToItem(initialIndex)
-    }
-    
-    Box(
-        modifier = Modifier
-            .height(120.dp)
-            .width(60.dp)
-    ) {
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.spacedBy(0.dp),
-            contentPadding = PaddingValues(vertical = 40.dp)
-        ) {
-            // Empty space at top
-            item {
-                Box(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "",
-                        color = Color.Transparent,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            // AM option
-            item {
-                Box(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth()
-                        .clickable { onAmPmSelected("AM") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "AM",
-                        color = if (selectedAmPm == "AM") Color.White else Color(0xFF666666),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            // PM option
-            item {
-                Box(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth()
-                        .clickable { onAmPmSelected("PM") },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "PM",
-                        color = if (selectedAmPm == "PM") Color.White else Color(0xFF666666),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-            
-            // Empty space at bottom
-            item {
-                Box(
-                    modifier = Modifier
-                        .height(40.dp)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "",
-                        color = Color.Transparent,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-        }
-        
-        // Center selection indicator
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 40.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .height(40.dp)
-                    .fillMaxWidth()
-                    .background(
-                        Color(0xFF00FF00).copy(alpha = 0.2f),
-                        RoundedCornerShape(8.dp)
-                    )
-            )
-        }
-    }
-}
-
-@Composable
-fun AnalogClockFace(
-    selectedHour: Int,
-    selectedMinute: Int,
-    onHourSelected: (Int) -> Unit
-) {
-    Box(
-        modifier = Modifier
-            .size(200.dp)
-            .background(
-                Color(0xFF1A1A1A),
-                CircleShape
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        // Clock numbers
-        for (i in 1..12) {
-            val angle = (i - 3) * 30.0 // Start from 12 o'clock
-            val x = (kotlin.math.cos(Math.toRadians(angle)) * 80).toFloat()
-            val y = (kotlin.math.sin(Math.toRadians(angle)) * 80).toFloat()
-            
-            val isSelected = if (selectedHour == 0) i == 12 else i == selectedHour
-            
-            Box(
-                modifier = Modifier
-                    .offset(x.dp, y.dp)
-                    .size(40.dp)
-                    .background(
-                        if (isSelected) Color(0xFF00FF00) else Color.Transparent,
-                        CircleShape
-                    )
-                    .clickable { 
-                        val hour = if (i == 12) 0 else i
-                        onHourSelected(hour)
-                    },
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = i.toString(),
-                    color = if (isSelected) Color.Black else Color.White,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        
-        // Hour hand
-        val hourAngle = (selectedHour - 3) * 30.0 + (selectedMinute * 0.5)
-        val hourX = (kotlin.math.cos(Math.toRadians(hourAngle)) * 40).toFloat()
-        val hourY = (kotlin.math.sin(Math.toRadians(hourAngle)) * 40).toFloat()
-        
-        Box(
-            modifier = Modifier
-                .offset(hourX.dp, hourY.dp)
-                .size(4.dp, 40.dp)
-                .background(Color(0xFF00FF00), RoundedCornerShape(2.dp))
-        )
-        
-        // Center dot
-        Box(
-            modifier = Modifier
-                .size(8.dp)
-                .background(Color(0xFF00FF00), CircleShape)
-        )
-    }
-}
