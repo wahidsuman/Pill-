@@ -4,6 +4,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
 import com.pilltracker.app.data.model.Pill
 import java.util.*
 
@@ -42,12 +43,20 @@ class PillAlarmManager(private val context: Context) {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 
-                alarmManager.setRepeating(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    AlarmManager.INTERVAL_DAY,
-                    pendingIntent
-                )
+                // Use setExactAndAllowWhileIdle for better reliability
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
             }
         }
     }
@@ -83,11 +92,58 @@ class PillAlarmManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
-        alarmManager.setExact(
-            AlarmManager.RTC_WAKEUP,
-            snoozeTime,
-            pendingIntent
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                snoozeTime,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                snoozeTime,
+                pendingIntent
+            )
+        }
+    }
+    
+    fun rescheduleNextDay(pill: Pill, timeString: String) {
+        val time = parseTime(timeString) ?: return
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, time.first)
+            set(Calendar.MINUTE, time.second)
+            set(Calendar.SECOND, 0)
+        }
+        
+        val intent = Intent(context, PillReminderReceiver::class.java).apply {
+            putExtra("pill_name", pill.name)
+            putExtra("pill_dosage", pill.dosage)
+            putExtra("pill_id", pill.id)
+            putExtra("pill_time", timeString)
+            putExtra("pill_image_path", pill.imagePath)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (pill.id + timeString.hashCode()).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        }
     }
     
     private fun parseTime(timeString: String): Pair<Int, Int>? {
