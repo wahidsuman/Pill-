@@ -48,6 +48,7 @@ import com.pilltracker.app.ui.theme.*
 import java.util.*
 import android.app.TimePickerDialog
 import android.content.Context
+import android.content.Intent
 
 // Extension function to convert Color to ARGB
 private fun Color.toArgb(): Int {
@@ -731,8 +732,15 @@ fun ImageCaptureSection(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         if (success && imageUri != null) {
-            // Image was captured successfully
-            onImageCaptured(imageUri!!.path ?: "")
+            try {
+                // Image was captured successfully
+                val filePath = imageUri!!.path
+                if (filePath != null && File(filePath).exists()) {
+                    onImageCaptured(filePath)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
     
@@ -823,35 +831,64 @@ fun ImageCaptureSection(
             // Show camera and gallery options
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Camera button
                 OutlinedButton(
                     onClick = {
-                        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                        val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                        imageUri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            photoFile
-                        )
-                        cameraLauncher.launch(imageUri)
+                        try {
+                            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                            val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                            
+                            // Ensure the file exists
+                            if (!photoFile.exists()) {
+                                photoFile.createNewFile()
+                            }
+                            
+                            imageUri = FileProvider.getUriForFile(
+                                context,
+                                "${context.packageName}.fileprovider",
+                                photoFile
+                            )
+                            
+                            // Grant URI permissions
+                            context.grantUriPermission(
+                                context.packageName,
+                                imageUri,
+                                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                            )
+                            
+                            cameraLauncher.launch(imageUri)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            // Fallback: try to launch camera without specific file
+                            cameraLauncher.launch(null)
+                        }
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Blue600
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CameraAlt,
-                        contentDescription = "Take photo",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Camera",
-                        fontSize = 14.sp
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CameraAlt,
+                            contentDescription = "Take photo",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Camera",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
                 
                 // Gallery button
@@ -859,21 +896,30 @@ fun ImageCaptureSection(
                     onClick = {
                         galleryLauncher.launch("image/*")
                     },
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(48.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Blue600
-                    )
+                    ),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.PhotoLibrary,
-                        contentDescription = "Select from gallery",
-                        modifier = Modifier.size(18.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "Gallery",
-                        fontSize = 14.sp
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.PhotoLibrary,
+                            contentDescription = "Select from gallery",
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = "Gallery",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+                    }
                 }
             }
         }
