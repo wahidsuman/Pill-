@@ -32,10 +32,8 @@ import androidx.compose.ui.window.Dialog
 import com.pilltracker.app.data.model.Pill
 import com.pilltracker.app.ui.theme.*
 import java.util.*
-import com.google.android.material.timepicker.MaterialTimePicker
-import com.google.android.material.timepicker.TimeFormat
-import androidx.fragment.app.FragmentManager
-import androidx.appcompat.app.AppCompatActivity
+import android.app.TimePickerDialog
+import android.content.Context
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -319,7 +317,7 @@ fun AddPillModal(
     }
 
 
-    // Material Time Picker Dialog
+    // Time Picker Dialog
     if (showTimePicker) {
         val context = LocalContext.current
         
@@ -349,45 +347,33 @@ fun AddPillModal(
             minute = 0
         }
         
-        val timePicker = MaterialTimePicker.Builder()
-            .setTimeFormat(TimeFormat.CLOCK_12H)
-            .setHour(hour)
-            .setMinute(minute)
-            .setTitleText("Select Medication Time")
-            .build()
-        
-        timePicker.addOnPositiveButtonClickListener {
-            val selectedHour = timePicker.hour
-            val selectedMinute = timePicker.minute
-            
-            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-            val ampm = if (selectedHour < 12) "AM" else "PM"
-            val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, ampm)
-            
-            val newTimes = times.toMutableList()
-            newTimes[selectedTimeIndex] = timeString
-            times = newTimes
-            showTimePicker = false
-        }
-        
-        timePicker.addOnNegativeButtonClickListener {
-            showTimePicker = false
-        }
-        
-        timePicker.addOnCancelListener {
-            showTimePicker = false
-        }
-        
-        // Show the time picker
-        LaunchedEffect(Unit) {
-            try {
-                val activity = context as? AppCompatActivity
-                activity?.supportFragmentManager?.let { fragmentManager: FragmentManager ->
-                    timePicker.show(fragmentManager, "timePicker")
+        // Use LaunchedEffect to show the time picker
+        LaunchedEffect(showTimePicker) {
+            if (showTimePicker) {
+                try {
+                    val timePickerDialog = TimePickerDialog(
+                        context,
+                        { _, selectedHour, selectedMinute ->
+                            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                            val ampm = if (selectedHour < 12) "AM" else "PM"
+                            val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, ampm)
+                            
+                            val newTimes = times.toMutableList()
+                            newTimes[selectedTimeIndex] = timeString
+                            times = newTimes
+                            showTimePicker = false
+                        },
+                        hour,
+                        minute,
+                        false // 12-hour format
+                    )
+                    
+                    timePickerDialog.setTitle("Select Medication Time")
+                    timePickerDialog.show()
+                } catch (e: Exception) {
+                    // Fallback: just close the picker
+                    showTimePicker = false
                 }
-            } catch (e: Exception) {
-                // Fallback: just close the picker
-                showTimePicker = false
             }
         }
     }
