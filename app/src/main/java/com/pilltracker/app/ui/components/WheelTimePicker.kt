@@ -2,6 +2,7 @@ package com.pilltracker.app.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -13,12 +14,15 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.launch
 
 @Composable
 fun WheelTimePickerDialog(
@@ -139,7 +143,7 @@ fun WheelTimePickerDialog(
                     text = "Ring in less than 1 minute",
                     color = Color(0xFF999999),
                     fontSize = 14.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
+                    modifier = Modifier.padding(bottom = 24.dp)
                 )
                 
                 // Wheel Time Picker
@@ -168,9 +172,10 @@ fun WheelTimePicker(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .height(200.dp),
+            .height(220.dp),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A))
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Row(
             modifier = Modifier
@@ -214,8 +219,9 @@ fun WheelColumn(
     modifier: Modifier = Modifier
 ) {
     val listState = rememberLazyListState()
+    val coroutineScope = rememberCoroutineScope()
     
-    // Auto-scroll to selected item when it changes
+    // Calculate initial position and auto-scroll to selected item
     LaunchedEffect(selectedItem) {
         val index = items.indexOf(selectedItem)
         if (index >= 0) {
@@ -224,11 +230,22 @@ fun WheelColumn(
     }
     
     Box(
-        modifier = modifier.height(168.dp)
+        modifier = modifier.height(188.dp)
     ) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectDragGestures { _, dragAmount ->
+                        coroutineScope.launch {
+                            val currentIndex = listState.firstVisibleItemIndex
+                            val newIndex = (currentIndex - (dragAmount.y / 48).toInt()).coerceIn(0, items.size - 1)
+                            listState.animateScrollToItem(newIndex)
+                            onItemSelected(items[newIndex])
+                        }
+                    }
+                },
             verticalArrangement = Arrangement.spacedBy(0.dp),
             contentPadding = PaddingValues(vertical = 60.dp),
             horizontalAlignment = Alignment.CenterHorizontally
@@ -241,7 +258,12 @@ fun WheelColumn(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
-                        .clickable { onItemSelected(item) },
+                        .clickable { 
+                            coroutineScope.launch {
+                                listState.animateScrollToItem(index)
+                            }
+                            onItemSelected(item) 
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -258,7 +280,7 @@ fun WheelColumn(
             }
         }
         
-        // Selection indicator lines
+        // Selection indicator lines with better visibility
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -270,7 +292,7 @@ fun WheelColumn(
                     .fillMaxWidth()
                     .height(1.dp)
                     .offset(y = 24.dp)
-                    .background(Color(0xFF333333))
+                    .background(Color(0xFF444444))
             )
             
             // Bottom line
@@ -279,7 +301,19 @@ fun WheelColumn(
                     .fillMaxWidth()
                     .height(1.dp)
                     .offset(y = 72.dp)
-                    .background(Color(0xFF333333))
+                    .background(Color(0xFF444444))
+            )
+            
+            // Center selection highlight
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .offset(y = 24.dp)
+                    .background(
+                        Color(0xFF00D4AA).copy(alpha = 0.1f),
+                        RoundedCornerShape(4.dp)
+                    )
             )
         }
     }
