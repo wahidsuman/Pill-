@@ -15,6 +15,22 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.border
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.core.content.FileProvider
+import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import android.net.Uri
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -51,8 +67,9 @@ fun AddPillModal(
     editPill: Pill? = null
 ) {
     var name by remember { mutableStateOf(editPill?.name ?: "") }
-    var dosage by remember { mutableStateOf(editPill?.dosage ?: "") }
     var color by remember { mutableStateOf(editPill?.color ?: "blue") }
+    var imagePath by remember { mutableStateOf(editPill?.imagePath ?: "") }
+    var useImage by remember { mutableStateOf(editPill?.imagePath?.isNotEmpty() == true) }
     var times by remember { mutableStateOf(editPill?.times ?: listOf("")) }
     var showTimePicker by remember { mutableStateOf(false) }
     var selectedTimeIndex by remember { mutableStateOf(0) }
@@ -95,37 +112,99 @@ fun AddPillModal(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Dosage
-                OutlinedTextField(
-                    value = dosage,
-                    onValueChange = { dosage = it },
-                    label = { Text("Dosage") },
-                    placeholder = { Text("e.g., 100mg") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                // Pill Color
+                // Image or Color Selection
                 Text(
-                    text = "Pill Color",
+                    text = "Pill Representation",
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Gray700,
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
 
+                // Toggle between Image and Color
                 Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    val colors = listOf("blue", "red", "green", "orange", "purple")
-                    colors.forEach { colorOption ->
-                        ColorOption(
-                            color = colorOption,
-                            isSelected = color == colorOption,
-                            onClick = { color = colorOption }
+                    FilterChip(
+                        onClick = { 
+                            useImage = true
+                            color = "blue" // Reset color when switching to image
+                        },
+                        label = { 
+                            Text(
+                                text = "Take Photo",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        },
+                        selected = useImage,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.CameraAlt,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Blue100,
+                            selectedLabelColor = Blue600,
+                            containerColor = Gray100,
+                            labelColor = Gray700
                         )
+                    )
+                    
+                    FilterChip(
+                        onClick = { 
+                            useImage = false
+                            imagePath = "" // Clear image when switching to color
+                        },
+                        label = { 
+                            Text(
+                                text = "Use Color",
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        },
+                        selected = !useImage,
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Default.Palette,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                        },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = Blue100,
+                            selectedLabelColor = Blue600,
+                            containerColor = Gray100,
+                            labelColor = Gray700
+                        )
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Show Image Capture or Color Selection based on toggle
+                if (useImage) {
+                    // Image Capture Section
+                    ImageCaptureSection(
+                        imagePath = imagePath,
+                        onImageCaptured = { path -> imagePath = path }
+                    )
+                } else {
+                    // Color Selection Section
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        val colors = listOf("blue", "red", "green", "orange", "purple")
+                        colors.forEach { colorOption ->
+                            ColorOption(
+                                color = colorOption,
+                                isSelected = color == colorOption,
+                                onClick = { color = colorOption }
+                            )
+                        }
                     }
                 }
 
@@ -310,15 +389,16 @@ fun AddPillModal(
                     
                     Button(
                         onClick = {
-                            if (name.isNotBlank() && dosage.isNotBlank()) {
+                            if (name.isNotBlank()) {
                                 val validTimes = times.filter { it.isNotBlank() }
                                 if (validTimes.isNotEmpty()) {
                                     val pill = Pill(
                                         id = editPill?.id ?: 0,
                                         name = name,
-                                        dosage = dosage,
+                                        dosage = "", // No longer used
                                         times = validTimes,
-                                        color = color,
+                                        color = if (useImage) "" else color,
+                                        imagePath = if (useImage) imagePath else "",
                                         nextDose = validTimes.first(),
                                         frequency = frequency,
                                         customDays = if (frequency == "custom") customDays else emptyList(),
@@ -329,7 +409,7 @@ fun AddPillModal(
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        enabled = name.isNotBlank() && dosage.isNotBlank() && times.any { it.isNotBlank() } && 
+                        enabled = name.isNotBlank() && times.any { it.isNotBlank() } && 
                                 (frequency != "custom" || customDays.isNotEmpty()),
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Blue600,
@@ -629,6 +709,116 @@ fun ColorOption(
                     tint = Color.White,
                     modifier = Modifier.size(20.dp)
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun ImageCaptureSection(
+    imagePath: String,
+    onImageCaptured: (String) -> Unit
+) {
+    val context = LocalContext.current
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+    
+    // Create a temporary file for the image
+    val imageFile = remember {
+        File(context.filesDir, "pill_images").apply {
+            if (!exists()) mkdirs()
+        }
+    }
+    
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success && imageUri != null) {
+            // Image was captured successfully
+            onImageCaptured(imageUri!!.path ?: "")
+        }
+    }
+    
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (imagePath.isNotEmpty()) {
+            // Show captured image
+            Card(
+                modifier = Modifier
+                    .size(120.dp)
+                    .border(
+                        2.dp,
+                        Blue600,
+                        RoundedCornerShape(8.dp)
+                    ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                try {
+                    val bitmap = BitmapFactory.decodeFile(imagePath)
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Captured pill image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
+                        )
+                    }
+                } catch (e: Exception) {
+                    // Show placeholder if image can't be loaded
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Image,
+                            contentDescription = "Image placeholder",
+                            modifier = Modifier.size(48.dp),
+                            tint = Gray400
+                        )
+                    }
+                }
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Remove image button
+            TextButton(
+                onClick = { onImageCaptured("") }
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Remove image",
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text("Remove Image")
+            }
+        } else {
+            // Show camera capture button
+            OutlinedButton(
+                onClick = {
+                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                    val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                    imageUri = FileProvider.getUriForFile(
+                        context,
+                        "${context.packageName}.fileprovider",
+                        photoFile
+                    )
+                    cameraLauncher.launch(imageUri)
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = Blue600
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "Take photo",
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Take Photo of Medicine")
             }
         }
     }
