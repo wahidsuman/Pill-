@@ -363,7 +363,7 @@ fun AddPillModal(
 
                 TextButton(
                     onClick = {
-                        times = times + ""
+                        times = times.toMutableList().apply { add("") }
                     },
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
@@ -753,14 +753,19 @@ fun ImageCaptureSection(
     ) { success ->
         if (success && imageUri != null) {
             try {
-                // Image was captured successfully
-                val capturedFile = File(imageUri!!.path ?: "")
-                if (capturedFile.exists() && capturedFile.length() > 0) {
-                    // Copy the captured image to our private storage (same as gallery)
-                    val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                    val photoFile = File(imageFile, "pill_camera_${timestamp}.jpg")
-                    
-                    capturedFile.copyTo(photoFile, overwrite = true)
+                // Image was captured successfully - use the URI directly
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val photoFile = File(imageFile, "pill_camera_${timestamp}.jpg")
+                
+                // Copy from URI to our private storage using content resolver
+                context.contentResolver.openInputStream(imageUri!!)?.use { inputStream ->
+                    photoFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                
+                // Verify the file was created and has content
+                if (photoFile.exists() && photoFile.length() > 0) {
                     onImageCaptured(photoFile.absolutePath)
                 }
             } catch (e: Exception) {
@@ -808,9 +813,13 @@ fun ImageCaptureSection(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 val bitmap = remember(imagePath) {
-                    try {
-                        BitmapFactory.decodeFile(imagePath)
-                    } catch (e: Exception) {
+                    if (imagePath.isNotEmpty()) {
+                        try {
+                            BitmapFactory.decodeFile(imagePath)
+                        } catch (e: Exception) {
+                            null
+                        }
+                    } else {
                         null
                     }
                 }
