@@ -95,10 +95,7 @@ fun PillTrackerScreen(
                     onAddPill = { viewModel.showAddForm() },
                     onMarkAsTaken = { viewModel.markAsTaken(it) },
                     onDeletePill = { viewModel.deletePill(it) },
-                    onEditPill = { viewModel.showEditForm(it) },
-                    onTestAlarm = { viewModel.testAlarmService() },
-                    onTestAlarm1Min = { viewModel.scheduleTestAlarm() },
-                    onRescheduleAll = { viewModel.rescheduleAllAlarms() }
+                    onEditPill = { viewModel.showEditForm(it) }
                 )
             }
         }
@@ -342,10 +339,7 @@ fun PillsListSection(
     onAddPill: () -> Unit,
     onMarkAsTaken: (Pill) -> Unit,
     onDeletePill: (Pill) -> Unit,
-    onEditPill: (Pill) -> Unit,
-    onTestAlarm: () -> Unit,
-    onTestAlarm1Min: () -> Unit,
-    onRescheduleAll: () -> Unit
+    onEditPill: (Pill) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -363,53 +357,23 @@ fun PillsListSection(
                 fontWeight = FontWeight.SemiBold,
                 color = Gray800
             )
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            FloatingActionButton(
+                onClick = onAddPill,
+                containerColor = Blue600,
+                contentColor = Color.White,
+                modifier = Modifier
+                    .size(56.dp)
+                    .shadow(8.dp, RoundedCornerShape(28.dp)),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 8.dp,
+                    pressedElevation = 12.dp
+                )
             ) {
-                // Test alarm buttons
-                
-                Button(
-                    onClick = onTestAlarm,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Text("T", color = Color.White, fontSize = 12.sp)
-                }
-                
-                Button(
-                    onClick = onTestAlarm1Min,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Text("1M", color = Color.White, fontSize = 10.sp)
-                }
-                
-                Button(
-                    onClick = onRescheduleAll,
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
-                    modifier = Modifier.size(40.dp)
-                ) {
-                    Text("R", color = Color.White, fontSize = 12.sp)
-                }
-                
-                FloatingActionButton(
-                    onClick = onAddPill,
-                    containerColor = Blue600,
-                    contentColor = Color.White,
-                    modifier = Modifier
-                        .size(56.dp)
-                        .shadow(8.dp, RoundedCornerShape(28.dp)),
-                    elevation = FloatingActionButtonDefaults.elevation(
-                        defaultElevation = 8.dp,
-                        pressedElevation = 12.dp
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Pill",
-                        modifier = Modifier.size(24.dp)
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Pill",
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
 
