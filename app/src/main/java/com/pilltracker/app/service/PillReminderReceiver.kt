@@ -3,6 +3,7 @@ package com.pilltracker.app.service
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import com.pilltracker.app.data.model.Pill
 
 class PillReminderReceiver : BroadcastReceiver() {
     

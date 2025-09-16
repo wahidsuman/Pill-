@@ -41,16 +41,21 @@ class PillNotificationService(private val context: Context) {
     }
     
     fun showPillReminder(pillName: String, dosage: String, pillId: Long, imagePath: String = "") {
-        // Launch the popup activity
-        val popupIntent = Intent(context, PillReminderPopupActivity::class.java).apply {
-            putExtra("pill_name", pillName)
-            putExtra("pill_dosage", dosage)
-            putExtra("pill_id", pillId)
-            putExtra("pill_image_path", imagePath)
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+        try {
+            // Launch the popup activity
+            val popupIntent = Intent(context, PillReminderPopupActivity::class.java).apply {
+                putExtra("pill_name", pillName)
+                putExtra("pill_dosage", dosage)
+                putExtra("pill_id", pillId)
+                putExtra("pill_image_path", imagePath)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            }
+            
+            context.startActivity(popupIntent)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            // Fallback: just show notification if popup fails
         }
-        
-        context.startActivity(popupIntent)
         
         // Also show a regular notification as backup
         val intent = Intent(context, MainActivity::class.java).apply {
@@ -87,5 +92,9 @@ class PillNotificationService(private val context: Context) {
         with(NotificationManagerCompat.from(context)) {
             cancel((NOTIFICATION_ID_BASE + pillId).toInt())
         }
+    }
+    
+    fun testPopup() {
+        showPillReminder("Test Medicine", "1 tablet", 999L, "")
     }
 }

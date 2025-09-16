@@ -10,6 +10,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -109,5 +110,21 @@ class PillViewModel @Inject constructor(
 
     fun hideEditForm() {
         _showEditForm.value = null
+    }
+    
+    fun scheduleTestAlarm() {
+        viewModelScope.launch {
+            val testPill = Pill(
+                id = 999L,
+                name = "Test Medicine",
+                dosage = "1 tablet",
+                times = listOf("00:01"), // 1 minute from now
+                color = "#FF5722",
+                imagePath = "",
+                nextDose = "00:01",
+                taken = false
+            )
+            alarmManager.schedulePillReminder(testPill)
+        }
     }
 }

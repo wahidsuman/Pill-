@@ -1,5 +1,6 @@
 package com.pilltracker.app.ui.screen
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -15,11 +16,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.pilltracker.app.data.model.Pill
+import com.pilltracker.app.service.PillNotificationService
 import com.pilltracker.app.ui.components.*
 import com.pilltracker.app.ui.theme.*
 import com.pilltracker.app.ui.viewmodel.PillViewModel
@@ -92,7 +95,8 @@ fun PillTrackerScreen(
                     onAddPill = { viewModel.showAddForm() },
                     onMarkAsTaken = { viewModel.markAsTaken(it) },
                     onDeletePill = { viewModel.deletePill(it) },
-                    onEditPill = { viewModel.showEditForm(it) }
+                    onEditPill = { viewModel.showEditForm(it) },
+                    onTestPopup = { viewModel.scheduleTestAlarm() }
                 )
             }
         }
@@ -336,7 +340,8 @@ fun PillsListSection(
     onAddPill: () -> Unit,
     onMarkAsTaken: (Pill) -> Unit,
     onDeletePill: (Pill) -> Unit,
-    onEditPill: (Pill) -> Unit
+    onEditPill: (Pill) -> Unit,
+    onTestPopup: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -354,23 +359,45 @@ fun PillsListSection(
                 fontWeight = FontWeight.SemiBold,
                 color = Gray800
             )
-            FloatingActionButton(
-                onClick = onAddPill,
-                containerColor = Blue600,
-                contentColor = Color.White,
-                modifier = Modifier
-                    .size(56.dp)
-                    .shadow(8.dp, RoundedCornerShape(28.dp)),
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 8.dp,
-                    pressedElevation = 12.dp
-                )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = "Add Pill",
-                    modifier = Modifier.size(24.dp)
-                )
+                // Test popup button
+                val context = LocalContext.current
+                val notificationService = remember { PillNotificationService(context) }
+                
+                Button(
+                    onClick = {
+                        // Test immediate popup
+                        notificationService.testPopup()
+                        
+                        // Also schedule a test alarm for 1 minute from now
+                        onTestPopup()
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Text("T", color = Color.White, fontSize = 12.sp)
+                }
+                
+                FloatingActionButton(
+                    onClick = onAddPill,
+                    containerColor = Blue600,
+                    contentColor = Color.White,
+                    modifier = Modifier
+                        .size(56.dp)
+                        .shadow(8.dp, RoundedCornerShape(28.dp)),
+                    elevation = FloatingActionButtonDefaults.elevation(
+                        defaultElevation = 8.dp,
+                        pressedElevation = 12.dp
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Pill",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
             }
         }
 
