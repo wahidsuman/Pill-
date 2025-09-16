@@ -349,9 +349,9 @@ fun AddPillModal(
     }
 
 
-    // Custom Time Picker Dialog with scrollable AM/PM selector
+    // Hybrid Time Picker Dialog - Native picker with custom scrollable AM/PM selector
     if (showTimePicker) {
-        CustomTimePickerDialog(
+        HybridTimePickerDialog(
             onDismiss = { showTimePicker = false },
             onTimeSelected = { timeString ->
                 val newTimes = times.toMutableList()
