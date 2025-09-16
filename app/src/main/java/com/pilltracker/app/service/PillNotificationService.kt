@@ -5,9 +5,11 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import com.pilltracker.app.MainActivity
 import com.pilltracker.app.R
 
@@ -70,17 +72,40 @@ class PillNotificationService(private val context: Context) {
             .build()
         
         with(NotificationManagerCompat.from(context)) {
-            notify((NOTIFICATION_ID_BASE + pillId).toInt(), notification)
+            if (areNotificationsEnabled()) {
+                try {
+                    notify((NOTIFICATION_ID_BASE + pillId).toInt(), notification)
+                } catch (e: SecurityException) {
+                    // Handle case where notification permission is revoked
+                    android.util.Log.e("PillNotificationService", "Failed to show notification: ${e.message}")
+                }
+            }
         }
     }
     
     fun cancelPillReminder(pillId: Long) {
         with(NotificationManagerCompat.from(context)) {
-            cancel((NOTIFICATION_ID_BASE + pillId).toInt())
+            try {
+                cancel((NOTIFICATION_ID_BASE + pillId).toInt())
+            } catch (e: SecurityException) {
+                // Handle case where notification permission is revoked
+                android.util.Log.e("PillNotificationService", "Failed to cancel notification: ${e.message}")
+            }
         }
     }
     
     fun testPopup() {
         showPillReminder("Test Medicine", "1 tablet", 999L, "")
+    }
+    
+    private fun areNotificationsEnabled(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(
+                context,
+                android.Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+        } else {
+            NotificationManagerCompat.from(context).areNotificationsEnabled()
+        }
     }
 }

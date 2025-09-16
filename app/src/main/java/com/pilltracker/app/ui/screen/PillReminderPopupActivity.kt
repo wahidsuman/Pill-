@@ -136,9 +136,11 @@ class PillReminderPopupActivity : ComponentActivity() {
         vibrator?.cancel()
     }
     
+    @Deprecated("Deprecated in Java")
     override fun onBackPressed() {
         // Prevent back button from dismissing the popup
         // User must use the buttons in the popup
+        super.onBackPressed()
     }
 }
 
