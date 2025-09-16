@@ -756,10 +756,35 @@ fun ImageCaptureSection(
                 // Image was captured successfully
                 val filePath = imageUri!!.path
                 if (filePath != null && File(filePath).exists()) {
-                    onImageCaptured(filePath)
+                    // Verify the file has content
+                    val file = File(filePath)
+                    if (file.length() > 0) {
+                        onImageCaptured(filePath)
+                    } else {
+                        // File is empty, try alternative path
+                        val alternativePath = imageUri.toString().replace("file://", "")
+                        if (File(alternativePath).exists() && File(alternativePath).length() > 0) {
+                            onImageCaptured(alternativePath)
+                        }
+                    }
+                } else {
+                    // Try to get the file from the URI directly
+                    val uriPath = imageUri.toString().replace("file://", "")
+                    if (File(uriPath).exists() && File(uriPath).length() > 0) {
+                        onImageCaptured(uriPath)
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+                // Last resort: try to use the URI path directly
+                try {
+                    val uriPath = imageUri!!.toString().replace("file://", "")
+                    if (File(uriPath).exists()) {
+                        onImageCaptured(uriPath)
+                    }
+                } catch (e2: Exception) {
+                    e2.printStackTrace()
+                }
             }
         }
     }
@@ -864,25 +889,42 @@ fun ImageCaptureSection(
                                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                                 val photoFile = File(imageFile, "pill_${timestamp}.jpg")
                                 
-                                // Ensure the file exists
+                                // Ensure the parent directory exists
+                                if (photoFile.parentFile?.exists() != true) {
+                                    photoFile.parentFile?.mkdirs()
+                                }
+                                
+                                // Create the file
                                 if (!photoFile.exists()) {
                                     photoFile.createNewFile()
                                 }
                                 
-                                imageUri = FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    photoFile
-                                )
-                                
-                                // Grant URI permissions
-                                context.grantUriPermission(
-                                    context.packageName,
-                                    imageUri,
-                                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                                )
-                                
-                                cameraLauncher.launch(imageUri)
+                                // Verify file was created
+                                if (photoFile.exists()) {
+                                    imageUri = FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        photoFile
+                                    )
+                                    
+                                    // Grant URI permissions
+                                    context.grantUriPermission(
+                                        context.packageName,
+                                        imageUri,
+                                        android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                    )
+                                    
+                                    cameraLauncher.launch(imageUri)
+                                } else {
+                                    // File creation failed, try alternative approach
+                                    val tempFile = File.createTempFile("pill_${timestamp}", ".jpg", imageFile)
+                                    imageUri = FileProvider.getUriForFile(
+                                        context,
+                                        "${context.packageName}.fileprovider",
+                                        tempFile
+                                    )
+                                    cameraLauncher.launch(imageUri)
+                                }
                             } catch (e: Exception) {
                                 e.printStackTrace()
                                 // Fallback: try to launch camera without specific file
@@ -908,7 +950,7 @@ fun ImageCaptureSection(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Take Photo with Camera",
+                            text = "Camera",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
@@ -938,7 +980,7 @@ fun ImageCaptureSection(
                             modifier = Modifier.size(24.dp)
                         )
                         Text(
-                            text = "Select from Gallery",
+                            text = "Gallery",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
