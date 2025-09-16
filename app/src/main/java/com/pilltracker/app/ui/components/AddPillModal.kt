@@ -316,27 +316,20 @@ fun AddPillModal(
                                         color = Gray600
                                     )
                                 } else {
-                                    // Parse time to show AM/PM with visual distinction
-                                    val timeParts = time.split(" ")
-                                    val timeOnly = timeParts[0]
-                                    val ampm = if (timeParts.size > 1) timeParts[1] else ""
+                                    // Convert 24-hour format to 12-hour format for display
+                                    val timeParts = time.split(":")
+                                    val hour = timeParts[0].toInt()
+                                    val minute = timeParts[1].toInt()
                                     
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            text = timeOnly,
-                                            color = Color.Black,
-                                            fontSize = 16.sp
-                                        )
-                                        Text(
-                                            text = ampm,
-                                            color = Color.Black,
-                                            fontSize = 14.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                    }
+                                    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+                                    val ampm = if (hour < 12) "AM" else "PM"
+                                    val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
+                                    
+                                    Text(
+                                        text = displayTime,
+                                        color = Color.Black,
+                                        fontSize = 16.sp
+                                    )
                                 }
                             }
                         }
@@ -443,16 +436,10 @@ fun AddPillModal(
         
         if (currentTime.isNotBlank() && currentTime != "Select Time") {
             try {
-                val timeParts = currentTime.split(" ")
-                val timeOnly = timeParts[0].split(":")
-                val ampm = timeParts[1]
-                
-                hour = if (ampm == "AM") {
-                    if (timeOnly[0].toInt() == 12) 0 else timeOnly[0].toInt()
-                } else {
-                    if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt() + 12
-                }
-                minute = timeOnly[1].toInt()
+                // Parse 24-hour format (HH:MM)
+                val timeParts = currentTime.split(":")
+                hour = timeParts[0].toInt()
+                minute = timeParts[1].toInt()
             } catch (e: Exception) {
                 hour = 12
                 minute = 0
@@ -470,9 +457,8 @@ fun AddPillModal(
                     val timePickerDialog = object : TimePickerDialog(
                         context,
                         { _, selectedHour, selectedMinute ->
-                            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                            val ampm = if (selectedHour < 12) "AM" else "PM"
-                            val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, ampm)
+                            // Convert to 24-hour format for alarm system
+                            val timeString = String.format("%02d:%02d", selectedHour, selectedMinute)
                             
                             val newTimes = times.toMutableList()
                             newTimes[selectedTimeIndex] = timeString
@@ -481,7 +467,7 @@ fun AddPillModal(
                         },
                         hour,
                         minute,
-                        false // 12-hour format
+                        true // 24-hour format
                     ) {
                         override fun onTimeChanged(view: android.widget.TimePicker?, hourOfDay: Int, minute: Int) {
                             super.onTimeChanged(view, hourOfDay, minute)
