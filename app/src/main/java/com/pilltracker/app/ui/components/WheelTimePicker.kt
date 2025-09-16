@@ -220,13 +220,28 @@ fun WheelColumn(
 ) {
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
+    var centerItem by remember { mutableStateOf(selectedItem) }
     
     // Calculate initial position and auto-scroll to selected item
     LaunchedEffect(selectedItem) {
         val index = items.indexOf(selectedItem)
         if (index >= 0) {
             listState.animateScrollToItem(index)
+            centerItem = selectedItem
         }
+    }
+    
+    // Update center item when scrolling - use derived state for better performance
+    val currentCenterItem by remember {
+        derivedStateOf {
+            val centerIndex = listState.firstVisibleItemIndex + 2 // +2 for padding
+            if (centerIndex < items.size) items[centerIndex] else centerItem
+        }
+    }
+    
+    // Update centerItem when derived state changes
+    LaunchedEffect(currentCenterItem) {
+        centerItem = currentCenterItem
     }
     
     Box(
@@ -242,7 +257,12 @@ fun WheelColumn(
                             val currentIndex = listState.firstVisibleItemIndex
                             val newIndex = (currentIndex - (dragAmount.y / 48).toInt()).coerceIn(0, items.size - 1)
                             listState.animateScrollToItem(newIndex)
-                            onItemSelected(items[newIndex])
+                            // Update center item and notify parent
+                            val newCenterIndex = newIndex + 2 // +2 for padding
+                            if (newCenterIndex < items.size) {
+                                centerItem = items[newCenterIndex]
+                                onItemSelected(items[newCenterIndex])
+                            }
                         }
                     }
                 },
@@ -252,7 +272,7 @@ fun WheelColumn(
         ) {
             items(items.size) { index ->
                 val item = items[index]
-                val isSelected = item == selectedItem
+                val isInCenter = item == centerItem
                 
                 Box(
                     modifier = Modifier
@@ -261,6 +281,8 @@ fun WheelColumn(
                         .clickable { 
                             coroutineScope.launch {
                                 listState.animateScrollToItem(index)
+                                // Update center item after scrolling
+                                centerItem = item
                             }
                             onItemSelected(item) 
                         },
@@ -271,9 +293,9 @@ fun WheelColumn(
                             is Int -> if (item < 10) "0$item" else item.toString()
                             else -> item.toString()
                         },
-                        color = if (isSelected) Color.White else Color(0xFF999999),
-                        fontSize = if (isSelected) 24.sp else 18.sp,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                        color = if (isInCenter) Color(0xFF1976D2) else Color(0xFF999999), // Deep blue for center, grey for others
+                        fontSize = if (isInCenter) 24.sp else 18.sp,
+                        fontWeight = if (isInCenter) FontWeight.Bold else FontWeight.Normal,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -304,15 +326,15 @@ fun WheelColumn(
                     .background(Color(0xFF444444))
             )
             
-            // Center selection highlight
+            // Center selection highlight - more prominent
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(48.dp)
                     .offset(y = 24.dp)
                     .background(
-                        Color(0xFF00D4AA).copy(alpha = 0.1f),
-                        RoundedCornerShape(4.dp)
+                        Color(0xFF1976D2).copy(alpha = 0.15f),
+                        RoundedCornerShape(6.dp)
                     )
             )
         }
