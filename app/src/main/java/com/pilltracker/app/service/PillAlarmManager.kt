@@ -56,7 +56,7 @@ class PillAlarmManager(private val context: Context) {
                             calendar.timeInMillis,
                             pendingIntent
                         )
-                        Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString}")
+                        Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
                     } else {
                         // For older versions use setExact
                         alarmManager.setExact(
@@ -64,7 +64,7 @@ class PillAlarmManager(private val context: Context) {
                             calendar.timeInMillis,
                             pendingIntent
                         )
-                        Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString}")
+                        Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
                     }
                 } catch (e: Exception) {
                     Log.e("PillAlarmManager", "Failed to schedule exact alarm, trying fallback", e)
@@ -75,7 +75,7 @@ class PillAlarmManager(private val context: Context) {
                             calendar.timeInMillis,
                             pendingIntent
                         )
-                        Log.d("PillAlarmManager", "Scheduled fallback alarm for ${pill.name} at ${timeString}")
+                        Log.d("PillAlarmManager", "Scheduled fallback alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
                     } catch (e2: Exception) {
                         Log.e("PillAlarmManager", "Failed to schedule any alarm for ${pill.name}", e2)
                     }
@@ -225,6 +225,60 @@ class PillAlarmManager(private val context: Context) {
             Log.d("PillAlarmManager", "Test alarm scheduled successfully")
         } catch (e: Exception) {
             Log.e("PillAlarmManager", "Failed to schedule test alarm", e)
+        }
+    }
+    
+    fun scheduleAllPills(pills: List<Pill>) {
+        Log.d("PillAlarmManager", "Scheduling alarms for ${pills.size} pills")
+        pills.forEach { pill ->
+            schedulePillReminder(pill)
+        }
+    }
+    
+    fun scheduleAlarmForTomorrow(pill: Pill, timeString: String) {
+        val time = parseTime(timeString) ?: return
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, time.first)
+            set(Calendar.MINUTE, time.second)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+        
+        Log.d("PillAlarmManager", "Scheduling tomorrow's alarm for ${pill.name} at $timeString")
+        
+        val intent = Intent(context, PillReminderReceiver::class.java).apply {
+            putExtra("pill_name", pill.name)
+            putExtra("pill_dosage", pill.dosage)
+            putExtra("pill_id", pill.id)
+            putExtra("pill_time", timeString)
+            putExtra("pill_image_path", pill.imagePath)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (pill.id + timeString.hashCode()).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+            Log.d("PillAlarmManager", "Tomorrow's alarm scheduled successfully for ${pill.name}")
+        } catch (e: Exception) {
+            Log.e("PillAlarmManager", "Failed to schedule tomorrow's alarm for ${pill.name}", e)
         }
     }
     

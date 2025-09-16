@@ -97,7 +97,8 @@ fun PillTrackerScreen(
                     onDeletePill = { viewModel.deletePill(it) },
                     onEditPill = { viewModel.showEditForm(it) },
                     onTestAlarm = { viewModel.testAlarmService() },
-                    onTestAlarm1Min = { viewModel.scheduleTestAlarm() }
+                    onTestAlarm1Min = { viewModel.scheduleTestAlarm() },
+                    onRescheduleAll = { viewModel.rescheduleAllAlarms() }
                 )
             }
         }
@@ -343,7 +344,8 @@ fun PillsListSection(
     onDeletePill: (Pill) -> Unit,
     onEditPill: (Pill) -> Unit,
     onTestAlarm: () -> Unit,
-    onTestAlarm1Min: () -> Unit
+    onTestAlarm1Min: () -> Unit,
+    onRescheduleAll: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -380,6 +382,14 @@ fun PillsListSection(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Text("1M", color = Color.White, fontSize = 10.sp)
+                }
+                
+                Button(
+                    onClick = onRescheduleAll,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4CAF50)),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Text("R", color = Color.White, fontSize = 12.sp)
                 }
                 
                 FloatingActionButton(
