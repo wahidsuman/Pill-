@@ -35,6 +35,14 @@ import java.util.*
 import android.app.TimePickerDialog
 import android.content.Context
 
+// Extension function to convert Color to ARGB
+private fun Color.toArgb(): Int {
+    return (alpha * 255).toInt() shl 24 or
+           (red * 255).toInt() shl 16 or
+           (green * 255).toInt() shl 8 or
+           (blue * 255).toInt()
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPillModal(
@@ -371,11 +379,12 @@ fun AddPillModal(
             minute = 0
         }
         
-        // Use LaunchedEffect to show the time picker
-        LaunchedEffect(showTimePicker) {
+        // Use LaunchedEffect to show the time picker with selectedTimeIndex as key
+        LaunchedEffect(showTimePicker, selectedTimeIndex) {
             if (showTimePicker) {
                 try {
-                    val timePickerDialog = TimePickerDialog(
+                    // Create a custom styled TimePickerDialog
+                    val timePickerDialog = object : TimePickerDialog(
                         context,
                         { _, selectedHour, selectedMinute ->
                             val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
@@ -390,7 +399,58 @@ fun AddPillModal(
                         hour,
                         minute,
                         false // 12-hour format
-                    )
+                    ) {
+                        override fun onTimeChanged(view: android.widget.TimePicker?, hourOfDay: Int, minute: Int) {
+                            super.onTimeChanged(view, hourOfDay, minute)
+                            
+                            // Apply custom styling to AM/PM buttons
+                            try {
+                                val timePicker = view ?: return
+                                
+                                // Try multiple approaches to access AM/PM button
+                                val isAM = hourOfDay < 12
+                                
+                                // Method 1: Try to access mAmPmButton field
+                                try {
+                                    val amPmButtonField = timePicker.javaClass.getDeclaredField("mAmPmButton")
+                                    amPmButtonField.isAccessible = true
+                                    val amPmButton = amPmButtonField.get(timePicker) as? android.widget.Button
+                                    
+                                    amPmButton?.let { button ->
+                                        button.setBackgroundColor(if (isAM) Blue600.toArgb() else Red600.toArgb())
+                                        button.setTextColor(Color.White.toArgb())
+                                        button.textSize = 16f
+                                        button.typeface = android.graphics.Typeface.DEFAULT_BOLD
+                                    }
+                                } catch (e: Exception) {
+                                    // Method 2: Try to find AM/PM button by text
+                                    try {
+                                        val parent = timePicker.parent as? android.view.ViewGroup
+                                        parent?.let { viewGroup ->
+                                            for (i in 0 until viewGroup.childCount) {
+                                                val child = viewGroup.getChildAt(i)
+                                                if (child is android.widget.Button) {
+                                                    val buttonText = child.text.toString()
+                                                    if (buttonText == "AM" || buttonText == "PM") {
+                                                        child.setBackgroundColor(if (isAM) Blue600.toArgb() else Red600.toArgb())
+                                                        child.setTextColor(Color.White.toArgb())
+                                                        child.textSize = 16f
+                                                        child.typeface = android.graphics.Typeface.DEFAULT_BOLD
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    } catch (e2: Exception) {
+                                        // If all methods fail, just continue
+                                        e2.printStackTrace()
+                                    }
+                                }
+                            } catch (e: Exception) {
+                                // Fallback if reflection fails
+                                e.printStackTrace()
+                            }
+                        }
+                    }
                     
                     timePickerDialog.setTitle("Select Medication Time")
                     timePickerDialog.show()
