@@ -53,10 +53,6 @@ class PillReminderPopupActivity : ComponentActivity() {
         // Make the activity visible and keep screen on
         try {
             window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-            @Suppress("DEPRECATION")
-            window.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED)
-            @Suppress("DEPRECATION")
-            window.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON)
         } catch (e: Exception) {
             e.printStackTrace()
         }

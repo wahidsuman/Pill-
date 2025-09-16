@@ -5,9 +5,7 @@ import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
-import android.provider.Settings
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.pilltracker.app.MainActivity
@@ -44,15 +42,6 @@ class PillNotificationService(private val context: Context) {
     
     fun showPillReminder(pillName: String, dosage: String, pillId: Long, imagePath: String = "") {
         try {
-            // Check if we have permission to show popup over other apps
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(context)) {
-                // Request permission
-                val intent = Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:${context.packageName}"))
-                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                context.startActivity(intent)
-                return
-            }
-            
             // Launch the popup activity
             val popupIntent = Intent(context, PillReminderPopupActivity::class.java).apply {
                 putExtra("pill_name", pillName)
