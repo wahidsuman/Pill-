@@ -43,28 +43,20 @@ class PillAlarmManager(private val context: Context) {
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )
                 
-                // Use setExact for better reliability
+                // Use setRepeating for better compatibility
                 try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        alarmManager.setExactAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            calendar.timeInMillis,
-                            pendingIntent
-                        )
-                    } else {
-                        alarmManager.setExact(
-                            AlarmManager.RTC_WAKEUP,
-                            calendar.timeInMillis,
-                            pendingIntent
-                        )
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    // Fallback to setRepeating if exact alarms fail
                     alarmManager.setRepeating(
                         AlarmManager.RTC_WAKEUP,
                         calendar.timeInMillis,
                         AlarmManager.INTERVAL_DAY,
+                        pendingIntent
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    // Fallback to set if setRepeating fails
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
                         pendingIntent
                     )
                 }
@@ -103,18 +95,14 @@ class PillAlarmManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
         
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
+        try {
+            alarmManager.set(
                 AlarmManager.RTC_WAKEUP,
                 snoozeTime,
                 pendingIntent
             )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                snoozeTime,
-                pendingIntent
-            )
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
     
@@ -143,19 +131,11 @@ class PillAlarmManager(private val context: Context) {
         )
         
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -182,19 +162,11 @@ class PillAlarmManager(private val context: Context) {
         )
         
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
         } catch (e: Exception) {
             e.printStackTrace()
         }

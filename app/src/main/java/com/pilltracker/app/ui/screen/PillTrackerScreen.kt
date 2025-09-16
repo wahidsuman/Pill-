@@ -366,7 +366,11 @@ fun PillsListSection(
                 Button(
                     onClick = {
                         try {
-                            // Test notification only
+                            // Test alarm scheduling
+                            val alarmManager = com.pilltracker.app.service.PillAlarmManager(context)
+                            alarmManager.scheduleImmediateTest()
+                            
+                            // Also show immediate notification
                             val notificationService = PillNotificationService(context)
                             notificationService.showPillReminder("Test Medicine", "1 tablet", 999L, "")
                         } catch (e: Exception) {
