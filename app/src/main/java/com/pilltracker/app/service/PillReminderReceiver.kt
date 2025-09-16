@@ -31,7 +31,11 @@ class PillReminderReceiver : BroadcastReceiver() {
             }
             
             try {
-                context.startForegroundService(alarmServiceIntent)
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    context.startForegroundService(alarmServiceIntent)
+                } else {
+                    context.startService(alarmServiceIntent)
+                }
                 Log.d("PillReminderReceiver", "Started AlarmService")
             } catch (e: Exception) {
                 Log.e("PillReminderReceiver", "Failed to start AlarmService", e)

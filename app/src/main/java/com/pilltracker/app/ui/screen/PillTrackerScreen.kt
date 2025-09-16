@@ -26,8 +26,8 @@ import com.pilltracker.app.service.PillNotificationService
 import com.pilltracker.app.ui.components.*
 import com.pilltracker.app.ui.theme.*
 import com.pilltracker.app.ui.viewmodel.PillViewModel
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
+import java.text.SimpleDateFormat
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,13 +42,13 @@ fun PillTrackerScreen(
     val showAddForm by viewModel.showAddForm.collectAsState()
     val showEditForm by viewModel.showEditForm.collectAsState()
 
-    var currentTime by remember { mutableStateOf(LocalDateTime.now()) }
+    var currentTime by remember { mutableStateOf(Date()) }
     
     // Update current time every second
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(1000) // Update every second
-            currentTime = LocalDateTime.now()
+            currentTime = Date()
         }
     }
 
@@ -120,7 +120,7 @@ fun PillTrackerScreen(
 }
 
 @Composable
-fun HeaderSection(currentTime: LocalDateTime) {
+fun HeaderSection(currentTime: Date) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -155,7 +155,7 @@ fun HeaderSection(currentTime: LocalDateTime) {
                     )
                 }
                 Text(
-                    text = currentTime.format(DateTimeFormatter.ofPattern("EEEE, MMM dd")),
+                    text = SimpleDateFormat("EEEE, MMM dd", Locale.getDefault()).format(currentTime),
                     fontSize = 14.sp,
                     color = Gray600,
                     modifier = Modifier.padding(top = 4.dp)
@@ -166,13 +166,13 @@ fun HeaderSection(currentTime: LocalDateTime) {
                 horizontalAlignment = Alignment.End
             ) {
                 Text(
-                    text = currentTime.format(DateTimeFormatter.ofPattern("a")),
+                    text = SimpleDateFormat("a", Locale.getDefault()).format(currentTime),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Medium,
                     color = Blue600
                 )
                 Text(
-                    text = currentTime.format(DateTimeFormatter.ofPattern("hh:mm")),
+                    text = SimpleDateFormat("hh:mm", Locale.getDefault()).format(currentTime),
                     fontSize = 32.sp,
                     fontWeight = FontWeight.Bold,
                     color = Blue600
