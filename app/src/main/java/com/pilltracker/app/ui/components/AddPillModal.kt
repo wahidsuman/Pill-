@@ -32,6 +32,10 @@ import androidx.compose.ui.window.Dialog
 import com.pilltracker.app.data.model.Pill
 import com.pilltracker.app.ui.theme.*
 import java.util.*
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
+import androidx.fragment.app.FragmentManager
+import androidx.appcompat.app.AppCompatActivity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -314,6 +318,79 @@ fun AddPillModal(
         }
     }
 
+
+    // Material Time Picker Dialog
+    if (showTimePicker) {
+        val context = LocalContext.current
+        
+        // Parse current time if available
+        val currentTime = times[selectedTimeIndex]
+        var hour: Int
+        var minute: Int
+        
+        if (currentTime.isNotBlank() && currentTime != "Select Time") {
+            try {
+                val timeParts = currentTime.split(" ")
+                val timeOnly = timeParts[0].split(":")
+                val ampm = timeParts[1]
+                
+                hour = if (ampm == "AM") {
+                    if (timeOnly[0].toInt() == 12) 0 else timeOnly[0].toInt()
+                } else {
+                    if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt() + 12
+                }
+                minute = timeOnly[1].toInt()
+            } catch (e: Exception) {
+                hour = 12
+                minute = 0
+            }
+        } else {
+            hour = 12
+            minute = 0
+        }
+        
+        val timePicker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_12H)
+            .setHour(hour)
+            .setMinute(minute)
+            .setTitleText("Select Medication Time")
+            .build()
+        
+        timePicker.addOnPositiveButtonClickListener {
+            val selectedHour = timePicker.hour
+            val selectedMinute = timePicker.minute
+            
+            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+            val ampm = if (selectedHour < 12) "AM" else "PM"
+            val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, ampm)
+            
+            val newTimes = times.toMutableList()
+            newTimes[selectedTimeIndex] = timeString
+            times = newTimes
+            showTimePicker = false
+        }
+        
+        timePicker.addOnNegativeButtonClickListener {
+            showTimePicker = false
+        }
+        
+        timePicker.addOnCancelListener {
+            showTimePicker = false
+        }
+        
+        // Show the time picker
+        LaunchedEffect(Unit) {
+            try {
+                val activity = context as? AppCompatActivity
+                activity?.supportFragmentManager?.let { fragmentManager: FragmentManager ->
+                    timePicker.show(fragmentManager, "timePicker")
+                }
+            } catch (e: Exception) {
+                // Fallback: just close the picker
+                showTimePicker = false
+            }
+        }
+    }
 
     // Custom Days Picker Dialog
     if (showCustomDaysPicker) {
