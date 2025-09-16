@@ -95,7 +95,9 @@ fun PillTrackerScreen(
                     onAddPill = { viewModel.showAddForm() },
                     onMarkAsTaken = { viewModel.markAsTaken(it) },
                     onDeletePill = { viewModel.deletePill(it) },
-                    onEditPill = { viewModel.showEditForm(it) }
+                    onEditPill = { viewModel.showEditForm(it) },
+                    onTestAlarm = { viewModel.testAlarmService() },
+                    onTestAlarm1Min = { viewModel.scheduleTestAlarm() }
                 )
             }
         }
@@ -339,7 +341,9 @@ fun PillsListSection(
     onAddPill: () -> Unit,
     onMarkAsTaken: (Pill) -> Unit,
     onDeletePill: (Pill) -> Unit,
-    onEditPill: (Pill) -> Unit
+    onEditPill: (Pill) -> Unit,
+    onTestAlarm: () -> Unit,
+    onTestAlarm1Min: () -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -360,28 +364,22 @@ fun PillsListSection(
             Row(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                // Test popup button
-                val context = LocalContext.current
+                // Test alarm buttons
                 
                 Button(
-                    onClick = {
-                        try {
-                            // Test alarm scheduling
-                            val alarmManager = com.pilltracker.app.service.PillAlarmManager(context)
-                            alarmManager.scheduleImmediateTest()
-                            
-                            // Also show immediate notification
-                            val notificationService = PillNotificationService(context)
-                            notificationService.showPillReminder("Test Medicine", "1 tablet", 999L, "")
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            // Show a simple toast or log the error
-                        }
-                    },
+                    onClick = onTestAlarm,
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Red),
                     modifier = Modifier.size(40.dp)
                 ) {
                     Text("T", color = Color.White, fontSize = 12.sp)
+                }
+                
+                Button(
+                    onClick = onTestAlarm1Min,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF9800)),
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Text("1M", color = Color.White, fontSize = 10.sp)
                 }
                 
                 FloatingActionButton(
