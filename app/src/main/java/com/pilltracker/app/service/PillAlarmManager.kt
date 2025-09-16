@@ -28,9 +28,38 @@ class PillAlarmManager(private val context: Context) {
                     }
                 }
                 
-                // For now, just show notification directly instead of using alarm
-                // This avoids the need for the receiver in manifest
-                notificationService.showPillReminder(pill.name, pill.dosage, pill.id, pill.imagePath)
+                val intent = Intent(context, PillReminderReceiver::class.java).apply {
+                    putExtra("pill_name", pill.name)
+                    putExtra("pill_dosage", pill.dosage)
+                    putExtra("pill_id", pill.id)
+                    putExtra("pill_time", timeString)
+                    putExtra("pill_image_path", pill.imagePath)
+                }
+                
+                val pendingIntent = PendingIntent.getBroadcast(
+                    context,
+                    (pill.id + timeString.hashCode()).toInt(),
+                    intent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                
+                // Schedule the alarm
+                try {
+                    alarmManager.setRepeating(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        AlarmManager.INTERVAL_DAY,
+                        pendingIntent
+                    )
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    // Fallback to set if setRepeating fails
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                }
             }
         }
     }
@@ -49,18 +78,98 @@ class PillAlarmManager(private val context: Context) {
     }
     
     fun snoozePillReminder(pill: Pill, snoozeMinutes: Int = 5) {
-        // For now, just show notification directly instead of using alarm
-        notificationService.showPillReminder(pill.name, pill.dosage, pill.id, pill.imagePath)
+        val snoozeTime = System.currentTimeMillis() + (snoozeMinutes * 60 * 1000)
+        
+        val intent = Intent(context, PillReminderReceiver::class.java).apply {
+            putExtra("pill_name", pill.name)
+            putExtra("pill_dosage", pill.dosage)
+            putExtra("pill_id", pill.id)
+            putExtra("pill_time", "snooze")
+            putExtra("pill_image_path", pill.imagePath)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (pill.id + "snooze".hashCode()).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        try {
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                snoozeTime,
+                pendingIntent
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     fun rescheduleNextDay(pill: Pill, timeString: String) {
-        // For now, just show notification directly instead of using alarm
-        notificationService.showPillReminder(pill.name, pill.dosage, pill.id, pill.imagePath)
+        val time = parseTime(timeString) ?: return
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_MONTH, 1)
+            set(Calendar.HOUR_OF_DAY, time.first)
+            set(Calendar.MINUTE, time.second)
+            set(Calendar.SECOND, 0)
+        }
+        
+        val intent = Intent(context, PillReminderReceiver::class.java).apply {
+            putExtra("pill_name", pill.name)
+            putExtra("pill_dosage", pill.dosage)
+            putExtra("pill_id", pill.id)
+            putExtra("pill_time", timeString)
+            putExtra("pill_image_path", pill.imagePath)
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            (pill.id + timeString.hashCode()).toInt(),
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        try {
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     fun scheduleImmediateTest() {
-        // For now, just show notification directly instead of using alarm
-        notificationService.showPillReminder("Test Medicine", "1 tablet", 999L, "")
+        val calendar = Calendar.getInstance().apply {
+            add(Calendar.SECOND, 5) // 5 seconds from now
+        }
+        
+        val intent = Intent(context, PillReminderReceiver::class.java).apply {
+            putExtra("pill_name", "Test Medicine")
+            putExtra("pill_dosage", "1 tablet")
+            putExtra("pill_id", 999L)
+            putExtra("pill_time", "test")
+            putExtra("pill_image_path", "")
+        }
+        
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            999,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        
+        try {
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
     
     private fun parseTime(timeString: String): Pair<Int, Int>? {
