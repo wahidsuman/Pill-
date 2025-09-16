@@ -15,6 +15,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.asImageBitmap
+import android.graphics.BitmapFactory
 import com.pilltracker.app.data.model.Pill
 import com.pilltracker.app.ui.theme.*
 
@@ -39,13 +43,46 @@ fun PillCard(
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Pill Icon with taken indicator
+            // Pill Icon/Image with taken indicator
             Box {
-                PillIcon(
-                    color = pill.color,
-                    size = 48.dp,
-                    modifier = Modifier.clip(RoundedCornerShape(12.dp))
-                )
+                if (pill.imagePath.isNotEmpty()) {
+                    // Show captured image
+                    try {
+                        val bitmap = BitmapFactory.decodeFile(pill.imagePath)
+                        if (bitmap != null) {
+                            Image(
+                                bitmap = bitmap.asImageBitmap(),
+                                contentDescription = "Pill image",
+                                modifier = Modifier
+                                    .size(48.dp)
+                                    .clip(RoundedCornerShape(12.dp)),
+                                contentScale = ContentScale.Crop
+                            )
+                        } else {
+                            // Fallback to color icon if image can't be loaded
+                            PillIcon(
+                                color = pill.color,
+                                size = 48.dp,
+                                modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                            )
+                        }
+                    } catch (e: Exception) {
+                        // Fallback to color icon if image can't be loaded
+                        PillIcon(
+                            color = pill.color,
+                            size = 48.dp,
+                            modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                        )
+                    }
+                } else {
+                    // Show color icon
+                    PillIcon(
+                        color = pill.color,
+                        size = 48.dp,
+                        modifier = Modifier.clip(RoundedCornerShape(12.dp))
+                    )
+                }
+                
                 if (pill.taken) {
                     Box(
                         modifier = Modifier
@@ -136,7 +173,7 @@ fun PillCard(
                 }
                 
                 Text(
-                    text = "${pill.dosage} • Next: ${pill.nextDose}",
+                    text = "Next: ${pill.nextDose}",
                     fontSize = 14.sp,
                     color = Gray600,
                     modifier = Modifier.padding(top = 4.dp)
