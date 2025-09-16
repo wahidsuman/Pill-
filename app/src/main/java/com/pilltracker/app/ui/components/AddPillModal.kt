@@ -341,18 +341,65 @@ fun AddPillModal(
     }
 
 
-    // Custom Time Picker Dialog with AM/PM visual distinction
+    // Native Time Picker Dialog
     if (showTimePicker) {
-        CustomTimePickerDialog(
-            currentTime = times[selectedTimeIndex],
-            onTimeSelected = { timeString ->
-                val newTimes = times.toMutableList()
-                newTimes[selectedTimeIndex] = timeString
-                times = newTimes
-                showTimePicker = false
-            },
-            onDismiss = { showTimePicker = false }
-        )
+        val context = LocalContext.current
+        
+        // Parse current time if available
+        val currentTime = times[selectedTimeIndex]
+        var hour: Int
+        var minute: Int
+        
+        if (currentTime.isNotBlank() && currentTime != "Select Time") {
+            try {
+                val timeParts = currentTime.split(" ")
+                val timeOnly = timeParts[0].split(":")
+                val ampm = timeParts[1]
+                
+                hour = if (ampm == "AM") {
+                    if (timeOnly[0].toInt() == 12) 0 else timeOnly[0].toInt()
+                } else {
+                    if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt() + 12
+                }
+                minute = timeOnly[1].toInt()
+            } catch (e: Exception) {
+                hour = 12
+                minute = 0
+            }
+        } else {
+            hour = 12
+            minute = 0
+        }
+        
+        // Use LaunchedEffect to show the time picker
+        LaunchedEffect(showTimePicker) {
+            if (showTimePicker) {
+                try {
+                    val timePickerDialog = TimePickerDialog(
+                        context,
+                        { _, selectedHour, selectedMinute ->
+                            val displayHour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
+                            val ampm = if (selectedHour < 12) "AM" else "PM"
+                            val timeString = String.format("%02d:%02d %s", displayHour, selectedMinute, ampm)
+                            
+                            val newTimes = times.toMutableList()
+                            newTimes[selectedTimeIndex] = timeString
+                            times = newTimes
+                            showTimePicker = false
+                        },
+                        hour,
+                        minute,
+                        false // 12-hour format
+                    )
+                    
+                    timePickerDialog.setTitle("Select Medication Time")
+                    timePickerDialog.show()
+                } catch (e: Exception) {
+                    // Fallback: just close the picker
+                    showTimePicker = false
+                }
+            }
+        }
     }
 
     // Custom Days Picker Dialog
@@ -368,169 +415,6 @@ fun AddPillModal(
     }
 }
 
-
-@Composable
-fun CustomTimePickerDialog(
-    currentTime: String,
-    onTimeSelected: (String) -> Unit,
-    onDismiss: () -> Unit
-) {
-    val context = LocalContext.current
-    
-    // Parse current time if available
-    var hour by remember { mutableStateOf(12) }
-    var minute by remember { mutableStateOf(0) }
-    var isAM by remember { mutableStateOf(true) }
-    
-    // Initialize with current time
-    LaunchedEffect(currentTime) {
-        if (currentTime.isNotBlank() && currentTime != "Select Time") {
-            try {
-                val timeParts = currentTime.split(" ")
-                val timeOnly = timeParts[0].split(":")
-                val ampm = timeParts[1]
-                
-                hour = if (ampm == "AM") {
-                    if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt()
-                } else {
-                    if (timeOnly[0].toInt() == 12) 12 else timeOnly[0].toInt()
-                }
-                minute = timeOnly[1].toInt()
-                isAM = ampm == "AM"
-            } catch (e: Exception) {
-                hour = 12
-                minute = 0
-                isAM = true
-            }
-        }
-    }
-    
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                // Title
-                Text(
-                    text = "Select Medication Time",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Gray800,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-                
-                // Time Display
-                Text(
-                    text = String.format("%02d:%02d %s", hour, minute, if (isAM) "AM" else "PM"),
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Blue600,
-                    modifier = Modifier.padding(bottom = 24.dp)
-                )
-                
-                // Time Picker using native TimePickerDialog
-                LaunchedEffect(Unit) {
-                    val timePickerDialog = TimePickerDialog(
-                        context,
-                        { _, selectedHour, selectedMinute ->
-                            hour = if (selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour
-                            minute = selectedMinute
-                            isAM = selectedHour < 12
-                        },
-                        if (isAM) hour else hour + 12,
-                        minute,
-                        false // 12-hour format
-                    )
-                    timePickerDialog.setTitle("Set Time")
-                    timePickerDialog.show()
-                }
-                
-                // AM/PM Selection Buttons
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 16.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    // AM Button
-                    Button(
-                        onClick = { isAM = true },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isAM) Blue600 else Gray200,
-                            contentColor = if (isAM) Color.White else Gray800
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "AM",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    
-                    Spacer(modifier = Modifier.width(16.dp))
-                    
-                    // PM Button
-                    Button(
-                        onClick = { isAM = false },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (!isAM) Blue600 else Gray200,
-                            contentColor = if (!isAM) Color.White else Gray800
-                        ),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Text(
-                            text = "PM",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Action Buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancel")
-                    }
-                    
-                    Button(
-                        onClick = {
-                            val timeString = String.format("%02d:%02d %s", hour, minute, if (isAM) "AM" else "PM")
-                            onTimeSelected(timeString)
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Blue600,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("OK")
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun CustomDaysPickerDialog(
