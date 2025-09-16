@@ -17,10 +17,14 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.core.content.FileProvider
@@ -720,6 +724,22 @@ fun ImageCaptureSection(
 ) {
     val context = LocalContext.current
     var imageUri by remember { mutableStateOf<Uri?>(null) }
+    var hasCameraPermission by remember { mutableStateOf(false) }
+    
+    // Check camera permission
+    LaunchedEffect(Unit) {
+        hasCameraPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.CAMERA
+        ) == PackageManager.PERMISSION_GRANTED
+    }
+    
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+    }
     
     // Create a temporary file for the image
     val imageFile = remember {
@@ -829,63 +849,67 @@ fun ImageCaptureSection(
             }
         } else {
             // Show camera and gallery options
-            Row(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 // Camera button
                 OutlinedButton(
                     onClick = {
-                        try {
-                            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                            val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                            
-                            // Ensure the file exists
-                            if (!photoFile.exists()) {
-                                photoFile.createNewFile()
+                        if (!hasCameraPermission) {
+                            permissionLauncher.launch(Manifest.permission.CAMERA)
+                        } else {
+                            try {
+                                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                                val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                                
+                                // Ensure the file exists
+                                if (!photoFile.exists()) {
+                                    photoFile.createNewFile()
+                                }
+                                
+                                imageUri = FileProvider.getUriForFile(
+                                    context,
+                                    "${context.packageName}.fileprovider",
+                                    photoFile
+                                )
+                                
+                                // Grant URI permissions
+                                context.grantUriPermission(
+                                    context.packageName,
+                                    imageUri,
+                                    android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+                                )
+                                
+                                cameraLauncher.launch(imageUri)
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                                // Fallback: try to launch camera without specific file
+                                cameraLauncher.launch(null)
                             }
-                            
-                            imageUri = FileProvider.getUriForFile(
-                                context,
-                                "${context.packageName}.fileprovider",
-                                photoFile
-                            )
-                            
-                            // Grant URI permissions
-                            context.grantUriPermission(
-                                context.packageName,
-                                imageUri,
-                                android.content.Intent.FLAG_GRANT_WRITE_URI_PERMISSION or android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
-                            )
-                            
-                            cameraLauncher.launch(imageUri)
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            // Fallback: try to launch camera without specific file
-                            cameraLauncher.launch(null)
                         }
                     },
                     modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
+                        .fillMaxWidth()
+                        .height(56.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Blue600
                     ),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.CameraAlt,
                             contentDescription = "Take photo",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Camera",
-                            fontSize = 12.sp,
+                            text = "Take Photo with Camera",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
@@ -897,26 +921,25 @@ fun ImageCaptureSection(
                         galleryLauncher.launch("image/*")
                     },
                     modifier = Modifier
-                        .weight(1f)
-                        .height(48.dp),
+                        .fillMaxWidth()
+                        .height(56.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Blue600
                     ),
-                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Icon(
                             imageVector = Icons.Default.PhotoLibrary,
                             contentDescription = "Select from gallery",
-                            modifier = Modifier.size(20.dp)
+                            modifier = Modifier.size(24.dp)
                         )
-                        Spacer(modifier = Modifier.height(2.dp))
                         Text(
-                            text = "Gallery",
-                            fontSize = 12.sp,
+                            text = "Select from Gallery",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Medium
                         )
                     }
