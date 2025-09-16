@@ -2,5 +2,6 @@
 <full-backup-content>
     <include domain="database" path="." />
     <include domain="sharedpref" path="." />
+    <include domain="file" path="." />
     <exclude domain="file" path="pill_images/" />
 </full-backup-content>
