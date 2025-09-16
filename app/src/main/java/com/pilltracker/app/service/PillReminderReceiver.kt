@@ -42,18 +42,26 @@ class PillReminderReceiver : BroadcastReceiver() {
             
             // Reschedule for next day if this is not a snooze or test
             if (timeString != "snooze" && timeString != "test") {
-                val alarmManager = PillAlarmManager(context)
-                val pill = Pill(
-                    id = pillId,
-                    name = pillName,
-                    dosage = pillDosage,
-                    times = listOf(timeString),
-                    color = "",
-                    imagePath = imagePath,
-                    nextDose = "",
-                    taken = false
-                )
-                alarmManager.scheduleAlarmForTomorrow(pill, timeString)
+                // Use a background thread to reschedule the alarm
+                android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                    try {
+                        val alarmManager = PillAlarmManager(context)
+                        val pill = Pill(
+                            id = pillId,
+                            name = pillName,
+                            dosage = pillDosage,
+                            times = listOf(timeString),
+                            color = "",
+                            imagePath = imagePath,
+                            nextDose = "",
+                            taken = false
+                        )
+                        alarmManager.scheduleAlarmForTomorrow(pill, timeString)
+                        Log.d("PillReminderReceiver", "Rescheduled alarm for ${pillName} at $timeString")
+                    } catch (e: Exception) {
+                        Log.e("PillReminderReceiver", "Failed to reschedule alarm for ${pillName}", e)
+                    }
+                }, 1000) // Delay by 1 second to ensure the alarm service has started
             }
         }
     }

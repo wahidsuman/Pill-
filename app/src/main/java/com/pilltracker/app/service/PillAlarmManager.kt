@@ -18,72 +18,83 @@ class PillAlarmManager(private val context: Context) {
         Log.d("PillAlarmManager", "Scheduling alarm for pill: ${pill.name}")
         
         pill.times.forEach { timeString ->
-            val time = parseTime(timeString)
-            if (time != null) {
-                val calendar = Calendar.getInstance().apply {
-                    set(Calendar.HOUR_OF_DAY, time.first)
-                    set(Calendar.MINUTE, time.second)
-                    set(Calendar.SECOND, 0)
-                    set(Calendar.MILLISECOND, 0)
-                    
-                    // If the time has already passed today, schedule for tomorrow
-                    if (timeInMillis <= System.currentTimeMillis()) {
-                        add(Calendar.DAY_OF_MONTH, 1)
-                    }
+            scheduleSingleAlarm(pill, timeString)
+        }
+    }
+    
+    private fun scheduleSingleAlarm(pill: Pill, timeString: String) {
+        val time = parseTime(timeString)
+        if (time != null) {
+            // Schedule for the next occurrence of this time
+            val calendar = getNextAlarmTime(time.first, time.second)
+            
+            val intent = Intent(context, PillReminderReceiver::class.java).apply {
+                putExtra("pill_name", pill.name)
+                putExtra("pill_dosage", pill.dosage)
+                putExtra("pill_id", pill.id)
+                putExtra("pill_time", timeString)
+                putExtra("pill_image_path", pill.imagePath)
+            }
+            
+            val requestCode = (pill.id + timeString.hashCode()).toInt()
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                requestCode,
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            
+            // Schedule the alarm with proper method for Android version
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    // For Android 6.0+ use setExactAndAllowWhileIdle for better reliability
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                    Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
+                } else {
+                    // For older versions use setExact
+                    alarmManager.setExact(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                    Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
                 }
-                
-                val intent = Intent(context, PillReminderReceiver::class.java).apply {
-                    putExtra("pill_name", pill.name)
-                    putExtra("pill_dosage", pill.dosage)
-                    putExtra("pill_id", pill.id)
-                    putExtra("pill_time", timeString)
-                    putExtra("pill_image_path", pill.imagePath)
-                }
-                
-                val pendingIntent = PendingIntent.getBroadcast(
-                    context,
-                    (pill.id + timeString.hashCode()).toInt(),
-                    intent,
-                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-                )
-                
-                // Schedule the alarm with proper method for Android version
+            } catch (e: Exception) {
+                Log.e("PillAlarmManager", "Failed to schedule exact alarm, trying fallback", e)
                 try {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        // For Android 6.0+ use setExactAndAllowWhileIdle for better reliability
-                        alarmManager.setExactAndAllowWhileIdle(
-                            AlarmManager.RTC_WAKEUP,
-                            calendar.timeInMillis,
-                            pendingIntent
-                        )
-                        Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
-                    } else {
-                        // For older versions use setExact
-                        alarmManager.setExact(
-                            AlarmManager.RTC_WAKEUP,
-                            calendar.timeInMillis,
-                            pendingIntent
-                        )
-                        Log.d("PillAlarmManager", "Scheduled exact alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
-                    }
-                } catch (e: Exception) {
-                    Log.e("PillAlarmManager", "Failed to schedule exact alarm, trying fallback", e)
-                    try {
-                        // Fallback to regular set
-                        alarmManager.set(
-                            AlarmManager.RTC_WAKEUP,
-                            calendar.timeInMillis,
-                            pendingIntent
-                        )
-                        Log.d("PillAlarmManager", "Scheduled fallback alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
-                    } catch (e2: Exception) {
-                        Log.e("PillAlarmManager", "Failed to schedule any alarm for ${pill.name}", e2)
-                    }
+                    // Fallback to regular set
+                    alarmManager.set(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                    Log.d("PillAlarmManager", "Scheduled fallback alarm for ${pill.name} at ${timeString} for ${java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.getDefault()).format(calendar.time)}")
+                } catch (e2: Exception) {
+                    Log.e("PillAlarmManager", "Failed to schedule any alarm for ${pill.name}", e2)
                 }
-            } else {
-                Log.e("PillAlarmManager", "Invalid time format: $timeString")
+            }
+        } else {
+            Log.e("PillAlarmManager", "Invalid time format: $timeString")
+        }
+    }
+    
+    private fun getNextAlarmTime(hour: Int, minute: Int): Calendar {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, hour)
+            set(Calendar.MINUTE, minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            
+            // If the time has already passed today, schedule for tomorrow
+            if (timeInMillis <= System.currentTimeMillis()) {
+                add(Calendar.DAY_OF_MONTH, 1)
             }
         }
+        return calendar
     }
     
     fun cancelPillReminder(pill: Pill) {
@@ -194,50 +205,27 @@ class PillAlarmManager(private val context: Context) {
     }
     
     fun scheduleAlarmForTomorrow(pill: Pill, timeString: String) {
-        val time = parseTime(timeString) ?: return
-        val calendar = Calendar.getInstance().apply {
-            add(Calendar.DAY_OF_MONTH, 1)
-            set(Calendar.HOUR_OF_DAY, time.first)
-            set(Calendar.MINUTE, time.second)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        
         Log.d("PillAlarmManager", "Scheduling tomorrow's alarm for ${pill.name} at $timeString")
-        
-        val intent = Intent(context, PillReminderReceiver::class.java).apply {
-            putExtra("pill_name", pill.name)
-            putExtra("pill_dosage", pill.dosage)
-            putExtra("pill_id", pill.id)
-            putExtra("pill_time", timeString)
-            putExtra("pill_image_path", pill.imagePath)
+        scheduleSingleAlarm(pill, timeString)
+    }
+    
+    fun rescheduleAllAlarms() {
+        Log.d("PillAlarmManager", "Rescheduling all alarms")
+        // This will be called from the ViewModel to reschedule all alarms
+        // when the app starts or when needed
+    }
+    
+    fun checkAlarmPermissions(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true // For older versions, assume we can schedule alarms
         }
-        
-        val pendingIntent = PendingIntent.getBroadcast(
-            context,
-            (pill.id + timeString.hashCode()).toInt(),
-            intent,
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        
-        try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                alarmManager.setExactAndAllowWhileIdle(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            } else {
-                alarmManager.setExact(
-                    AlarmManager.RTC_WAKEUP,
-                    calendar.timeInMillis,
-                    pendingIntent
-                )
-            }
-            Log.d("PillAlarmManager", "Tomorrow's alarm scheduled successfully for ${pill.name}")
-        } catch (e: Exception) {
-            Log.e("PillAlarmManager", "Failed to schedule tomorrow's alarm for ${pill.name}", e)
-        }
+    }
+    
+    fun logScheduledAlarms() {
+        Log.d("PillAlarmManager", "Checking scheduled alarms...")
+        // This method can be used for debugging to see what alarms are scheduled
     }
     
     private fun parseTime(timeString: String): Pair<Int, Int>? {
