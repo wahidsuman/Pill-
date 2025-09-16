@@ -70,7 +70,6 @@ class PillReminderPopupActivity : ComponentActivity() {
         // Get data from intent
         val pillName = intent.getStringExtra("pill_name") ?: "Medication"
         val pillDosage = intent.getStringExtra("pill_dosage") ?: ""
-        val pillId = intent.getLongExtra("pill_id", -1)
         val imagePath = intent.getStringExtra("pill_image_path") ?: ""
         
         // Initialize vibration
@@ -87,44 +86,14 @@ class PillReminderPopupActivity : ComponentActivity() {
         
         setContent {
             PillTrackerTheme {
-                val viewModel: PillViewModel = viewModel()
-                val alarmManager = PillAlarmManager(this)
-                
                 PillReminderPopup(
                     pillName = pillName,
                     pillDosage = pillDosage,
                     imagePath = imagePath,
                     onDismiss = { 
-                        // Snooze for 5 minutes
-                        alarmManager.snoozePillReminder(
-                            Pill(
-                                id = pillId,
-                                name = pillName,
-                                dosage = pillDosage,
-                                times = emptyList(),
-                                color = "",
-                                imagePath = imagePath,
-                                nextDose = "",
-                                taken = false
-                            ),
-                            5
-                        )
                         finish() 
                     },
                     onMarkTaken = { 
-                        // Mark pill as taken in database
-                        viewModel.markAsTaken(
-                            Pill(
-                                id = pillId,
-                                name = pillName,
-                                dosage = pillDosage,
-                                times = emptyList(),
-                                color = "",
-                                imagePath = imagePath,
-                                nextDose = "",
-                                taken = true
-                            )
-                        )
                         finish() 
                     }
                 )
