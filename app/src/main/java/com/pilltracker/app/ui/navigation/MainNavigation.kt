@@ -24,7 +24,7 @@ sealed class Screen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainNavigation() {
-    var selectedScreen by remember { mutableStateOf(Screen.Home) }
+    var selectedScreen by remember { mutableStateOf<Screen>(Screen.Home) }
     
     Scaffold(
         bottomBar = {
@@ -65,10 +65,10 @@ fun MainNavigation() {
                 .padding(paddingValues)
         ) {
             when (selectedScreen) {
-                is Screen.Home -> HomeScreen()
-                is Screen.Stats -> StatsScreen()
-                is Screen.Calendar -> CalendarScreen()
-                is Screen.Settings -> SettingsScreen()
+                Screen.Home -> HomeScreen()
+                Screen.Stats -> StatsScreen()
+                Screen.Calendar -> CalendarScreen()
+                Screen.Settings -> SettingsScreen()
             }
         }
     }
