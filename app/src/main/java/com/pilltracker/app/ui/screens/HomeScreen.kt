@@ -3,6 +3,8 @@ package com.pilltracker.app.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -31,7 +33,9 @@ fun HomeScreen(
     var showAddPillModal by remember { mutableStateOf(false) }
     
     Column(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
     ) {
         // Header (without add button)
         HomeHeader()
@@ -44,13 +48,12 @@ fun HomeScreen(
         
         // My medication segment
         MyMedicationSection(
+            pills = pills,
+            viewModel = viewModel,
             onAddPill = { 
                 viewModel?.showAddForm() ?: run { showAddPillModal = true }
             }
         )
-        
-        // All medications list
-        AllMedicationsSection(pills = pills, viewModel = viewModel)
     }
     
     // Add Pill Modal
@@ -143,15 +146,16 @@ fun StatBox(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.height(80.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
                 .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = value,
@@ -230,12 +234,7 @@ fun NextRemindersSection(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(upcomingPills) { pill ->
-                    PillCard(
-                        pill = pill,
-                        onMarkAsTaken = { viewModel?.markAsTaken(pill) },
-                        onEditPill = { viewModel?.showEditForm(pill) },
-                        onDeletePill = { viewModel?.deletePill(pill) }
-                    )
+                    SimpleReminderCard(pill = pill)
                 }
             }
         }
@@ -243,7 +242,39 @@ fun NextRemindersSection(
 }
 
 @Composable
+fun SimpleReminderCard(pill: Pill) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = pill.name,
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = Gray800,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = pill.nextDose,
+                fontSize = 14.sp,
+                color = Blue600,
+                fontWeight = FontWeight.Medium
+            )
+        }
+    }
+}
+
+@Composable
 fun MyMedicationSection(
+    pills: List<Pill>,
+    viewModel: PillViewModel? = null,
     onAddPill: () -> Unit
 ) {
     Column(
@@ -274,24 +305,8 @@ fun MyMedicationSection(
                 )
             }
         }
-    }
-}
-
-@Composable
-fun AllMedicationsSection(
-    pills: List<Pill>,
-    viewModel: PillViewModel? = null
-) {
-    Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-    ) {
-        Text(
-            text = "All Medications",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Gray800,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
+        
+        Spacer(modifier = Modifier.height(12.dp))
         
         if (pills.isEmpty()) {
             Card(
@@ -343,6 +358,7 @@ fun AllMedicationsSection(
         }
     }
 }
+
 
 
 
