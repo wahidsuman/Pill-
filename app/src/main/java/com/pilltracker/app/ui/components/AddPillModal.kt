@@ -320,35 +320,12 @@ fun AddPillModal(
                                     )
                                 } else {
                                     // Convert 24-hour format to 12-hour format for display
-                                    try {
-                                        val timeParts = time.split(":")
-                                        if (timeParts.size == 2) {
-                                            val hour = timeParts[0].toInt()
-                                            val minute = timeParts[1].toInt()
-                                            
-                                            val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-                                            val ampm = if (hour < 12) "AM" else "PM"
-                                            val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
-                                            
-                                            Text(
-                                                text = displayTime,
-                                                color = Color.Black,
-                                                fontSize = 16.sp
-                                            )
-                                        } else {
-                                            Text(
-                                                text = "Invalid Time",
-                                                color = Red500,
-                                                fontSize = 16.sp
-                                            )
-                                        }
-                                    } catch (e: Exception) {
-                                        Text(
-                                            text = "Invalid Time",
-                                            color = Red500,
-                                            fontSize = 16.sp
-                                        )
-                                    }
+                                    val displayTime = parseTimeForDisplay(time)
+                                    Text(
+                                        text = displayTime.first,
+                                        color = displayTime.second,
+                                        fontSize = 16.sp
+                                    )
                                 }
                             }
                         }
@@ -972,5 +949,26 @@ fun CustomDaysPickerDialog(
                 }
             }
         }
+    }
+}
+
+// Helper function to parse time for display
+private fun parseTimeForDisplay(time: String): Pair<String, Color> {
+    return try {
+        val timeParts = time.split(":")
+        if (timeParts.size == 2) {
+            val hour = timeParts[0].toInt()
+            val minute = timeParts[1].toInt()
+            
+            val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+            val ampm = if (hour < 12) "AM" else "PM"
+            val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
+            
+            Pair(displayTime, Color.Black)
+        } else {
+            Pair("Invalid Time", Red500)
+        }
+    } catch (e: Exception) {
+        Pair("Invalid Time", Red500)
     }
 }
