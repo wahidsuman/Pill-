@@ -429,39 +429,40 @@ fun AddPillModal(
 
 
     if (showTimePicker) {
+        val context = LocalContext.current
         val currentTime24 = times.getOrElse(selectedTimeIndex) { "" }
-        val displayTime = if (currentTime24.isNotBlank()) {
+        
+        // Parse current time or default to 12:00
+        val calendar = Calendar.getInstance()
+        if (currentTime24.isNotBlank()) {
             try {
                 val inputFormat = SimpleDateFormat("HH:mm", Locale.US)
-                val outputFormat = SimpleDateFormat("hh:mm a", Locale.US)
                 val date = inputFormat.parse(currentTime24)
-                outputFormat.format(date!!)
+                calendar.time = date!!
             } catch (e: Exception) {
-                "" // Default if parsing fails
+                calendar.set(Calendar.HOUR_OF_DAY, 12)
+                calendar.set(Calendar.MINUTE, 0)
             }
         } else {
-            ""
+            calendar.set(Calendar.HOUR_OF_DAY, 12)
+            calendar.set(Calendar.MINUTE, 0)
         }
 
-        CustomTimePickerDialog(
-            onDismiss = { showTimePicker = false },
-            onTimeSelected = { timeString12hr ->
-                try {
-                    val inputFormat = SimpleDateFormat("hh:mm a", Locale.US)
-                    val outputFormat = SimpleDateFormat("HH:mm", Locale.US)
-                    val date = inputFormat.parse(timeString12hr)
-                    val formattedTime24hr = outputFormat.format(date!!)
-
+        LaunchedEffect(showTimePicker) {
+            val timePickerDialog = TimePickerDialog(
+                context,
+                { _, hourOfDay, minute ->
                     val newTimes = times.toMutableList()
-                    newTimes[selectedTimeIndex] = formattedTime24hr
+                    newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
                     times = newTimes
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                }
-                showTimePicker = false
-            },
-            currentTime = displayTime
-        )
+                    showTimePicker = false
+                },
+                calendar.get(Calendar.HOUR_OF_DAY),
+                calendar.get(Calendar.MINUTE),
+                false // 24-hour format
+            )
+            timePickerDialog.show()
+        }
     }
 
     // Custom Days Picker Dialog
@@ -478,70 +479,6 @@ fun AddPillModal(
 }
 
 
-@Composable
-fun ScrollablePicker(
-    items: List<String>,
-    state: LazyListState,
-    isInfinite: Boolean,
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .height(120.dp)
-            .width(80.dp),
-        contentAlignment = Alignment.Center
-    ) {
-        LazyColumn(
-            state = state,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (isInfinite) {
-                val itemCount = Int.MAX_VALUE
-                items(itemCount) { index ->
-                    val actualIndex = index % items.size
-                    Text(
-                        text = items[actualIndex],
-                        fontSize = 20.sp,
-                        color = Color.White,
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .height(28.dp)
-                            .fillMaxWidth()
-                            .wrapContentHeight(Alignment.CenterVertically)
-                    )
-                }
-            } else {
-                // For AM/PM: limited scrolling with repetitions for smooth stepping
-                val itemCount = items.size * 1000
-                items(itemCount) { index ->
-                    val actualIndex = index % items.size
-                    Text(
-                        text = items[actualIndex],
-                        fontSize = 20.sp,
-                        color = Color.White,
-                        modifier = Modifier
-                            .padding(vertical = 4.dp)
-                            .height(28.dp)
-                            .fillMaxWidth()
-                            .wrapContentHeight(Alignment.CenterVertically)
-                    )
-                }
-            }
-        }
-        
-        // Selection indicator (ladder effect)
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(28.dp)
-                .background(
-                    Color.White.copy(alpha = 0.2f),
-                    RoundedCornerShape(8.dp)
-                )
-        )
-    }
-}
 
 @Composable
 fun CustomDaysPickerDialog(
@@ -999,8 +936,7 @@ fun ImageCaptureSection(
     }
 }
 
-@Composable
-fun CustomTimePickerDialog(
+// Removed CustomTimePickerDialog - using native Android TimePickerDialog instead
     onDismiss: () -> Unit,
     onTimeSelected: (String) -> Unit,
     currentTime: String
