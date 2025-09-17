@@ -33,15 +33,24 @@ fun HomeScreen(
     Column(
         modifier = Modifier.fillMaxSize()
     ) {
-        // Header with greeting and add button
-        HomeHeader(
+        // Header (without add button)
+        HomeHeader()
+        
+        // Stats boxes
+        StatsBoxesSection(pills = pills)
+        
+        // Next reminders segment
+        NextRemindersSection(pills = pills, viewModel = viewModel)
+        
+        // My medication segment
+        MyMedicationSection(
             onAddPill = { 
                 viewModel?.showAddForm() ?: run { showAddPillModal = true }
             }
         )
         
-        // Today's medications
-        TodayMedicationsSection(pills = pills, viewModel = viewModel)
+        // All medications list
+        AllMedicationsSection(pills = pills, viewModel = viewModel)
     }
     
     // Add Pill Modal
@@ -61,7 +70,7 @@ fun HomeScreen(
 }
 
 @Composable
-fun HomeHeader(onAddPill: () -> Unit) {
+fun HomeHeader() {
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -72,41 +81,168 @@ fun HomeHeader(onAddPill: () -> Unit) {
         Column(
             modifier = Modifier.padding(20.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
-                    Text(
-                        text = "Pill Reminder",
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                    Text(
-                        text = "Never forget your Medicines",
-                        fontSize = 16.sp,
-                        color = Color.White.copy(alpha = 0.9f)
-                    )
-                    Text(
-                        text = getCurrentDateTime(),
-                        fontSize = 14.sp,
-                        color = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
+            Text(
+                text = "Pill Reminder",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = "Never forget your Medicines",
+                fontSize = 16.sp,
+                color = Color.White.copy(alpha = 0.9f)
+            )
+            Text(
+                text = getCurrentDateTime(),
+                fontSize = 14.sp,
+                color = Color.White.copy(alpha = 0.8f),
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+fun StatsBoxesSection(pills: List<Pill>) {
+    val takenToday = pills.count { it.taken }
+    val totalToday = pills.size
+    val pendingToday = totalToday - takenToday
+    
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        StatBox(
+            title = "Taken Today",
+            value = takenToday.toString(),
+            icon = Icons.Default.CheckCircle,
+            color = Green600,
+            modifier = Modifier.weight(1f)
+        )
+        StatBox(
+            title = "Pending",
+            value = pendingToday.toString(),
+            icon = Icons.Default.Schedule,
+            color = Orange600,
+            modifier = Modifier.weight(1f)
+        )
+        StatBox(
+            title = "Total",
+            value = totalToday.toString(),
+            icon = Icons.Default.Medication,
+            color = Blue600,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
+fun StatBox(
+    title: String,
+    value: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = title,
+                tint = color,
+                modifier = Modifier.size(24.dp)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = value,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold,
+                color = Gray800
+            )
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                color = Gray600,
+                textAlign = TextAlign.Center
+            )
+        }
+    }
+}
+
+@Composable
+fun NextRemindersSection(
+    pills: List<Pill>,
+    viewModel: PillViewModel? = null
+) {
+    val upcomingPills = pills.filter { !it.taken }.take(3)
+    
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Next Reminders",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Gray800
+            )
+            if (pills.filter { !it.taken }.size > 3) {
+                TextButton(onClick = { /* Navigate to see all reminders */ }) {
+                    Text("See More")
                 }
-                
-                FloatingActionButton(
-                    onClick = onAddPill,
-                    modifier = Modifier.size(56.dp),
-                    containerColor = Color.White,
-                    contentColor = Blue600
+            }
+        }
+        
+        if (upcomingPills.isEmpty()) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Gray50),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Medication",
-                        modifier = Modifier.size(24.dp)
+                        imageVector = Icons.Default.Notifications,
+                        contentDescription = null,
+                        tint = Gray400,
+                        modifier = Modifier.size(32.dp)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = "No upcoming reminders",
+                        fontSize = 14.sp,
+                        color = Gray600,
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(upcomingPills) { pill ->
+                    PillCard(
+                        pill = pill,
+                        onMarkAsTaken = { viewModel?.markAsTaken(pill) },
+                        onEditPill = { viewModel?.showEditForm(pill) },
+                        onDeletePill = { viewModel?.deletePill(pill) }
                     )
                 }
             }
@@ -115,16 +251,74 @@ fun HomeHeader(onAddPill: () -> Unit) {
 }
 
 @Composable
-fun TodayMedicationsSection(
+fun MyMedicationSection(
+    onAddPill: () -> Unit
+) {
+    Column(
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = "My Medication",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Bold,
+            color = Gray800,
+            modifier = Modifier.padding(bottom = 12.dp)
+        )
+        
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Blue50),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                FloatingActionButton(
+                    onClick = onAddPill,
+                    modifier = Modifier.size(64.dp),
+                    containerColor = Blue600,
+                    contentColor = Color.White
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Add,
+                        contentDescription = "Add Medication",
+                        modifier = Modifier.size(32.dp)
+                    )
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = "Add New Medication",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Blue600,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Tap to add your first medication",
+                    fontSize = 12.sp,
+                    color = Gray600,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun AllMedicationsSection(
     pills: List<Pill>,
     viewModel: PillViewModel? = null
 ) {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp)
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
-            text = "Today's Medications",
-            fontSize = 20.sp,
+            text = "All Medications",
+            fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = Gray800,
             modifier = Modifier.padding(bottom = 12.dp)
@@ -156,7 +350,7 @@ fun TodayMedicationsSection(
                         textAlign = TextAlign.Center
                     )
                     Text(
-                        text = "Tap the + button to add your first medication",
+                        text = "Add your first medication using the + button above",
                         fontSize = 14.sp,
                         color = Gray600,
                         textAlign = TextAlign.Center,
@@ -180,6 +374,7 @@ fun TodayMedicationsSection(
         }
     }
 }
+
 
 
 private fun getCurrentDateTime(): String {
