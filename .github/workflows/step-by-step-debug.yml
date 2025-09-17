@@ -33,7 +33,7 @@ jobs:
         java -version
         
     - name: Step 6 - Setup Android SDK
-      uses: android-actions/setup-android@v4
+      uses: android-actions/setup-android@v3.2.2
       with:
         api-level: 34
         build-tools: 34.0.0
