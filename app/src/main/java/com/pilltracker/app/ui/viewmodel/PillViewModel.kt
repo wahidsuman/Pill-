@@ -47,26 +47,46 @@ class PillViewModel @Inject constructor(
 
     private fun loadPills() {
         viewModelScope.launch {
-            repository.getAllPills().collect { pillsList ->
-                _pills.value = pillsList
+            try {
+                repository.getAllPills().collect { pillsList ->
+                    _pills.value = pillsList
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error loading pills: ${e.message}", e)
+                _pills.value = emptyList()
             }
         }
 
         viewModelScope.launch {
-            repository.getUpcomingPills().collect { upcomingList ->
-                _upcomingPills.value = upcomingList
+            try {
+                repository.getUpcomingPills().collect { upcomingList ->
+                    _upcomingPills.value = upcomingList
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error loading upcoming pills: ${e.message}", e)
+                _upcomingPills.value = emptyList()
             }
         }
 
         viewModelScope.launch {
-            repository.getTakenCount().collect { count ->
-                _takenCount.value = count
+            try {
+                repository.getTakenCount().collect { count ->
+                    _takenCount.value = count
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error loading taken count: ${e.message}", e)
+                _takenCount.value = 0
             }
         }
 
         viewModelScope.launch {
-            repository.getPendingCount().collect { count ->
-                _pendingCount.value = count
+            try {
+                repository.getPendingCount().collect { count ->
+                    _pendingCount.value = count
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error loading pending count: ${e.message}", e)
+                _pendingCount.value = 0
             }
         }
     }

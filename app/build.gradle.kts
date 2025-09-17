@@ -81,9 +81,6 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     ksp("com.google.dagger:hilt-compiler:2.48")
     
-    // Date/Time
-    implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
-    
     // Gson for JSON serialization
     implementation("com.google.code.gson:gson:2.10.1")
     

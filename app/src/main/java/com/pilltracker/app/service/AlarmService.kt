@@ -294,7 +294,7 @@ class AlarmService : Service() {
         )
         
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("🔔 Pill Reminder Alarm")
             .setContentText("Time to take: $pillName ($pillDosage)")
             .setPriority(NotificationCompat.PRIORITY_MAX)
