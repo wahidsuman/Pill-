@@ -539,34 +539,29 @@ fun ImageCaptureSection(
         }
     }
 
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-
-    // Camera launcher
+    // Simplified camera launcher - let Android handle the file creation
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        println("Camera result: success=$success, imageUri=$imageUri")
-        if (success && imageUri != null) {
+        println("Camera result: success=$success")
+        if (success) {
+            // The image is already saved by TakePicture contract
+            // We just need to find the latest image file
             try {
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val photoFile = File(imageFile, "pill_camera_${timestamp}.jpg")
-                context.contentResolver.openInputStream(imageUri!!)?.use { inputStream ->
-                    photoFile.outputStream().use { outputStream ->
-                        inputStream.copyTo(outputStream)
-                    }
-                }
-                if (photoFile.exists() && photoFile.length() > 0) {
-                    println("Image saved successfully: ${photoFile.absolutePath}")
-                    onImageCaptured(photoFile.absolutePath)
-                } else {
-                    println("Failed to save image: file doesn't exist or is empty")
+                val imageFiles = imageFile.listFiles { file ->
+                    file.name.startsWith("pill_") && file.name.endsWith(".jpg")
+                }?.sortedByDescending { it.lastModified() }
+                
+                imageFiles?.firstOrNull()?.let { latestFile ->
+                    println("Image captured: ${latestFile.absolutePath}")
+                    onImageCaptured(latestFile.absolutePath)
                 }
             } catch (e: Exception) {
-                println("Error saving image: ${e.message}")
+                println("Error finding captured image: ${e.message}")
                 e.printStackTrace()
             }
         } else {
-            println("Camera failed or imageUri is null")
+            println("Camera capture failed")
         }
     }
 
@@ -577,21 +572,27 @@ fun ImageCaptureSection(
         hasCameraPermission = isGranted
         println("Camera permission granted: $isGranted")
         if (isGranted) {
-            try {
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                photoFile.createNewFile()
-                imageUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    photoFile
-                )
-                println("Created imageUri: $imageUri")
-                cameraLauncher.launch(imageUri)
-            } catch (e: Exception) {
-                println("Error opening camera: ${e.message}")
-                e.printStackTrace()
-            }
+            launchCamera()
+        }
+    }
+
+    // Function to launch camera
+    fun launchCamera() {
+        try {
+            val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+            val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+            photoFile.createNewFile()
+            
+            val imageUri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                photoFile
+            )
+            println("Launching camera with URI: $imageUri")
+            cameraLauncher.launch(imageUri)
+        } catch (e: Exception) {
+            println("Error launching camera: ${e.message}")
+            e.printStackTrace()
         }
     }
 
@@ -663,22 +664,8 @@ fun ImageCaptureSection(
                     println("Requesting camera permission...")
                     permissionLauncher.launch(Manifest.permission.CAMERA)
                 } else {
-                    try {
-                        println("Opening camera...")
-                        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                        val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                        photoFile.createNewFile()
-                        imageUri = FileProvider.getUriForFile(
-                            context,
-                            "${context.packageName}.fileprovider",
-                            photoFile
-                        )
-                        println("Created imageUri: $imageUri")
-                        cameraLauncher.launch(imageUri)
-                    } catch (e: Exception) {
-                        println("Error opening camera: ${e.message}")
-                        e.printStackTrace()
-                    }
+                    println("Opening camera...")
+                    launchCamera()
                 }
             },
             modifier = Modifier
