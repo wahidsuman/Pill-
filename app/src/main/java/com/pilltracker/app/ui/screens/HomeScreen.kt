@@ -147,7 +147,7 @@ fun StatBox(
 ) {
     Card(
         modifier = modifier.height(100.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Gray800),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -167,7 +167,7 @@ fun StatBox(
             Text(
                 text = title,
                 fontSize = 11.sp,
-                color = Gray600,
+                color = Color.White,
                 textAlign = TextAlign.Center,
                 maxLines = 2,
                 lineHeight = 12.sp
@@ -195,7 +195,7 @@ fun NextRemindersSection(
                 text = "Next Reminders",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.White
             )
             if (pills.filter { !it.taken }.size > 3) {
                 TextButton(onClick = { /* Navigate to see all reminders */ }) {
@@ -211,7 +211,7 @@ fun NextRemindersSection(
         if (upcomingPills.isEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Gray50),
+                colors = CardDefaults.cardColors(containerColor = Gray800),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -230,7 +230,7 @@ fun NextRemindersSection(
                     Text(
                         text = "No upcoming reminders",
                         fontSize = 14.sp,
-                        color = Gray700,
+                        color = Color.White,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -251,7 +251,7 @@ fun NextRemindersSection(
 fun SimpleReminderCard(pill: Pill) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
+        colors = CardDefaults.cardColors(containerColor = Gray800),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -264,7 +264,7 @@ fun SimpleReminderCard(pill: Pill) {
                 text = pill.name,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium,
-                color = Gray800,
+                color = Color.White,
                 modifier = Modifier.weight(1f)
             )
             Text(
@@ -295,7 +295,7 @@ fun MyMedicationSection(
                 text = "My Medication",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black
+                color = Color.White
             )
             
             FloatingActionButton(
@@ -317,7 +317,7 @@ fun MyMedicationSection(
         if (pills.isEmpty()) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Gray50),
+                colors = CardDefaults.cardColors(containerColor = Gray800),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
@@ -336,13 +336,13 @@ fun MyMedicationSection(
                     Text(
                         text = "No medications added yet",
                         fontSize = 16.sp,
-                        color = Gray700,
+                        color = Color.White,
                         textAlign = TextAlign.Center
                     )
                     Text(
                         text = "Add your first medication using the + button above",
                         fontSize = 14.sp,
-                        color = Gray700,
+                        color = Color.White,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 4.dp)
                     )
