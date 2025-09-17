@@ -67,7 +67,6 @@ jobs:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           serviceCredentialsFile: service-account-key.json
           file: ${{ steps.find_apk.outputs.apk }}
-          groups: testers
           debug: true
           releaseNotes: |
             🚀 New build from commit ${{ github.sha }}
