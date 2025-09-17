@@ -48,13 +48,21 @@ jobs:
         run: |
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
 
+      - name: Debug Firebase Configuration
+        if: success()
+        run: |
+          echo "Firebase App ID: ${{ secrets.FIREBASE_APP_ID }}"
+          echo "Tester Emails: ${{ secrets.TESTER_EMAILS }}"
+          echo "Firebase Token exists: ${{ secrets.FIREBASE_TOKEN != '' }}"
+          echo "Google Services JSON exists: ${{ secrets.GOOGLE_SERVICES_JSON != '' }}"
+
       - name: Distribute to Firebase App Distribution
         if: success()
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
           token: ${{ secrets.FIREBASE_TOKEN }}
-          groups: testers
+          testers: ${{ secrets.TESTER_EMAILS }}
           file: ${{ steps.find_apk.outputs.apk }}
           releaseNotes: |
             🚀 New build from commit ${{ github.sha }}
