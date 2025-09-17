@@ -494,15 +494,29 @@ fun ScrollablePicker(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            val itemCount = if (isInfinite) Int.MAX_VALUE else items.size
-            items(itemCount) { index ->
-                val actualIndex = if (isInfinite) index % items.size else index
-                Text(
-                    text = items[actualIndex],
-                    fontSize = 20.sp,
-                    color = Color.White,
-                    modifier = Modifier.padding(vertical = 4.dp)
-                )
+            if (isInfinite) {
+                val itemCount = Int.MAX_VALUE
+                items(itemCount) { index ->
+                    val actualIndex = index % items.size
+                    Text(
+                        text = items[actualIndex],
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            } else {
+                // For non-infinite scrolling, create enough items to allow smooth scrolling
+                val itemCount = items.size * 1000 // Create 1000 repetitions for smooth scrolling
+                items(itemCount) { index ->
+                    val actualIndex = index % items.size
+                    Text(
+                        text = items[actualIndex],
+                        fontSize = 20.sp,
+                        color = Color.White,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
             }
         }
         Box(
@@ -968,7 +982,7 @@ fun CustomTimePickerDialog(
 
                 val hourState = rememberLazyListState(initialFirstVisibleItemIndex = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % 12) + (if (selectedHour == 0 || selectedHour == 12) 11 else (selectedHour % 12) - 1))
                 val minuteState = rememberLazyListState(initialFirstVisibleItemIndex = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % 60) + selectedMinute)
-                val ampmState = rememberLazyListState(initialFirstVisibleItemIndex = if (selectedAmPm == "AM") 0 else 1)
+                val ampmState = rememberLazyListState(initialFirstVisibleItemIndex = (1000 * 2 / 2) + if (selectedAmPm == "AM") 0 else 1)
 
 
                 if (isKeyboardInput) {
