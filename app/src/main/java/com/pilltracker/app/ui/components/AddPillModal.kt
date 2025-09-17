@@ -34,6 +34,8 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import android.net.Uri
+import android.provider.MediaStore
+import android.graphics.Bitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import android.graphics.BitmapFactory
 import androidx.compose.material3.*
@@ -708,6 +710,7 @@ fun ImageCaptureSection(
     val context = LocalContext.current
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var hasCameraPermission by remember { mutableStateOf(false) }
+    var requestPreviewFallback by remember { mutableStateOf(false) }
     
     // Check camera permission
     LaunchedEffect(Unit) {
@@ -754,7 +757,35 @@ fun ImageCaptureSection(
             }
         } else {
             println("Camera failed or imageUri is null")
+            // Fallback to preview capture if available
+            requestPreviewFallback = true
         }
+    }
+
+    val cameraPreviewLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap ->
+        if (bitmap != null) {
+            try {
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val photoFile = File(imageFile, "pill_camera_preview_${timestamp}.jpg")
+                photoFile.outputStream().use { out ->
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
+                }
+                if (photoFile.exists() && photoFile.length() > 0) {
+                    println("Preview image saved successfully: ${photoFile.absolutePath}")
+                    onImageCaptured(photoFile.absolutePath)
+                } else {
+                    println("Failed to save preview image")
+                }
+            } catch (e: Exception) {
+                println("Error saving preview image: ${e.message}")
+                e.printStackTrace()
+            }
+        } else {
+            println("Preview capture returned null bitmap")
+        }
+        requestPreviewFallback = false
     }
     
     // Permission launcher
@@ -777,7 +808,14 @@ fun ImageCaptureSection(
                     photoFile
                 )
                 
-                cameraLauncher.launch(imageUri)
+                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                val canHandle = cameraIntent.resolveActivity(context.packageManager) != null
+                if (canHandle) {
+                    cameraLauncher.launch(imageUri)
+                } else {
+                    // No camera app, fallback to preview
+                    cameraPreviewLauncher.launch(null)
+                }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -901,7 +939,14 @@ fun ImageCaptureSection(
                                 )
                                 
                                 println("Created imageUri: $imageUri")
-                                cameraLauncher.launch(imageUri)
+                                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+                                val canHandle = cameraIntent.resolveActivity(context.packageManager) != null
+                                if (canHandle) {
+                                    cameraLauncher.launch(imageUri)
+                                } else {
+                                    // Fallback to preview
+                                    cameraPreviewLauncher.launch(null)
+                                }
                             } catch (e: Exception) {
                                 println("Error opening camera: ${e.message}")
                                 e.printStackTrace()
