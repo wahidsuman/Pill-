@@ -431,7 +431,13 @@ fun AppPreferencesDialog(
     var timeFormat by remember { mutableStateOf("12 Hour") }
     var firstDayOfWeek by remember { mutableStateOf("Sunday") }
     
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(
+            dismissOnBackPress = true,
+            dismissOnClickOutside = true
+        )
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
