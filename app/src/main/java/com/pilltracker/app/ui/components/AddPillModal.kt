@@ -532,9 +532,9 @@ fun ImageCaptureSection(
         )
     }
 
-    // Create image file directory
+    // Create image file directory - use internal storage for FileProvider compatibility
     val imageFile = remember {
-        File(context.getExternalFilesDir(null), "images").apply {
+        File(context.filesDir, "pill_images").apply {
             if (!exists()) mkdirs()
         }
     }
@@ -568,17 +568,30 @@ fun ImageCaptureSection(
     // Function to launch camera
     val launchCamera: () -> Unit = {
         try {
+            println("=== CAMERA LAUNCH DEBUG ===")
+            println("Image directory: ${imageFile.absolutePath}")
+            println("Directory exists: ${imageFile.exists()}")
+            println("Directory writable: ${imageFile.canWrite()}")
+            
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-            photoFile.createNewFile()
+            println("Photo file path: ${photoFile.absolutePath}")
+            
+            val created = photoFile.createNewFile()
+            println("File created: $created")
+            println("File exists: ${photoFile.exists()}")
             
             val imageUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 photoFile
             )
-            println("Launching camera with URI: $imageUri")
+            println("Generated URI: $imageUri")
+            println("Package name: ${context.packageName}")
+            
+            println("Launching camera...")
             cameraLauncher.launch(imageUri)
+            println("Camera launch called")
         } catch (e: Exception) {
             println("Error launching camera: ${e.message}")
             e.printStackTrace()
@@ -659,12 +672,16 @@ fun ImageCaptureSection(
         // Camera button
         OutlinedButton(
             onClick = {
-                println("Camera button clicked. hasCameraPermission: $hasCameraPermission")
+                println("=== CAMERA BUTTON CLICKED ===")
+                println("hasCameraPermission: $hasCameraPermission")
+                println("Context: $context")
+                println("Image directory: ${imageFile.absolutePath}")
+                
                 if (!hasCameraPermission) {
                     println("Requesting camera permission...")
                     permissionLauncher.launch(Manifest.permission.CAMERA)
                 } else {
-                    println("Opening camera...")
+                    println("Opening camera directly...")
                     launchCamera()
                 }
             },
