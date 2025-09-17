@@ -48,6 +48,11 @@ jobs:
         run: |
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
 
+      - name: Create service account key
+        if: success()
+        run: |
+          echo '${{ secrets.FIREBASE_TOKEN }}' > service-account-key.json
+
       - name: Debug Firebase Configuration
         if: success()
         run: |
@@ -60,7 +65,7 @@ jobs:
         uses: wzieba/Firebase-Distribution-Github-Action@v1
         with:
           appId: ${{ secrets.FIREBASE_APP_ID }}
-          token: ${{ secrets.FIREBASE_TOKEN }}
+          serviceCredentialsFile: service-account-key.json
           file: ${{ steps.find_apk.outputs.apk }}
           releaseNotes: |
             🚀 New build from commit ${{ github.sha }}
