@@ -427,7 +427,7 @@ fun AddPillModal(
         }
     }
 
-
+    // Native Android TimePickerDialog
     if (showTimePicker) {
         val context = LocalContext.current
         val currentTime24 = times.getOrElse(selectedTimeIndex) { "" }
@@ -478,163 +478,41 @@ fun AddPillModal(
     }
 }
 
-
-
-@Composable
-fun CustomDaysPickerDialog(
-    onDismiss: () -> Unit,
-    onDaysSelected: (List<String>) -> Unit,
-    selectedDays: List<String>
-) {
-    var tempSelectedDays by remember { mutableStateOf(selectedDays.toSet()) }
-    
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp)
-            ) {
-                Text(
-                    text = "Select Days",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Gray800
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                val daysOfWeek = listOf(
-                    "Monday" to "Mon",
-                    "Tuesday" to "Tue", 
-                    "Wednesday" to "Wed",
-                    "Thursday" to "Thu",
-                    "Friday" to "Fri",
-                    "Saturday" to "Sat",
-                    "Sunday" to "Sun"
-                )
-
-                daysOfWeek.forEach { (fullDay, _) ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable {
-                                tempSelectedDays = if (tempSelectedDays.contains(fullDay)) {
-                                    tempSelectedDays - fullDay
-                                } else {
-                                    tempSelectedDays + fullDay
-                                }
-                            }
-                            .padding(vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = fullDay,
-                            fontSize = 16.sp,
-                            color = Gray800
-                        )
-                        
-                        Checkbox(
-                            checked = tempSelectedDays.contains(fullDay),
-                            onCheckedChange = { isChecked ->
-                                tempSelectedDays = if (isChecked) {
-                                    tempSelectedDays + fullDay
-                                } else {
-                                    tempSelectedDays - fullDay
-                                }
-                            },
-                            colors = CheckboxDefaults.colors(
-                                checkedColor = Blue600,
-                                uncheckedColor = Gray400
-                            )
-                        )
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancel")
-                    }
-                    
-                    Button(
-                        onClick = {
-                            onDaysSelected(tempSelectedDays.toList())
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = tempSelectedDays.isNotEmpty(),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Blue600,
-                            contentColor = Color.White,
-                            disabledContainerColor = Gray200,
-                            disabledContentColor = Gray600
-                        )
-                    ) {
-                        Text(
-                            "Done",
-                            fontWeight = FontWeight.SemiBold
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
 @Composable
 fun ColorOption(
     color: String,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
-    val colorValue = when (color.lowercase()) {
-        "blue" -> Blue500
+    val colorValue = when (color) {
+        "blue" -> Blue600
         "red" -> Red500
-        "green" -> Green500
-        "orange" -> Orange500
-        "purple" -> Purple500
-        else -> Blue500
+        "green" -> Green600
+        "orange" -> Orange600
+        "purple" -> Purple600
+        else -> Blue600
     }
 
-    Card(
+    Box(
         modifier = Modifier
             .size(40.dp)
+            .clip(CircleShape)
+            .background(colorValue)
+            .border(
+                width = if (isSelected) 3.dp else 0.dp,
+                color = if (isSelected) Color.White else Color.Transparent,
+                shape = CircleShape
+            )
             .clickable { onClick() },
-        colors = CardDefaults.cardColors(containerColor = colorValue),
-        shape = RoundedCornerShape(8.dp),
-        border = if (isSelected) {
-            BorderStroke(3.dp, Color.White)
-        } else null,
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = if (isSelected) 8.dp else 2.dp
-        )
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            if (isSelected) {
-                Icon(
-                    imageVector = Icons.Default.Check,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
+        if (isSelected) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = "Selected",
+                tint = Color.White,
+                modifier = Modifier.size(20.dp)
+            )
         }
     }
 }
@@ -645,42 +523,38 @@ fun ImageCaptureSection(
     onImageCaptured: (String) -> Unit
 ) {
     val context = LocalContext.current
-    var imageUri by remember { mutableStateOf<Uri?>(null) }
-    var hasCameraPermission by remember { mutableStateOf(false) }
-    
-    // Check camera permission
-    LaunchedEffect(Unit) {
-        hasCameraPermission = ContextCompat.checkSelfPermission(
-            context,
-            Manifest.permission.CAMERA
-        ) == PackageManager.PERMISSION_GRANTED
+    var hasCameraPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED
+        )
     }
-    
-    // Create a temporary file for the image
+
+    // Create image file directory
     val imageFile = remember {
-        File(context.filesDir, "pill_images").apply {
+        File(context.getExternalFilesDir(null), "images").apply {
             if (!exists()) mkdirs()
         }
     }
-    
+
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Camera launcher
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         println("Camera result: success=$success, imageUri=$imageUri")
         if (success && imageUri != null) {
             try {
-                // Image was captured successfully - use the URI directly
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val photoFile = File(imageFile, "pill_camera_${timestamp}.jpg")
-                
-                // Copy from URI to our private storage using content resolver
                 context.contentResolver.openInputStream(imageUri!!)?.use { inputStream ->
                     photoFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
                 }
-                
-                // Verify the file was created and has content
                 if (photoFile.exists() && photoFile.length() > 0) {
                     println("Image saved successfully: ${photoFile.absolutePath}")
                     onImageCaptured(photoFile.absolutePath)
@@ -696,52 +570,22 @@ fun ImageCaptureSection(
         }
     }
 
-    val cameraPreviewLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap ->
-        if (bitmap != null) {
-            try {
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val photoFile = File(imageFile, "pill_camera_preview_${timestamp}.jpg")
-                photoFile.outputStream().use { out ->
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 92, out)
-                }
-                if (photoFile.exists() && photoFile.length() > 0) {
-                    println("Preview image saved successfully: ${photoFile.absolutePath}")
-                    onImageCaptured(photoFile.absolutePath)
-                } else {
-                    println("Failed to save preview image")
-                }
-            } catch (e: Exception) {
-                println("Error saving preview image: ${e.message}")
-                e.printStackTrace()
-            }
-        } else {
-            println("Preview capture returned null bitmap")
-        }
-    }
-    
     // Permission launcher
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
         println("Camera permission granted: $isGranted")
-        // If permission granted, immediately try to open camera
         if (isGranted) {
             try {
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                
-                // Create the file
                 photoFile.createNewFile()
-                
                 imageUri = FileProvider.getUriForFile(
                     context,
                     "${context.packageName}.fileprovider",
                     photoFile
                 )
-                
                 println("Created imageUri: $imageUri")
                 cameraLauncher.launch(imageUri)
             } catch (e: Exception) {
@@ -750,218 +594,154 @@ fun ImageCaptureSection(
             }
         }
     }
-    
+
+    // Gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
-        if (uri != null) {
+        uri?.let {
             try {
-                // Copy the selected image to our private storage
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                 val photoFile = File(imageFile, "pill_gallery_${timestamp}.jpg")
-                
-                context.contentResolver.openInputStream(uri)?.use { inputStream ->
+                context.contentResolver.openInputStream(it)?.use { inputStream ->
                     photoFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
                 }
-                onImageCaptured(photoFile.absolutePath)
+                if (photoFile.exists() && photoFile.length() > 0) {
+                    onImageCaptured(photoFile.absolutePath)
+                }
             } catch (e: Exception) {
-                // Handle error
                 e.printStackTrace()
             }
         }
     }
-    
+
     Column(
         modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
+        verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
+        // Show captured image if available
         if (imagePath.isNotEmpty()) {
-            // Show captured image
-            Card(
+            Box(
                 modifier = Modifier
-                    .size(120.dp)
-                    .border(
-                        2.dp,
-                        Blue600,
-                        RoundedCornerShape(8.dp)
-                    ),
-                shape = RoundedCornerShape(8.dp)
+                    .fillMaxWidth()
+                    .height(200.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(Gray100)
             ) {
-                val bitmap = remember(imagePath) {
-                    if (imagePath.isNotEmpty()) {
-                        try {
-                            BitmapFactory.decodeFile(imagePath)
-                        } catch (e: Exception) {
-                            null
-                        }
-                    } else {
-                        null
-                    }
-                }
-                
-                if (bitmap != null) {
-                    Image(
-                        bitmap = bitmap.asImageBitmap(),
-                        contentDescription = "Captured pill image",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
-                } else {
-                    // Show placeholder if image can't be loaded
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Image,
-                            contentDescription = "Image placeholder",
-                            modifier = Modifier.size(48.dp),
-                            tint = Gray400
+                try {
+                    val bitmap = BitmapFactory.decodeFile(imagePath)
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Captured image",
+                            modifier = Modifier.fillMaxSize(),
+                            contentScale = ContentScale.Crop
                         )
                     }
+                } catch (e: Exception) {
+                    Text(
+                        text = "Error loading image",
+                        color = Red500,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
             }
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            // Remove image button
-            TextButton(
-                onClick = { onImageCaptured("") }
+        }
+
+        // Camera button
+        OutlinedButton(
+            onClick = {
+                println("Camera button clicked. hasCameraPermission: $hasCameraPermission")
+                if (!hasCameraPermission) {
+                    println("Requesting camera permission...")
+                    permissionLauncher.launch(Manifest.permission.CAMERA)
+                } else {
+                    try {
+                        println("Opening camera...")
+                        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                        val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                        photoFile.createNewFile()
+                        imageUri = FileProvider.getUriForFile(
+                            context,
+                            "${context.packageName}.fileprovider",
+                            photoFile
+                        )
+                        println("Created imageUri: $imageUri")
+                        cameraLauncher.launch(imageUri)
+                    } catch (e: Exception) {
+                        println("Error opening camera: ${e.message}")
+                        e.printStackTrace()
+                    }
+                }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Blue600
+            ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = Icons.Default.Delete,
-                    contentDescription = "Remove image",
-                    modifier = Modifier.size(16.dp)
+                    imageVector = Icons.Default.CameraAlt,
+                    contentDescription = "Take photo",
+                    modifier = Modifier.size(24.dp)
                 )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Remove Image")
+                Text(
+                    text = "Take Photo",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
-        } else {
-            // Show camera and gallery options
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+        }
+        
+        // Gallery button
+        OutlinedButton(
+            onClick = {
+                galleryLauncher.launch("image/*")
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = Blue600
+            ),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                // Camera button
-                OutlinedButton(
-                    onClick = {
-                        println("Camera button clicked. hasCameraPermission: $hasCameraPermission")
-                        if (!hasCameraPermission) {
-                            println("Requesting camera permission...")
-                            permissionLauncher.launch(Manifest.permission.CAMERA)
-                        } else {
-                            try {
-                                println("Opening camera...")
-                                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                                val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                                
-                                // Create the file
-                                photoFile.createNewFile()
-                                
-                                imageUri = FileProvider.getUriForFile(
-                                    context,
-                                    "${context.packageName}.fileprovider",
-                                    photoFile
-                                )
-                                
-                                println("Created imageUri: $imageUri")
-                                cameraLauncher.launch(imageUri)
-                            } catch (e: Exception) {
-                                println("Error opening camera: ${e.message}")
-                                e.printStackTrace()
-                                // Fallback to preview if main camera fails
-                                cameraPreviewLauncher.launch(null)
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Blue600
-                    ),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.CameraAlt,
-                            contentDescription = "Take photo",
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "Camera",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
-                
-                // Gallery button
-                OutlinedButton(
-                    onClick = {
-                        galleryLauncher.launch("image/*")
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Blue600
-                    ),
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.PhotoLibrary,
-                            contentDescription = "Select from gallery",
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Text(
-                            text = "Gallery",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                    }
-                }
+                Icon(
+                    imageVector = Icons.Default.PhotoLibrary,
+                    contentDescription = "Select from gallery",
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = "Gallery",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }
 }
 
-// Removed CustomTimePickerDialog - using native Android TimePickerDialog instead
+@Composable
+fun CustomDaysPickerDialog(
     onDismiss: () -> Unit,
-    onTimeSelected: (String) -> Unit,
-    currentTime: String
+    onDaysSelected: (List<String>) -> Unit,
+    selectedDays: List<String>
 ) {
-    val initialCalendar = remember(currentTime) {
-        if (currentTime.isNotBlank()) {
-            try {
-                SimpleDateFormat("hh:mm a", Locale.US).parse(currentTime)?.let { date ->
-                    Calendar.getInstance().apply { time = date }
-                }
-            } catch (e: Exception) {
-                null
-            }
-        } else {
-            null
-        } ?: Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 12)
-            set(Calendar.MINUTE, 0)
-        }
-    }
-
-    var selectedHour by remember { mutableStateOf(initialCalendar.get(Calendar.HOUR_OF_DAY)) }
-    var selectedMinute by remember { mutableStateOf(initialCalendar.get(Calendar.MINUTE)) }
-    var selectedAmPm by remember { mutableStateOf(if (initialCalendar.get(Calendar.AM_PM) == Calendar.AM) "AM" else "PM") }
-    var isKeyboardInput by remember { mutableStateOf(false) }
+    var tempSelectedDays by remember { mutableStateOf(selectedDays.toMutableList()) }
+    
+    val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
     Dialog(onDismissRequest = onDismiss) {
         Card(
@@ -969,7 +749,7 @@ fun ImageCaptureSection(
                 .fillMaxWidth()
                 .padding(16.dp),
             shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF2C2C2C))
+            colors = CardDefaults.cardColors(containerColor = Color.White)
         ) {
             Column(
                 modifier = Modifier
@@ -978,140 +758,94 @@ fun ImageCaptureSection(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "Select Medication Time",
+                    text = "Select Days",
                     fontSize = 18.sp,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White,
+                    color = Gray800,
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
-                // State for the pickers
-                val hours = (1..12).map { it.toString().padStart(2, '0') }
-                val minutes = (0..59).map { it.toString().padStart(2, '0') }
-                val amPm = listOf("AM", "PM")
-
-                val hourState = rememberLazyListState(initialFirstVisibleItemIndex = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % 12) + (if (selectedHour == 0 || selectedHour == 12) 11 else (selectedHour % 12) - 1))
-                val minuteState = rememberLazyListState(initialFirstVisibleItemIndex = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % 60) + selectedMinute)
-                val ampmState = rememberLazyListState(initialFirstVisibleItemIndex = (1000 * 2 / 2) + if (selectedAmPm == "AM") 0 else 1)
-
-
-                if (isKeyboardInput) {
-                    var timeInput by remember { mutableStateOf(String.format("%02d:%02d", if(selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour, selectedMinute)) }
-
-                    OutlinedTextField(
-                        value = timeInput,
-                        onValueChange = {
-                            timeInput = it
-                            if (it.matches(Regex("\\d{1,2}:\\d{2}"))) {
-                                try {
-                                    val parts = it.split(":")
-                                    val hour12 = parts[0].toInt()
-                                    val minute = parts[1].toInt()
-                                    if (hour12 in 1..12 && minute in 0..59) {
-                                        val isAm = selectedAmPm == "AM"
-                                        selectedMinute = minute
-                                        selectedHour = when {
-                                            isAm && hour12 == 12 -> 0
-                                            !isAm && hour12 == 12 -> 12
-                                            isAm -> hour12
-                                            else -> hour12 + 12
-                                        }
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    items(daysOfWeek.size) { index ->
+                        val day = daysOfWeek[index]
+                        val isSelected = tempSelectedDays.contains(day)
+                        
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    if (isSelected) {
+                                        tempSelectedDays.remove(day)
+                                    } else {
+                                        tempSelectedDays.add(day)
                                     }
-                                } catch (e: Exception) { /* Ignore invalid input */ }
-                            }
-                        },
-                        label = { Text("Time (HH:MM)", color = Color.White) },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.width(120.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = Color.White,
-                            unfocusedBorderColor = Color.Gray,
-                            focusedTextColor = Color.White,
-                            unfocusedTextColor = Color.White,
-                        )
-                    )
-                } else {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        ScrollablePicker(items = hours, state = hourState, isInfinite = true)
-                        Text(":", fontSize = 24.sp, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp))
-                        ScrollablePicker(items = minutes, state = minuteState, isInfinite = true)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        ScrollablePicker(items = amPm, state = ampmState, isInfinite = false)
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = isSelected,
+                                onCheckedChange = { checked ->
+                                    if (checked) {
+                                        tempSelectedDays.add(day)
+                                    } else {
+                                        tempSelectedDays.remove(day)
+                                    }
+                                },
+                                colors = CheckboxDefaults.colors(
+                                    checkedColor = Blue600,
+                                    uncheckedColor = Gray400
+                                )
+                            )
+                            
+                            Spacer(modifier = Modifier.width(12.dp))
+                            
+                            Text(
+                                text = day,
+                                fontSize = 16.sp,
+                                color = if (isSelected) Blue600 else Gray700,
+                                fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal
+                            )
+                        }
                     }
                 }
                 
                 Spacer(modifier = Modifier.height(24.dp))
                 
-                // Control Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    IconButton(
-                        onClick = { isKeyboardInput = !isKeyboardInput }
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
                     ) {
-                        Icon(
-                            imageVector = if (isKeyboardInput) Icons.Default.Schedule else Icons.Default.Keyboard,
-                            contentDescription = if (isKeyboardInput) "Switch to wheel picker" else "Switch to keyboard input",
-                            tint = Color.White,
-                            modifier = Modifier.size(24.dp)
-                        )
+                        Text("Cancel")
                     }
                     
-                    // Cancel and OK buttons
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    Button(
+                        onClick = {
+                            onDaysSelected(tempSelectedDays)
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = tempSelectedDays.isNotEmpty(),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = Blue600,
+                            contentColor = Color.White,
+                            disabledContainerColor = Gray200,
+                            disabledContentColor = Gray600
+                        )
                     ) {
-                        TextButton(
-                            onClick = onDismiss
-                        ) {
-                            Text(
-                                text = "CANCEL",
-                                color = Color(0xFF00FF00),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
-                        
-                        TextButton(
-                            onClick = {
-                                // Calculate the centered index for each picker at the moment of click
-                                val hourLayoutInfo = hourState.layoutInfo
-                                val minuteLayoutInfo = minuteState.layoutInfo
-                                val ampmLayoutInfo = ampmState.layoutInfo
-
-                                val hourIndex = (hourState.firstVisibleItemIndex + hourLayoutInfo.visibleItemsInfo.size / 2) % hours.size
-                                val minuteIndex = (minuteState.firstVisibleItemIndex + minuteLayoutInfo.visibleItemsInfo.size / 2) % minutes.size
-                                val ampmIndex = (ampmState.firstVisibleItemIndex + ampmLayoutInfo.visibleItemsInfo.size / 2) % amPm.size
-
-                                val finalHour12 = hours[hourIndex].toInt()
-                                val finalMinute = minutes[minuteIndex].toInt()
-                                val finalAmPm = amPm[ampmIndex]
-
-                                val calendar = Calendar.getInstance().apply {
-                                    set(Calendar.HOUR, finalHour12 % 12) // Hour is 0-11 for Calendar
-                                    set(Calendar.MINUTE, finalMinute)
-                                    set(Calendar.AM_PM, if (finalAmPm == "AM") Calendar.AM else Calendar.PM)
-                                }
-
-                                val format = SimpleDateFormat("hh:mm a", Locale.US)
-                                onTimeSelected(format.format(calendar.time))
-                            }
-                        ) {
-                            Text(
-                                text = "OK",
-                                color = Color(0xFF00FF00),
-                                fontWeight = FontWeight.Bold
-                            )
-                        }
+                        Text(
+                            "OK",
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }
         }
     }
 }
-
