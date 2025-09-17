@@ -135,26 +135,34 @@ class PillViewModel @Inject constructor(
                 val samplePills = listOf(
                     Pill(
                         name = "Vitamin D",
+                        dosage = "1000 IU",
                         color = "#FF6B6B",
                         times = listOf("08:00", "20:00"),
+                        nextDose = "08:00",
                         taken = false
                     ),
                     Pill(
                         name = "Multivitamin",
+                        dosage = "1 tablet",
                         color = "#4ECDC4",
                         times = listOf("09:00"),
+                        nextDose = "09:00",
                         taken = true
                     ),
                     Pill(
                         name = "Omega-3",
+                        dosage = "500mg",
                         color = "#45B7D1",
                         times = listOf("12:00", "18:00"),
+                        nextDose = "12:00",
                         taken = false
                     ),
                     Pill(
                         name = "Calcium",
+                        dosage = "600mg",
                         color = "#96CEB4",
                         times = listOf("19:00"),
+                        nextDose = "19:00",
                         taken = false
                     )
                 )
