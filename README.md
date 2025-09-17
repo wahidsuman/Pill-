@@ -130,4 +130,8 @@ Usage:
 
 ## License
 
-This project is open source and available under the MIT License.# Trigger CI build
+This project is open source and available under the MIT License.
+
+## Firebase App Distribution
+
+This project uses Firebase App Distribution for automatic APK delivery to testers.
