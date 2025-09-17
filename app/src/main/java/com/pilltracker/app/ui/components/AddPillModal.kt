@@ -3,6 +3,8 @@ package com.pilltracker.app.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.nestedscroll.NestedScrollConnection
+import androidx.compose.foundation.gestures.nestedscroll.nestedScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -41,8 +43,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -492,7 +496,35 @@ fun ScrollablePicker(
         LazyColumn(
             state = state,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .nestedScroll(
+                    remember {
+                        object : NestedScrollConnection {
+                            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
+                                // Implement stepped scrolling - each scroll moves exactly one item
+                                val itemHeight = 28.dp.value // Approximate item height
+                                val scrollDelta = available.y
+                                
+                                if (kotlin.math.abs(scrollDelta) > itemHeight / 2) {
+                                    // Snap to next/previous item
+                                    val direction = if (scrollDelta > 0) -1 else 1
+                                    val currentIndex = state.firstVisibleItemIndex
+                                    val targetIndex = if (isInfinite) {
+                                        (currentIndex + direction + Int.MAX_VALUE) % Int.MAX_VALUE
+                                    } else {
+                                        kotlin.math.max(0, kotlin.math.min(items.size * 1000 - 1, currentIndex + direction))
+                                    }
+                                    
+                                    // Animate to target position
+                                    state.animateScrollToItem(targetIndex)
+                                    return Offset(0f, scrollDelta)
+                                }
+                                return Offset.Zero
+                            }
+                        }
+                    }
+                )
         ) {
             if (isInfinite) {
                 val itemCount = Int.MAX_VALUE
@@ -502,27 +534,37 @@ fun ScrollablePicker(
                         text = items[actualIndex],
                         fontSize = 20.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .height(28.dp)
+                            .fillMaxWidth()
+                            .wrapContentHeight(Alignment.CenterVertically)
                     )
                 }
             } else {
-                // For non-infinite scrolling, create enough items to allow smooth scrolling
-                val itemCount = items.size * 1000 // Create 1000 repetitions for smooth scrolling
+                // For AM/PM: limited scrolling with repetitions for smooth stepping
+                val itemCount = items.size * 1000
                 items(itemCount) { index ->
                     val actualIndex = index % items.size
                     Text(
                         text = items[actualIndex],
                         fontSize = 20.sp,
                         color = Color.White,
-                        modifier = Modifier.padding(vertical = 4.dp)
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .height(28.dp)
+                            .fillMaxWidth()
+                            .wrapContentHeight(Alignment.CenterVertically)
                     )
                 }
             }
         }
+        
+        // Selection indicator (ladder effect)
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(40.dp)
+                .height(28.dp)
                 .background(
                     Color.White.copy(alpha = 0.2f),
                     RoundedCornerShape(8.dp)
