@@ -21,6 +21,7 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.pilltracker.app.MainActivity
 import com.pilltracker.app.R
+import com.pilltracker.app.ui.PillAlarmPopupActivity
 
 class AlarmService : Service() {
     
@@ -36,6 +37,7 @@ class AlarmService : Service() {
         const val EXTRA_PILL_ID = "pill_id"
         const val EXTRA_PILL_TIME = "pill_time"
         const val EXTRA_PILL_IMAGE_PATH = "pill_image_path"
+        const val EXTRA_PILL_COLOR = "pill_color"
     }
     
     private var mediaPlayer: MediaPlayer? = null
@@ -58,8 +60,9 @@ class AlarmService : Service() {
                 val pillId = intent.getLongExtra(EXTRA_PILL_ID, -1)
                 val pillTime = intent.getStringExtra(EXTRA_PILL_TIME) ?: ""
                 val imagePath = intent.getStringExtra(EXTRA_PILL_IMAGE_PATH) ?: ""
+                val pillColor = intent.getStringExtra(EXTRA_PILL_COLOR) ?: "blue"
                 
-                startAlarm(pillName, pillDosage, pillId, pillTime, imagePath)
+                startAlarm(pillName, pillDosage, pillId, pillTime, imagePath, pillColor)
             }
             ACTION_STOP_ALARM -> {
                 stopAlarm()
@@ -114,7 +117,7 @@ class AlarmService : Service() {
         )
     }
     
-    private fun startAlarm(pillName: String, pillDosage: String, pillId: Long, pillTime: String, imagePath: String) {
+    private fun startAlarm(pillName: String, pillDosage: String, pillId: Long, pillTime: String, imagePath: String, pillColor: String) {
         if (isAlarmPlaying) return
         
         Log.d("AlarmService", "Starting alarm for: $pillName")
@@ -125,6 +128,9 @@ class AlarmService : Service() {
         // Start foreground service
         startForeground(NOTIFICATION_ID, createAlarmNotification(pillName, pillDosage, pillId, pillTime, imagePath))
         
+        // Launch popup activity
+        launchPopupActivity(pillName, pillDosage, pillId, pillTime, imagePath, pillColor)
+        
         // Play alarm sound
         playAlarmSound()
         
@@ -132,6 +138,24 @@ class AlarmService : Service() {
         startVibration()
         
         isAlarmPlaying = true
+    }
+    
+    private fun launchPopupActivity(pillName: String, pillDosage: String, pillId: Long, pillTime: String, imagePath: String, pillColor: String) {
+        try {
+            val popupIntent = Intent(this, PillAlarmPopupActivity::class.java).apply {
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                putExtra(PillAlarmPopupActivity.EXTRA_PILL_NAME, pillName)
+                putExtra(PillAlarmPopupActivity.EXTRA_PILL_DOSAGE, pillDosage)
+                putExtra(PillAlarmPopupActivity.EXTRA_PILL_ID, pillId)
+                putExtra(PillAlarmPopupActivity.EXTRA_PILL_TIME, pillTime)
+                putExtra(PillAlarmPopupActivity.EXTRA_PILL_IMAGE_PATH, imagePath)
+                putExtra(PillAlarmPopupActivity.EXTRA_PILL_COLOR, pillColor)
+            }
+            startActivity(popupIntent)
+            Log.d("AlarmService", "Popup activity launched for: $pillName")
+        } catch (e: Exception) {
+            Log.e("AlarmService", "Failed to launch popup activity", e)
+        }
     }
     
     private fun playAlarmSound() {

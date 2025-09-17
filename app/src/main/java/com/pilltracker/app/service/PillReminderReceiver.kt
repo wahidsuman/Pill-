@@ -16,6 +16,7 @@ class PillReminderReceiver : BroadcastReceiver() {
         val pillId = intent.getLongExtra("pill_id", -1)
         val imagePath = intent.getStringExtra("pill_image_path") ?: ""
         val timeString = intent.getStringExtra("pill_time") ?: ""
+        val pillColor = intent.getStringExtra("pill_color") ?: "blue"
         
         Log.d("PillReminderReceiver", "Pill: $pillName, Dosage: $pillDosage, ID: $pillId")
         
@@ -28,6 +29,7 @@ class PillReminderReceiver : BroadcastReceiver() {
                 putExtra(AlarmService.EXTRA_PILL_ID, pillId)
                 putExtra(AlarmService.EXTRA_PILL_TIME, timeString)
                 putExtra(AlarmService.EXTRA_PILL_IMAGE_PATH, imagePath)
+                putExtra(AlarmService.EXTRA_PILL_COLOR, pillColor)
             }
             
             try {

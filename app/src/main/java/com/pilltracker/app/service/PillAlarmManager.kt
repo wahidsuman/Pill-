@@ -34,6 +34,7 @@ class PillAlarmManager(private val context: Context) {
                 putExtra("pill_id", pill.id)
                 putExtra("pill_time", timeString)
                 putExtra("pill_image_path", pill.imagePath)
+                putExtra("pill_color", pill.color)
             }
             
             val requestCode = (pill.id + timeString.hashCode()).toInt()
