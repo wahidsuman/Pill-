@@ -274,45 +274,46 @@ fun PillAlarmPopup(
                     } else {
                         Spacer(modifier = Modifier.height(16.dp))
                     }
-                
-                // Action buttons
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    // Snooze button
-                    OutlinedButton(
-                        onClick = onSnoozeAlarm,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = Color(0xFF666666)
-                        )
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Snooze,
-                            contentDescription = "Snooze",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Snooze 5min")
-                    }
                     
-                    // Stop button
-                    Button(
-                        onClick = onStopAlarm,
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF4CAF50),
-                            contentColor = Color.White
-                        )
+                    // Action buttons
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Taken",
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Taken")
+                        // Snooze button
+                        OutlinedButton(
+                            onClick = onSnoozeAlarm,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = Color(0xFF666666)
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Snooze,
+                                contentDescription = "Snooze",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Snooze 5min")
+                        }
+                        
+                        // Stop button
+                        Button(
+                            onClick = onStopAlarm,
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = Color(0xFF4CAF50),
+                                contentColor = Color.White
+                            )
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Check,
+                                contentDescription = "Taken",
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Taken")
+                        }
                     }
                 }
             }
