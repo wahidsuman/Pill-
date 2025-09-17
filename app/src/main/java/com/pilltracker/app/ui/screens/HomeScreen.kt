@@ -117,21 +117,18 @@ fun StatsBoxesSection(pills: List<Pill>) {
         StatBox(
             title = "Taken Today",
             value = takenToday.toString(),
-            icon = Icons.Default.CheckCircle,
             color = Green600,
             modifier = Modifier.weight(1f)
         )
         StatBox(
             title = "Pending",
             value = pendingToday.toString(),
-            icon = Icons.Default.Schedule,
             color = Orange600,
             modifier = Modifier.weight(1f)
         )
         StatBox(
             title = "Total",
             value = totalToday.toString(),
-            icon = Icons.Default.Medication,
             color = Blue600,
             modifier = Modifier.weight(1f)
         )
@@ -142,7 +139,6 @@ fun StatsBoxesSection(pills: List<Pill>) {
 fun StatBox(
     title: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
     color: Color,
     modifier: Modifier = Modifier
 ) {
@@ -152,22 +148,18 @@ fun StatBox(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = title,
-                tint = color,
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = value,
-                fontSize = 20.sp,
+                fontSize = 24.sp,
                 fontWeight = FontWeight.Bold,
-                color = Gray800
+                color = color
             )
+            Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
                 fontSize = 12.sp,
@@ -257,51 +249,28 @@ fun MyMedicationSection(
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Text(
-            text = "My Medication",
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Gray800,
-            modifier = Modifier.padding(bottom = 12.dp)
-        )
-        
-        Card(
+        Row(
             modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Blue50),
-            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Text(
+                text = "My Medication",
+                fontSize = 18.sp,
+                fontWeight = FontWeight.Bold,
+                color = Gray800
+            )
+            
+            FloatingActionButton(
+                onClick = onAddPill,
+                modifier = Modifier.size(48.dp),
+                containerColor = Blue600,
+                contentColor = Color.White
             ) {
-                FloatingActionButton(
-                    onClick = onAddPill,
-                    modifier = Modifier.size(64.dp),
-                    containerColor = Blue600,
-                    contentColor = Color.White
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Add Medication",
-                        modifier = Modifier.size(32.dp)
-                    )
-                }
-                Spacer(modifier = Modifier.height(12.dp))
-                Text(
-                    text = "Add New Medication",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Blue600,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Tap to add your first medication",
-                    fontSize = 12.sp,
-                    color = Gray600,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 4.dp)
+                Icon(
+                    imageVector = Icons.Default.Add,
+                    contentDescription = "Add Medication",
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
