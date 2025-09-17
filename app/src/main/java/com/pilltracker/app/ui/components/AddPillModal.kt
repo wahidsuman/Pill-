@@ -710,7 +710,6 @@ fun ImageCaptureSection(
     val context = LocalContext.current
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var hasCameraPermission by remember { mutableStateOf(false) }
-    var requestPreviewFallback by remember { mutableStateOf(false) }
     
     // Check camera permission
     LaunchedEffect(Unit) {
@@ -757,8 +756,6 @@ fun ImageCaptureSection(
             }
         } else {
             println("Camera failed or imageUri is null")
-            // Fallback to preview capture if available
-            requestPreviewFallback = true
         }
     }
 
@@ -785,7 +782,6 @@ fun ImageCaptureSection(
         } else {
             println("Preview capture returned null bitmap")
         }
-        requestPreviewFallback = false
     }
     
     // Permission launcher
@@ -793,6 +789,7 @@ fun ImageCaptureSection(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
+        println("Camera permission granted: $isGranted")
         // If permission granted, immediately try to open camera
         if (isGranted) {
             try {
@@ -808,15 +805,10 @@ fun ImageCaptureSection(
                     photoFile
                 )
                 
-                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                val canHandle = cameraIntent.resolveActivity(context.packageManager) != null
-                if (canHandle) {
-                    cameraLauncher.launch(imageUri)
-                } else {
-                    // No camera app, fallback to preview
-                    cameraPreviewLauncher.launch(null)
-                }
+                println("Created imageUri: $imageUri")
+                cameraLauncher.launch(imageUri)
             } catch (e: Exception) {
+                println("Error opening camera: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -939,17 +931,12 @@ fun ImageCaptureSection(
                                 )
                                 
                                 println("Created imageUri: $imageUri")
-                                val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-                                val canHandle = cameraIntent.resolveActivity(context.packageManager) != null
-                                if (canHandle) {
-                                    cameraLauncher.launch(imageUri)
-                                } else {
-                                    // Fallback to preview
-                                    cameraPreviewLauncher.launch(null)
-                                }
+                                cameraLauncher.launch(imageUri)
                             } catch (e: Exception) {
                                 println("Error opening camera: ${e.message}")
                                 e.printStackTrace()
+                                // Fallback to preview if main camera fails
+                                cameraPreviewLauncher.launch(null)
                             }
                         }
                     },
