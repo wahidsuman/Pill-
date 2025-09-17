@@ -73,21 +73,6 @@ app/
 
 The project includes a GitHub Actions workflow that automatically builds APK files when you push to the main branch or create a pull request.
 
-### Browser-based Live Preview (BrowserStack App Live)
-
-Preview builds in your browser (tablet/phone/desktop) using BrowserStack App Live.
-
-Setup:
-- In GitHub repo settings → Secrets and variables → Actions, add:
-  - `BROWSERSTACK_USERNAME`
-  - `BROWSERSTACK_ACCESS_KEY`
-- Ensure the workflow `.github/workflows/browserstack-app-live.yml` exists.
-
-Usage:
-- Push to `main` or manually trigger the workflow (Actions → BrowserStack App Live Upload → Run workflow).
-- After it finishes, open BrowserStack App Live and select the latest uploaded app under “Uploaded apps”.
-- Launch on any BrowserStack device to see the app without downloading APKs.
-
 ### Download APK
 
 1. Go to the Actions tab in your GitHub repository
