@@ -136,5 +136,5 @@ This project is open source and available under the MIT License.
 
 This project uses Firebase App Distribution for automatic APK delivery to testers.
 
-### New Update - Testing Firebase Distribution
-Latest build with wahidiqubal9@gmail.com as tester
+### Fixed Tester Issue - New Build
+wahidiqubal9@gmail.com now properly added as tester
