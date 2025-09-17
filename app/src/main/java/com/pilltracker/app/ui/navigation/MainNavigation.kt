@@ -8,7 +8,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.pilltracker.app.ui.screens.*
+import com.pilltracker.app.ui.viewmodel.PillViewModel
 
 sealed class Screen(
     val route: String,
@@ -25,6 +27,7 @@ sealed class Screen(
 @Composable
 fun MainNavigation() {
     var selectedScreen by remember { mutableStateOf<Screen>(Screen.Home) }
+    val pillViewModel: PillViewModel = hiltViewModel()
     
     Scaffold(
         bottomBar = {
@@ -65,7 +68,7 @@ fun MainNavigation() {
                 .padding(paddingValues)
         ) {
             when (selectedScreen) {
-                Screen.Home -> HomeScreen()
+                Screen.Home -> HomeScreen(viewModel = pillViewModel)
                 Screen.Stats -> StatsScreen()
                 Screen.Calendar -> CalendarScreen()
                 Screen.Settings -> SettingsScreen()
