@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -478,38 +479,10 @@ fun AddPillModal(
 @Composable
 fun ScrollablePicker(
     items: List<String>,
-    initialIndex: Int,
-    onItemSelected: (Int) -> Unit,
+    state: LazyListState,
+    isInfinite: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val middleIndex = Int.MAX_VALUE / 2
-    val startIndex = middleIndex - (middleIndex % items.size) + initialIndex
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = startIndex)
-
-    // This derived state will recompose only when the centered item index changes.
-    val centeredItemIndex by remember {
-        derivedStateOf {
-            if (listState.isScrollInProgress) -1 else {
-                val layoutInfo = listState.layoutInfo
-                val visibleItemsInfo = layoutInfo.visibleItemsInfo
-                if (visibleItemsInfo.isEmpty()) {
-                    -1
-                } else {
-                    val viewportCenter = (layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset) / 2
-                    val centerItem = visibleItemsInfo.minByOrNull { (it.offset + it.size / 2) - viewportCenter }
-                    centerItem?.index ?: -1
-                }
-            }
-        }
-    }
-
-    // Report the selected item when scrolling stops and the centered item is valid.
-    LaunchedEffect(centeredItemIndex) {
-        if (centeredItemIndex != -1) {
-            onItemSelected(centeredItemIndex % items.size)
-        }
-    }
-
     Box(
         modifier = modifier
             .height(120.dp)
@@ -517,12 +490,13 @@ fun ScrollablePicker(
         contentAlignment = Alignment.Center
     ) {
         LazyColumn(
-            state = listState,
+            state = state,
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.fillMaxWidth()
         ) {
-            items(Int.MAX_VALUE) { index ->
-                val actualIndex = index % items.size
+            val itemCount = if (isInfinite) Int.MAX_VALUE else items.size
+            items(itemCount) { index ->
+                val actualIndex = if (isInfinite) index % items.size else index
                 Text(
                     text = items[actualIndex],
                     fontSize = 20.sp,
@@ -987,6 +961,16 @@ fun CustomTimePickerDialog(
                     modifier = Modifier.padding(bottom = 24.dp)
                 )
 
+                // State for the pickers
+                val hours = (1..12).map { it.toString().padStart(2, '0') }
+                val minutes = (0..59).map { it.toString().padStart(2, '0') }
+                val amPm = listOf("AM", "PM")
+
+                val hourState = rememberLazyListState(initialFirstVisibleItemIndex = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % 12) + (if (selectedHour == 0 || selectedHour == 12) 11 else (selectedHour % 12) - 1))
+                val minuteState = rememberLazyListState(initialFirstVisibleItemIndex = (Int.MAX_VALUE / 2) - ((Int.MAX_VALUE / 2) % 60) + selectedMinute)
+                val ampmState = rememberLazyListState(initialFirstVisibleItemIndex = if (selectedAmPm == "AM") 0 else 1)
+
+
                 if (isKeyboardInput) {
                     var timeInput by remember { mutableStateOf(String.format("%02d:%02d", if(selectedHour == 0) 12 else if (selectedHour > 12) selectedHour - 12 else selectedHour, selectedMinute)) }
 
@@ -994,7 +978,6 @@ fun CustomTimePickerDialog(
                         value = timeInput,
                         onValueChange = {
                             timeInput = it
-                            // Try to parse the input and update the state
                             if (it.matches(Regex("\\d{1,2}:\\d{2}"))) {
                                 try {
                                     val parts = it.split(":")
@@ -1010,9 +993,7 @@ fun CustomTimePickerDialog(
                                             else -> hour12 + 12
                                         }
                                     }
-                                } catch (e: Exception) {
-                                    // Ignore invalid input
-                                }
+                                } catch (e: Exception) { /* Ignore invalid input */ }
                             }
                         },
                         label = { Text("Time (HH:MM)", color = Color.White) },
@@ -1032,54 +1013,11 @@ fun CustomTimePickerDialog(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        val hours = (1..12).map { it.toString().padStart(2, '0') }
-                        val minutes = (0..59).map { it.toString().padStart(2, '0') }
-                        val amPm = listOf("AM", "PM")
-
-                        // Hour Picker
-                        ScrollablePicker(
-                            items = hours,
-                            initialIndex = if (selectedHour == 0 || selectedHour == 12) 11 else (selectedHour % 12) - 1,
-                            onItemSelected = { index ->
-                                val newHour12 = hours[index].toInt()
-                                val isAm = selectedAmPm == "AM"
-
-                                selectedHour = when {
-                                    isAm && newHour12 == 12 -> 0 // 12 AM -> 0
-                                    !isAm && newHour12 == 12 -> 12 // 12 PM -> 12
-                                    isAm -> newHour12
-                                    else -> newHour12 + 12
-                                }
-                            }
-                        )
-
+                        ScrollablePicker(items = hours, state = hourState, isInfinite = true)
                         Text(":", fontSize = 24.sp, color = Color.White, modifier = Modifier.padding(horizontal = 8.dp))
-
-                        // Minute Picker
-                        ScrollablePicker(
-                            items = minutes,
-                            initialIndex = selectedMinute,
-                            onItemSelected = { index ->
-                                selectedMinute = minutes[index].toInt()
-                            }
-                        )
-
+                        ScrollablePicker(items = minutes, state = minuteState, isInfinite = true)
                         Spacer(modifier = Modifier.width(16.dp))
-
-                        // AM/PM Picker
-                        ScrollablePicker(
-                            items = amPm,
-                            initialIndex = if (selectedAmPm == "AM") 0 else 1,
-                            onItemSelected = { index ->
-                                selectedAmPm = amPm[index]
-                                // Adjust the 24-hour selectedHour based on new AM/PM
-                                if (amPm[index] == "AM" && selectedHour >= 12) {
-                                    selectedHour -= 12
-                                } else if (amPm[index] == "PM" && selectedHour < 12) {
-                                    selectedHour += 12
-                                }
-                            }
-                        )
+                        ScrollablePicker(items = amPm, state = ampmState, isInfinite = false)
                     }
                 }
                 
@@ -1117,11 +1055,25 @@ fun CustomTimePickerDialog(
                         
                         TextButton(
                             onClick = {
-                                // Convert 24-hour state back to a 12-hour string for the callback
+                                // Calculate the centered index for each picker at the moment of click
+                                val hourLayoutInfo = hourState.layoutInfo
+                                val minuteLayoutInfo = minuteState.layoutInfo
+                                val ampmLayoutInfo = ampmState.layoutInfo
+
+                                val hourIndex = (hourState.firstVisibleItemIndex + hourLayoutInfo.visibleItemsInfo.size / 2) % hours.size
+                                val minuteIndex = (minuteState.firstVisibleItemIndex + minuteLayoutInfo.visibleItemsInfo.size / 2) % minutes.size
+                                val ampmIndex = (ampmState.firstVisibleItemIndex + ampmLayoutInfo.visibleItemsInfo.size / 2) % amPm.size
+
+                                val finalHour12 = hours[hourIndex].toInt()
+                                val finalMinute = minutes[minuteIndex].toInt()
+                                val finalAmPm = amPm[ampmIndex]
+
                                 val calendar = Calendar.getInstance().apply {
-                                    set(Calendar.HOUR_OF_DAY, selectedHour)
-                                    set(Calendar.MINUTE, selectedMinute)
+                                    set(Calendar.HOUR, finalHour12 % 12) // Hour is 0-11 for Calendar
+                                    set(Calendar.MINUTE, finalMinute)
+                                    set(Calendar.AM_PM, if (finalAmPm == "AM") Calendar.AM else Calendar.PM)
                                 }
+
                                 val format = SimpleDateFormat("hh:mm a", Locale.US)
                                 onTimeSelected(format.format(calendar.time))
                             }
