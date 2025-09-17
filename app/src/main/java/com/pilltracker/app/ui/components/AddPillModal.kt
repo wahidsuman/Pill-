@@ -754,6 +754,26 @@ fun ImageCaptureSection(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
+        // If permission granted, immediately try to open camera
+        if (isGranted) {
+            try {
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                
+                // Create the file
+                photoFile.createNewFile()
+                
+                imageUri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    photoFile
+                )
+                
+                cameraLauncher.launch(imageUri)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
     
     // Create a temporary file for the image
@@ -766,6 +786,7 @@ fun ImageCaptureSection(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
+        println("Camera result: success=$success, imageUri=$imageUri")
         if (success && imageUri != null) {
             try {
                 // Image was captured successfully - use the URI directly
@@ -781,11 +802,17 @@ fun ImageCaptureSection(
                 
                 // Verify the file was created and has content
                 if (photoFile.exists() && photoFile.length() > 0) {
+                    println("Image saved successfully: ${photoFile.absolutePath}")
                     onImageCaptured(photoFile.absolutePath)
+                } else {
+                    println("Failed to save image: file doesn't exist or is empty")
                 }
             } catch (e: Exception) {
+                println("Error saving image: ${e.message}")
                 e.printStackTrace()
             }
+        } else {
+            println("Camera failed or imageUri is null")
         }
     }
     
@@ -886,10 +913,13 @@ fun ImageCaptureSection(
                 // Camera button
                 OutlinedButton(
                     onClick = {
+                        println("Camera button clicked. hasCameraPermission: $hasCameraPermission")
                         if (!hasCameraPermission) {
+                            println("Requesting camera permission...")
                             permissionLauncher.launch(Manifest.permission.CAMERA)
                         } else {
                             try {
+                                println("Opening camera...")
                                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
                                 val photoFile = File(imageFile, "pill_${timestamp}.jpg")
                                 
@@ -902,8 +932,10 @@ fun ImageCaptureSection(
                                     photoFile
                                 )
                                 
+                                println("Created imageUri: $imageUri")
                                 cameraLauncher.launch(imageUri)
                             } catch (e: Exception) {
+                                println("Error opening camera: ${e.message}")
                                 e.printStackTrace()
                             }
                         }
