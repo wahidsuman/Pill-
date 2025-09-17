@@ -277,14 +277,14 @@ fun QuickStatsRow() {
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        QuickStatCard(
+        StatsQuickCard(
             title = "Streak",
             value = "7 days",
             icon = Icons.Default.LocalFireDepartment,
             color = Orange600,
             modifier = Modifier.weight(1f)
         )
-        QuickStatCard(
+        StatsQuickCard(
             title = "Total Pills",
             value = "42",
             icon = Icons.Default.Medication,
@@ -295,7 +295,7 @@ fun QuickStatsRow() {
 }
 
 @Composable
-fun QuickStatCard(
+fun StatsQuickCard(
     title: String,
     value: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
