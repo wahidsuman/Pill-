@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Auto Sync from GitHub",
+            "label": "Start Live Preview",
             "type": "shell",
-            "command": "./auto-sync.sh",
+            "command": "./live-preview.sh",
             "group": "build",
             "presentation": {
                 "echo": true,
@@ -15,9 +15,22 @@
             "problemMatcher": []
         },
         {
-            "label": "Watch for Changes",
+            "label": "Auto Sync with Live Preview",
             "type": "shell",
-            "command": "while true; do ./auto-sync.sh; sleep 10; done",
+            "command": "./auto-sync-live.sh",
+            "group": "build",
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "shared"
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Watch for Changes (Live Preview)",
+            "type": "shell",
+            "command": "while true; do ./auto-sync-live.sh; sleep 15; done",
             "group": "build",
             "presentation": {
                 "echo": true,
