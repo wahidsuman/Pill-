@@ -31,7 +31,11 @@ app/
 │   │   ├── repository/PillRepository.kt
 │   │   └── converter/Converters.kt
 │   ├── ui/
-│   │   ├── screen/PillTrackerScreen.kt
+│   │   ├── screens/
+│   │   │   ├── HomeScreen.kt
+│   │   │   ├── StatsScreen.kt
+│   │   │   ├── CalendarScreen.kt
+│   │   │   └── SettingsScreen.kt
 │   │   ├── components/
 │   │   │   ├── PillCard.kt
 │   │   │   ├── PillIcon.kt

@@ -25,10 +25,10 @@ import com.pilltracker.app.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
-    viewModel: PillViewModel? = null
+    viewModel: PillViewModel
 ) {
-    val pills by viewModel?.pills?.collectAsState() ?: remember { mutableStateOf(emptyList()) }
-    val showAddForm by viewModel?.showAddForm?.collectAsState() ?: remember { mutableStateOf(false) }
+    val pills by viewModel.pills.collectAsState()
+    val showAddForm by viewModel.showAddForm.collectAsState()
     
     var showAddPillModal by remember { mutableStateOf(false) }
     
@@ -52,7 +52,7 @@ fun HomeScreen(
             viewModel = viewModel,
             onAddPill = { 
                 try {
-                    viewModel?.showAddForm() ?: run { showAddPillModal = true }
+                    viewModel.showAddForm()
                 } catch (e: Exception) {
                     android.util.Log.e("HomeScreen", "Error showing add form: ${e.message}")
                     showAddPillModal = true
@@ -66,14 +66,14 @@ fun HomeScreen(
         AddPillModal(
             onDismiss = { 
                 try {
-                    viewModel?.hideAddForm()
+                    viewModel.hideAddForm()
                 } catch (e: Exception) {
                     android.util.Log.e("HomeScreen", "Error hiding add form: ${e.message}")
                 }
             },
             onAddPill = { pill -> 
                 try {
-                    viewModel?.addPill(pill)
+                    viewModel.addPill(pill)
                 } catch (e: Exception) {
                     android.util.Log.e("HomeScreen", "Error adding pill: ${e.message}")
                 }
@@ -86,7 +86,7 @@ fun HomeScreen(
             onDismiss = { showAddPillModal = false },
             onAddPill = { pill -> 
                 try {
-                    viewModel?.addPill(pill)
+                    viewModel.addPill(pill)
                     showAddPillModal = false
                 } catch (e: Exception) {
                     android.util.Log.e("HomeScreen", "Error adding pill from modal: ${e.message}")
@@ -203,7 +203,7 @@ fun StatBox(
 @Composable
 fun NextRemindersSection(
     pills: List<Pill>,
-    viewModel: PillViewModel? = null
+    viewModel: PillViewModel
 ) {
     val upcomingPills = pills.filter { !it.taken }.take(3)
     
@@ -304,7 +304,7 @@ fun SimpleReminderCard(pill: Pill) {
 @Composable
 fun MyMedicationSection(
     pills: List<Pill>,
-    viewModel: PillViewModel? = null,
+    viewModel: PillViewModel,
     onAddPill: () -> Unit
 ) {
     Column(
@@ -379,9 +379,9 @@ fun MyMedicationSection(
                 items(pills) { pill ->
                     PillCard(
                         pill = pill,
-                        onMarkAsTaken = { viewModel?.markAsTaken(pill) },
-                        onEditPill = { viewModel?.showEditForm(pill) },
-                        onDeletePill = { viewModel?.deletePill(pill) }
+                        onMarkAsTaken = { viewModel.markAsTaken(pill) },
+                        onEditPill = { viewModel.showEditForm(pill) },
+                        onDeletePill = { viewModel.deletePill(pill) }
                     )
                 }
             }

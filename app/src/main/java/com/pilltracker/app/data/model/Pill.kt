@@ -2,7 +2,6 @@ package com.pilltracker.app.data.model
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import java.time.LocalTime
 
 @Entity(tableName = "pills")
 data class Pill(
