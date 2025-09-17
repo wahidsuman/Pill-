@@ -127,4 +127,47 @@ class PillViewModel @Inject constructor(
         _showEditForm.value = null
     }
     
+    private fun addSamplePillsIfEmpty() {
+        viewModelScope.launch {
+            val existingPills = repository.getAllPills().first()
+            if (existingPills.isEmpty()) {
+                // Add sample pills for demonstration
+                val samplePills = listOf(
+                    Pill(
+                        name = "Vitamin D",
+                        color = "#FF6B6B",
+                        times = listOf("08:00", "20:00"),
+                        taken = false
+                    ),
+                    Pill(
+                        name = "Multivitamin",
+                        color = "#4ECDC4",
+                        times = listOf("09:00"),
+                        taken = true
+                    ),
+                    Pill(
+                        name = "Omega-3",
+                        color = "#45B7D1",
+                        times = listOf("12:00", "18:00"),
+                        taken = false
+                    ),
+                    Pill(
+                        name = "Calcium",
+                        color = "#96CEB4",
+                        times = listOf("19:00"),
+                        taken = false
+                    )
+                )
+                
+                samplePills.forEach { pill ->
+                    val pillId = repository.insertPill(pill)
+                    val pillWithId = pill.copy(id = pillId)
+                    alarmManager.schedulePillReminder(pillWithId)
+                }
+                
+                android.util.Log.d("PillViewModel", "Added ${samplePills.size} sample pills")
+            }
+        }
+    }
+    
 }
