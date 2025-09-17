@@ -71,17 +71,31 @@ app/
 
 ## GitHub Actions
 
-The project includes a GitHub Actions workflow that automatically builds APK files when you push to the main branch or create a pull request.
+The project includes GitHub Actions workflows that automatically build and distribute APK files.
 
-### Download APK
+### Firebase App Distribution (Recommended)
+
+**Automatic distribution to testers via Firebase App Distribution**
+
+Setup:
+1. Create Firebase project and add Android app
+2. Set up Firebase App Distribution
+3. Add GitHub secrets:
+   - `FIREBASE_APP_ID`: Your Firebase Android app ID
+   - `FIREBASE_TOKEN`: Firebase CI token
+   - `GOOGLE_SERVICES_JSON`: Contents of google-services.json
+
+Usage:
+- Push to `main` branch
+- APK automatically distributed to Firebase App Distribution testers
+- Testers get notification to install via Firebase App Tester app
+
+### Manual APK Download
 
 1. Go to the Actions tab in your GitHub repository
 2. Click on the latest workflow run
 3. Download the APK from the Artifacts section:
    - `pilltracker-debug-apk` - Debug version
-   - `pilltracker-release-apk` - Release version
-   - `pilltracker-debug-bundle` - Debug AAB bundle
-   - `pilltracker-release-bundle` - Release AAB bundle
 
 ## Features Matching React Version
 
