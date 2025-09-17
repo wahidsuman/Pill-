@@ -116,4 +116,4 @@ The project includes a GitHub Actions workflow that automatically builds APK fil
 
 ## License
 
-This project is open source and available under the MIT License.
+This project is open source and available under the MIT License.# Trigger CI build
