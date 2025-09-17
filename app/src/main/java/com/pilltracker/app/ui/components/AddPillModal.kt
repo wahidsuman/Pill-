@@ -717,33 +717,6 @@ fun ImageCaptureSection(
         ) == PackageManager.PERMISSION_GRANTED
     }
     
-    // Permission launcher
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
-        // If permission granted, immediately try to open camera
-        if (isGranted) {
-            try {
-                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-                
-                // Create the file
-                photoFile.createNewFile()
-                
-                imageUri = FileProvider.getUriForFile(
-                    context,
-                    "${context.packageName}.fileprovider",
-                    photoFile
-                )
-                
-                cameraLauncher.launch(imageUri)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
-    
     // Create a temporary file for the image
     val imageFile = remember {
         File(context.filesDir, "pill_images").apply {
@@ -781,6 +754,33 @@ fun ImageCaptureSection(
             }
         } else {
             println("Camera failed or imageUri is null")
+        }
+    }
+    
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        // If permission granted, immediately try to open camera
+        if (isGranted) {
+            try {
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val photoFile = File(imageFile, "pill_${timestamp}.jpg")
+                
+                // Create the file
+                photoFile.createNewFile()
+                
+                imageUri = FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    photoFile
+                )
+                
+                cameraLauncher.launch(imageUri)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
     
