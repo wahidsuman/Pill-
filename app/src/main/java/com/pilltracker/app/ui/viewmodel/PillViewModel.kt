@@ -41,6 +41,7 @@ class PillViewModel @Inject constructor(
 
     init {
         loadPills()
+        addSamplePillsIfEmpty()
         // Reschedule all alarms when the app starts
         viewModelScope.launch {
             repository.getAllPills().collect { pillsList ->
