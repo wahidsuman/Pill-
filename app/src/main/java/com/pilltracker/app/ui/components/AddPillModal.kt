@@ -630,17 +630,22 @@ fun ImageCaptureSection(
                     .clip(RoundedCornerShape(8.dp))
                     .background(Gray100)
             ) {
-                try {
-                    val bitmap = BitmapFactory.decodeFile(imagePath)
-                    if (bitmap != null) {
-                        Image(
-                            bitmap = bitmap.asImageBitmap(),
-                            contentDescription = "Captured image",
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Crop
-                        )
+                val bitmap = remember(imagePath) {
+                    try {
+                        BitmapFactory.decodeFile(imagePath)
+                    } catch (e: Exception) {
+                        null
                     }
-                } catch (e: Exception) {
+                }
+                
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap.asImageBitmap(),
+                        contentDescription = "Captured image",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                } else {
                     Text(
                         text = "Error loading image",
                         color = Red500,
