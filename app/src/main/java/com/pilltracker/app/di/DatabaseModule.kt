@@ -22,7 +22,9 @@ object DatabaseModule {
             context.applicationContext,
             PillDatabase::class.java,
             "pill_database"
-        ).build()
+        )
+        .fallbackToDestructiveMigration() // For development - in production, use proper migrations
+        .build()
     }
 
     @Provides

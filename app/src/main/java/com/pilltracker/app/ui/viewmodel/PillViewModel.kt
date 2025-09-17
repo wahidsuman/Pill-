@@ -41,20 +41,8 @@ class PillViewModel @Inject constructor(
 
     init {
         loadPills()
-        // Reschedule all alarms when the app starts
-        viewModelScope.launch {
-            repository.getAllPills().collect { pillsList ->
-                if (pillsList.isNotEmpty()) {
-                    // Check alarm permissions first
-                    if (alarmManager.checkAlarmPermissions()) {
-                        alarmManager.scheduleAllPills(pillsList)
-                        android.util.Log.d("PillViewModel", "Rescheduled ${pillsList.size} pills")
-                    } else {
-                        android.util.Log.w("PillViewModel", "Cannot schedule exact alarms - permission denied")
-                    }
-                }
-            }
-        }
+        // Don't schedule alarms immediately on startup to avoid crashes
+        // Alarms will be scheduled when pills are added
     }
 
     private fun loadPills() {
@@ -88,25 +76,44 @@ class PillViewModel @Inject constructor(
             try {
                 val pillId = repository.insertPill(pill)
                 val pillWithId = pill.copy(id = pillId)
-                alarmManager.schedulePillReminder(pillWithId)
+                
+                // Only schedule alarm if we have permission
+                if (alarmManager.checkAlarmPermissions()) {
+                    alarmManager.schedulePillReminder(pillWithId)
+                    android.util.Log.d("PillViewModel", "Successfully scheduled alarm for pill: ${pill.name}")
+                } else {
+                    android.util.Log.w("PillViewModel", "Cannot schedule alarm - permission denied for pill: ${pill.name}")
+                }
+                
                 _showAddForm.value = false
                 android.util.Log.d("PillViewModel", "Successfully added pill: ${pill.name}")
             } catch (e: Exception) {
                 android.util.Log.e("PillViewModel", "Error adding pill: ${e.message}", e)
+                // Don't crash the app, just log the error
             }
         }
     }
 
     fun updatePill(pill: Pill) {
         viewModelScope.launch {
-            repository.updatePill(pill)
+            try {
+                repository.updatePill(pill)
+                android.util.Log.d("PillViewModel", "Successfully updated pill: ${pill.name}")
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error updating pill: ${e.message}", e)
+            }
         }
     }
 
     fun deletePill(pill: Pill) {
         viewModelScope.launch {
-            alarmManager.cancelPillReminder(pill)
-            repository.deletePill(pill)
+            try {
+                alarmManager.cancelPillReminder(pill)
+                repository.deletePill(pill)
+                android.util.Log.d("PillViewModel", "Successfully deleted pill: ${pill.name}")
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error deleting pill: ${e.message}", e)
+            }
         }
     }
 
