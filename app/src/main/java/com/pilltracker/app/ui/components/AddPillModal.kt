@@ -3,8 +3,6 @@ package com.pilltracker.app.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.nestedscroll.NestedScrollConnection
-import androidx.compose.foundation.gestures.nestedscroll.nestedScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -43,10 +41,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -496,35 +492,7 @@ fun ScrollablePicker(
         LazyColumn(
             state = state,
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxWidth()
-                .nestedScroll(
-                    remember {
-                        object : NestedScrollConnection {
-                            override fun onPreScroll(available: Offset, source: NestedScrollSource): Offset {
-                                // Implement stepped scrolling - each scroll moves exactly one item
-                                val itemHeight = 28.dp.value // Approximate item height
-                                val scrollDelta = available.y
-                                
-                                if (kotlin.math.abs(scrollDelta) > itemHeight / 2) {
-                                    // Snap to next/previous item
-                                    val direction = if (scrollDelta > 0) -1 else 1
-                                    val currentIndex = state.firstVisibleItemIndex
-                                    val targetIndex = if (isInfinite) {
-                                        (currentIndex + direction + Int.MAX_VALUE) % Int.MAX_VALUE
-                                    } else {
-                                        kotlin.math.max(0, kotlin.math.min(items.size * 1000 - 1, currentIndex + direction))
-                                    }
-                                    
-                                    // Animate to target position
-                                    state.animateScrollToItem(targetIndex)
-                                    return Offset(0f, scrollDelta)
-                                }
-                                return Offset.Zero
-                            }
-                        }
-                    }
-                )
+            modifier = Modifier.fillMaxWidth()
         ) {
             if (isInfinite) {
                 val itemCount = Int.MAX_VALUE
