@@ -565,19 +565,8 @@ fun ImageCaptureSection(
         }
     }
 
-    // Permission launcher
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        hasCameraPermission = isGranted
-        println("Camera permission granted: $isGranted")
-        if (isGranted) {
-            launchCamera()
-        }
-    }
-
     // Function to launch camera
-    fun launchCamera() {
+    val launchCamera: () -> Unit = {
         try {
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val photoFile = File(imageFile, "pill_${timestamp}.jpg")
@@ -593,6 +582,17 @@ fun ImageCaptureSection(
         } catch (e: Exception) {
             println("Error launching camera: ${e.message}")
             e.printStackTrace()
+        }
+    }
+
+    // Permission launcher
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        hasCameraPermission = isGranted
+        println("Camera permission granted: $isGranted")
+        if (isGranted) {
+            launchCamera()
         }
     }
 
