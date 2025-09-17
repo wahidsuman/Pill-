@@ -74,15 +74,31 @@ class PillViewModel @Inject constructor(
     fun addPill(pill: Pill) {
         viewModelScope.launch {
             try {
+                // Validate pill data before adding
+                if (pill.name.isBlank()) {
+                    android.util.Log.e("PillViewModel", "Cannot add pill: name is blank")
+                    return@launch
+                }
+                
+                if (pill.times.isEmpty() || pill.times.all { it.isBlank() }) {
+                    android.util.Log.e("PillViewModel", "Cannot add pill: no valid times provided")
+                    return@launch
+                }
+                
                 val pillId = repository.insertPill(pill)
                 val pillWithId = pill.copy(id = pillId)
                 
                 // Only schedule alarm if we have permission
-                if (alarmManager.checkAlarmPermissions()) {
-                    alarmManager.schedulePillReminder(pillWithId)
-                    android.util.Log.d("PillViewModel", "Successfully scheduled alarm for pill: ${pill.name}")
-                } else {
-                    android.util.Log.w("PillViewModel", "Cannot schedule alarm - permission denied for pill: ${pill.name}")
+                try {
+                    if (alarmManager.checkAlarmPermissions()) {
+                        alarmManager.schedulePillReminder(pillWithId)
+                        android.util.Log.d("PillViewModel", "Successfully scheduled alarm for pill: ${pill.name}")
+                    } else {
+                        android.util.Log.w("PillViewModel", "Cannot schedule alarm - permission denied for pill: ${pill.name}")
+                    }
+                } catch (e: Exception) {
+                    android.util.Log.e("PillViewModel", "Error scheduling alarm for pill: ${pill.name}", e)
+                    // Continue even if alarm scheduling fails
                 }
                 
                 _showAddForm.value = false
@@ -90,6 +106,7 @@ class PillViewModel @Inject constructor(
             } catch (e: Exception) {
                 android.util.Log.e("PillViewModel", "Error adding pill: ${e.message}", e)
                 // Don't crash the app, just log the error
+                _showAddForm.value = false // Hide the form even if there was an error
             }
         }
     }
@@ -123,11 +140,21 @@ class PillViewModel @Inject constructor(
     }
 
     fun showAddForm() {
-        _showAddForm.value = true
+        try {
+            _showAddForm.value = true
+            android.util.Log.d("PillViewModel", "Showing add form")
+        } catch (e: Exception) {
+            android.util.Log.e("PillViewModel", "Error showing add form: ${e.message}", e)
+        }
     }
 
     fun hideAddForm() {
-        _showAddForm.value = false
+        try {
+            _showAddForm.value = false
+            android.util.Log.d("PillViewModel", "Hiding add form")
+        } catch (e: Exception) {
+            android.util.Log.e("PillViewModel", "Error hiding add form: ${e.message}", e)
+        }
     }
 
     fun showEditForm(pill: Pill) {

@@ -340,7 +340,11 @@ fun AddPillModal(
                         if (times.size > 1) {
                             IconButton(
                                 onClick = {
-                                    times = times.filterIndexed { i, _ -> i != index }
+                                    try {
+                                        times = times.filterIndexed { i, _ -> i != index }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("AddPillModal", "Error removing time: ${e.message}")
+                                    }
                                 }
                             ) {
                                 Icon(
@@ -359,7 +363,11 @@ fun AddPillModal(
 
                 TextButton(
                     onClick = {
-                        times = times.toMutableList().apply { add("") }
+                        try {
+                            times = times.toMutableList().apply { add("") }
+                        } catch (e: Exception) {
+                            android.util.Log.e("AddPillModal", "Error adding time slot: ${e.message}")
+                        }
                     },
                     modifier = Modifier.padding(top = 8.dp)
                 ) {
@@ -388,33 +396,45 @@ fun AddPillModal(
                     
                     Button(
                         onClick = {
-                            if (name.isNotBlank()) {
-                                val validTimes = times.filter { it.isNotBlank() }
-                                if (validTimes.isNotEmpty()) {
-                                    // Convert 24-hour format to 12-hour format for nextDose
-                                    val firstTime = validTimes.first()
-                                    val timeParts = firstTime.split(":")
-                                    val hour = timeParts[0].toInt()
-                                    val minute = timeParts[1].toInt()
-                                    
-                                    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-                                    val ampm = if (hour < 12) "AM" else "PM"
-                                    val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
-                                    
-                                    val pill = Pill(
-                                        id = editPill?.id ?: 0,
-                                        name = name,
-                                        dosage = "1 tablet", // Default dosage
-                                        times = validTimes,
-                                        color = if (useImage) "" else color,
-                                        imagePath = if (useImage) imagePath else "",
-                                        nextDose = displayTime,
-                                        frequency = frequency,
-                                        customDays = if (frequency == "custom") customDays else emptyList(),
-                                        taken = editPill?.taken ?: false
-                                    )
-                                    onAddPill(pill)
+                            try {
+                                if (name.isNotBlank()) {
+                                    val validTimes = times.filter { it.isNotBlank() }
+                                    if (validTimes.isNotEmpty()) {
+                                        // Convert 24-hour format to 12-hour format for nextDose
+                                        val firstTime = validTimes.first()
+                                        val timeParts = firstTime.split(":")
+                                        if (timeParts.size == 2) {
+                                            val hour = timeParts[0].toInt()
+                                            val minute = timeParts[1].toInt()
+                                            
+                                            val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+                                            val ampm = if (hour < 12) "AM" else "PM"
+                                            val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
+                                            
+                                            val pill = Pill(
+                                                id = editPill?.id ?: 0,
+                                                name = name.trim(),
+                                                dosage = "1 tablet", // Default dosage
+                                                times = validTimes,
+                                                color = if (useImage) "" else color,
+                                                imagePath = if (useImage) imagePath else "",
+                                                nextDose = displayTime,
+                                                frequency = frequency,
+                                                customDays = if (frequency == "custom") customDays else emptyList(),
+                                                taken = editPill?.taken ?: false
+                                            )
+                                            onAddPill(pill)
+                                        } else {
+                                            android.util.Log.e("AddPillModal", "Invalid time format: $firstTime")
+                                        }
+                                    } else {
+                                        android.util.Log.e("AddPillModal", "No valid times provided")
+                                    }
+                                } else {
+                                    android.util.Log.e("AddPillModal", "Pill name is blank")
                                 }
+                            } catch (e: Exception) {
+                                android.util.Log.e("AddPillModal", "Error creating pill: ${e.message}", e)
                             }
                         },
                         modifier = Modifier.weight(1f),
@@ -448,8 +468,14 @@ fun AddPillModal(
             try {
                 val inputFormat = SimpleDateFormat("HH:mm", Locale.US)
                 val date = inputFormat.parse(currentTime24)
-                calendar.time = date!!
+                if (date != null) {
+                    calendar.time = date
+                } else {
+                    calendar.set(Calendar.HOUR_OF_DAY, 12)
+                    calendar.set(Calendar.MINUTE, 0)
+                }
             } catch (e: Exception) {
+                android.util.Log.e("AddPillModal", "Error parsing time: ${e.message}")
                 calendar.set(Calendar.HOUR_OF_DAY, 12)
                 calendar.set(Calendar.MINUTE, 0)
             }
@@ -459,19 +485,31 @@ fun AddPillModal(
         }
 
         LaunchedEffect(showTimePicker) {
-            val timePickerDialog = TimePickerDialog(
-                context,
-                { _, hourOfDay, minute ->
-                    val newTimes = times.toMutableList()
-                    newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
-                    times = newTimes
-                    showTimePicker = false
-                },
-                calendar.get(Calendar.HOUR_OF_DAY),
-                calendar.get(Calendar.MINUTE),
-                false // 24-hour format
-            )
-            timePickerDialog.show()
+            try {
+                val timePickerDialog = TimePickerDialog(
+                    context,
+                    { _, hourOfDay, minute ->
+                        try {
+                            val newTimes = times.toMutableList()
+                            if (selectedTimeIndex < newTimes.size) {
+                                newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
+                                times = newTimes
+                            }
+                            showTimePicker = false
+                        } catch (e: Exception) {
+                            android.util.Log.e("AddPillModal", "Error updating time: ${e.message}")
+                            showTimePicker = false
+                        }
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    false // 24-hour format
+                )
+                timePickerDialog.show()
+            } catch (e: Exception) {
+                android.util.Log.e("AddPillModal", "Error showing time picker: ${e.message}")
+                showTimePicker = false
+            }
         }
     }
 
@@ -555,7 +593,7 @@ fun ImageCaptureSection(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        println("Camera result: success=$success")
+        android.util.Log.d("AddPillModal", "Camera result: success=$success")
         if (success && imageUri != null) {
             try {
                 // Copy the image from the URI to our file
@@ -569,49 +607,69 @@ fun ImageCaptureSection(
                 }
                 
                 if (finalFile.exists() && finalFile.length() > 0) {
-                    println("Image saved successfully: ${finalFile.absolutePath}")
+                    android.util.Log.d("AddPillModal", "Image saved successfully: ${finalFile.absolutePath}")
                     onImageCaptured(finalFile.absolutePath)
                 } else {
-                    println("Failed to save image: file doesn't exist or is empty")
+                    android.util.Log.e("AddPillModal", "Failed to save image: file doesn't exist or is empty")
                 }
             } catch (e: Exception) {
-                println("Error saving image: ${e.message}")
+                android.util.Log.e("AddPillModal", "Error saving image: ${e.message}")
                 e.printStackTrace()
             }
         } else {
-            println("Camera failed or imageUri is null")
+            android.util.Log.e("AddPillModal", "Camera failed or imageUri is null")
         }
     }
 
     // Function to launch camera
     val launchCamera: () -> Unit = {
         try {
-            println("=== CAMERA LAUNCH DEBUG ===")
-            println("Image directory: ${imageFile.absolutePath}")
-            println("Directory exists: ${imageFile.exists()}")
-            println("Directory writable: ${imageFile.canWrite()}")
+            android.util.Log.d("AddPillModal", "=== CAMERA LAUNCH DEBUG ===")
+            android.util.Log.d("AddPillModal", "Image directory: ${imageFile.absolutePath}")
+            android.util.Log.d("AddPillModal", "Directory exists: ${imageFile.exists()}")
+            android.util.Log.d("AddPillModal", "Directory writable: ${imageFile.canWrite()}")
+            
+            // Ensure directory exists
+            if (!imageFile.exists()) {
+                val created = imageFile.mkdirs()
+                android.util.Log.d("AddPillModal", "Directory created: $created")
+            }
             
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-            println("Photo file path: ${photoFile.absolutePath}")
+            android.util.Log.d("AddPillModal", "Photo file path: ${photoFile.absolutePath}")
             
-            val created = photoFile.createNewFile()
-            println("File created: $created")
-            println("File exists: ${photoFile.exists()}")
+            // Create the file safely
+            if (!photoFile.exists()) {
+                val created = photoFile.createNewFile()
+                android.util.Log.d("AddPillModal", "File created: $created")
+            }
+            android.util.Log.d("AddPillModal", "File exists: ${photoFile.exists()}")
             
-            imageUri = FileProvider.getUriForFile(
-                context,
-                "${context.packageName}.fileprovider",
-                photoFile
-            )
-            println("Generated URI: $imageUri")
-            println("Package name: ${context.packageName}")
+            // Generate URI with proper error handling
+            imageUri = try {
+                FileProvider.getUriForFile(
+                    context,
+                    "${context.packageName}.fileprovider",
+                    photoFile
+                )
+            } catch (e: Exception) {
+                android.util.Log.e("AddPillModal", "Error generating FileProvider URI: ${e.message}")
+                null
+            }
             
-            println("Launching camera...")
-            cameraLauncher.launch(imageUri)
-            println("Camera launch called")
+            if (imageUri != null) {
+                android.util.Log.d("AddPillModal", "Generated URI: $imageUri")
+                android.util.Log.d("AddPillModal", "Package name: ${context.packageName}")
+                
+                android.util.Log.d("AddPillModal", "Launching camera...")
+                cameraLauncher.launch(imageUri)
+                android.util.Log.d("AddPillModal", "Camera launch called")
+            } else {
+                android.util.Log.e("AddPillModal", "Failed to generate URI, cannot launch camera")
+            }
         } catch (e: Exception) {
-            println("Error launching camera: ${e.message}")
+            android.util.Log.e("AddPillModal", "Error launching camera: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -621,9 +679,11 @@ fun ImageCaptureSection(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
-        println("Camera permission granted: $isGranted")
+        android.util.Log.d("AddPillModal", "Camera permission granted: $isGranted")
         if (isGranted) {
             launchCamera()
+        } else {
+            android.util.Log.w("AddPillModal", "Camera permission denied")
         }
     }
 
@@ -641,9 +701,13 @@ fun ImageCaptureSection(
                     }
                 }
                 if (photoFile.exists() && photoFile.length() > 0) {
+                    android.util.Log.d("AddPillModal", "Gallery image saved: ${photoFile.absolutePath}")
                     onImageCaptured(photoFile.absolutePath)
+                } else {
+                    android.util.Log.e("AddPillModal", "Failed to save gallery image")
                 }
             } catch (e: Exception) {
+                android.util.Log.e("AddPillModal", "Error saving gallery image: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -690,16 +754,16 @@ fun ImageCaptureSection(
         // Camera button
         OutlinedButton(
             onClick = {
-                println("=== CAMERA BUTTON CLICKED ===")
-                println("hasCameraPermission: $hasCameraPermission")
-                println("Context: $context")
-                println("Image directory: ${imageFile.absolutePath}")
+                android.util.Log.d("AddPillModal", "=== CAMERA BUTTON CLICKED ===")
+                android.util.Log.d("AddPillModal", "hasCameraPermission: $hasCameraPermission")
+                android.util.Log.d("AddPillModal", "Context: $context")
+                android.util.Log.d("AddPillModal", "Image directory: ${imageFile.absolutePath}")
                 
                 if (!hasCameraPermission) {
-                    println("Requesting camera permission...")
+                    android.util.Log.d("AddPillModal", "Requesting camera permission...")
                     permissionLauncher.launch(Manifest.permission.CAMERA)
                 } else {
-                    println("Opening camera directly...")
+                    android.util.Log.d("AddPillModal", "Opening camera directly...")
                     launchCamera()
                 }
             },
@@ -804,10 +868,14 @@ fun CustomDaysPickerDialog(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    if (isSelected) {
-                                        tempSelectedDays.remove(day)
-                                    } else {
-                                        tempSelectedDays.add(day)
+                                    try {
+                                        if (isSelected) {
+                                            tempSelectedDays.remove(day)
+                                        } else {
+                                            tempSelectedDays.add(day)
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("AddPillModal", "Error toggling day selection: ${e.message}")
                                     }
                                 }
                                 .padding(vertical = 8.dp),
@@ -816,10 +884,14 @@ fun CustomDaysPickerDialog(
                             Checkbox(
                                 checked = isSelected,
                                 onCheckedChange = { checked ->
-                                    if (checked) {
-                                        tempSelectedDays.add(day)
-                                    } else {
-                                        tempSelectedDays.remove(day)
+                                    try {
+                                        if (checked) {
+                                            tempSelectedDays.add(day)
+                                        } else {
+                                            tempSelectedDays.remove(day)
+                                        }
+                                    } catch (e: Exception) {
+                                        android.util.Log.e("AddPillModal", "Error changing checkbox: ${e.message}")
                                     }
                                 },
                                 colors = CheckboxDefaults.colors(
@@ -847,7 +919,13 @@ fun CustomDaysPickerDialog(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     OutlinedButton(
-                        onClick = onDismiss,
+                        onClick = {
+                            try {
+                                onDismiss()
+                            } catch (e: Exception) {
+                                android.util.Log.e("AddPillModal", "Error dismissing dialog: ${e.message}")
+                            }
+                        },
                         modifier = Modifier.weight(1f)
                     ) {
                         Text("Cancel")
@@ -855,7 +933,11 @@ fun CustomDaysPickerDialog(
                     
                     Button(
                         onClick = {
-                            onDaysSelected(tempSelectedDays)
+                            try {
+                                onDaysSelected(tempSelectedDays)
+                            } catch (e: Exception) {
+                                android.util.Log.e("AddPillModal", "Error selecting days: ${e.message}")
+                            }
                         },
                         modifier = Modifier.weight(1f),
                         enabled = tempSelectedDays.isNotEmpty(),

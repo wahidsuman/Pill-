@@ -51,7 +51,12 @@ fun HomeScreen(
             pills = pills,
             viewModel = viewModel,
             onAddPill = { 
-                viewModel?.showAddForm() ?: run { showAddPillModal = true }
+                try {
+                    viewModel?.showAddForm() ?: run { showAddPillModal = true }
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeScreen", "Error showing add form: ${e.message}")
+                    showAddPillModal = true
+                }
             }
         )
     }
@@ -59,15 +64,34 @@ fun HomeScreen(
     // Add Pill Modal
     if (showAddForm) {
         AddPillModal(
-            onDismiss = { viewModel?.hideAddForm() },
-            onAddPill = { pill -> viewModel?.addPill(pill) }
+            onDismiss = { 
+                try {
+                    viewModel?.hideAddForm()
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeScreen", "Error hiding add form: ${e.message}")
+                }
+            },
+            onAddPill = { pill -> 
+                try {
+                    viewModel?.addPill(pill)
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeScreen", "Error adding pill: ${e.message}")
+                }
+            }
         )
     }
     
     if (showAddPillModal) {
         AddPillModal(
             onDismiss = { showAddPillModal = false },
-            onAddPill = { /* Handle add pill */ }
+            onAddPill = { pill -> 
+                try {
+                    viewModel?.addPill(pill)
+                    showAddPillModal = false
+                } catch (e: Exception) {
+                    android.util.Log.e("HomeScreen", "Error adding pill from modal: ${e.message}")
+                }
+            }
         )
     }
 }
