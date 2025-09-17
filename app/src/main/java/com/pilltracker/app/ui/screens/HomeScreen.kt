@@ -156,9 +156,9 @@ fun TodayMedicationsSection(pills: List<Pill>) {
             items(pills) { pill ->
                 PillCard(
                     pill = pill,
-                    onToggleTaken = { /* Handle toggle */ },
-                    onEdit = { /* Handle edit */ },
-                    onDelete = { /* Handle delete */ }
+                    onMarkAsTaken = { /* Handle toggle */ },
+                    onEditPill = { /* Handle edit */ },
+                    onDeletePill = { /* Handle delete */ }
                 )
             }
         }
