@@ -40,9 +40,6 @@ jobs:
     - name: Build Debug APK
       run: ./gradlew assembleDebug
 
-    - name: Build Release APK
-      run: ./gradlew assembleRelease
-
     - name: Stage Debug APK
       run: |
         mkdir -p apk-output
@@ -53,30 +50,4 @@ jobs:
       with:
         name: pilltracker-debug-apk
         path: apk-output/
-        retention-days: 30
-
-    - name: Stage Release APK
-      run: |
-        mkdir -p apk-output-release
-        cp app/build/outputs/apk/release/app-release.apk apk-output-release/
-
-    - name: Upload Release APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: pilltracker-release-apk
-        path: apk-output-release/
-        retention-days: 30
-
-    - name: Upload Debug Bundle
-      uses: actions/upload-artifact@v4
-      with:
-        name: pilltracker-debug-bundle
-        path: app/build/outputs/bundle/debug/app-debug.aab
-        retention-days: 30
-
-    - name: Upload Release Bundle
-      uses: actions/upload-artifact@v4
-      with:
-        name: pilltracker-release-bundle
-        path: app/build/outputs/bundle/release/app-release.aab
         retention-days: 30
