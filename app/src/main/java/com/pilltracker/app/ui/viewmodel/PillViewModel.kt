@@ -85,10 +85,15 @@ class PillViewModel @Inject constructor(
 
     fun addPill(pill: Pill) {
         viewModelScope.launch {
-            val pillId = repository.insertPill(pill)
-            val pillWithId = pill.copy(id = pillId)
-            alarmManager.schedulePillReminder(pillWithId)
-            _showAddForm.value = false
+            try {
+                val pillId = repository.insertPill(pill)
+                val pillWithId = pill.copy(id = pillId)
+                alarmManager.schedulePillReminder(pillWithId)
+                _showAddForm.value = false
+                android.util.Log.d("PillViewModel", "Successfully added pill: ${pill.name}")
+            } catch (e: Exception) {
+                android.util.Log.e("PillViewModel", "Error adding pill: ${e.message}", e)
+            }
         }
     }
 

@@ -394,7 +394,7 @@ fun AddPillModal(
                                     val pill = Pill(
                                         id = editPill?.id ?: 0,
                                         name = name,
-                                        dosage = "", // No longer used
+                                        dosage = "1 tablet", // Default dosage
                                         times = validTimes,
                                         color = if (useImage) "" else color,
                                         imagePath = if (useImage) imagePath else "",

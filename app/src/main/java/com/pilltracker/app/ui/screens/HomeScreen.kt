@@ -193,7 +193,7 @@ fun NextRemindersSection(
                 text = "Next Reminders",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Gray800
+                color = Color.Black
             )
             if (pills.filter { !it.taken }.size > 3) {
                 TextButton(onClick = { /* Navigate to see all reminders */ }) {
@@ -289,7 +289,7 @@ fun MyMedicationSection(
                 text = "My Medication",
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
-                color = Gray800
+                color = Color.Black
             )
             
             FloatingActionButton(
