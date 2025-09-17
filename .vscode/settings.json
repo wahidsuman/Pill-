@@ -1,0 +1,9 @@
+{
+    "git.autofetch": true,
+    "git.autofetchPeriod": 10,
+    "git.enableSmartCommit": true,
+    "git.confirmSync": false,
+    "files.autoSave": "afterDelay",
+    "files.autoSaveDelay": 1000,
+    "terminal.integrated.shell.linux": "/bin/bash"
+}
