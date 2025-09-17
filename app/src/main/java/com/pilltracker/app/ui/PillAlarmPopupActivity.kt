@@ -140,38 +140,10 @@ fun PillAlarmPopup(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(24.dp),
+                    .padding(0.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Alarm icon
-                Icon(
-                    imageVector = Icons.Default.NotificationsActive,
-                    contentDescription = "Alarm",
-                    modifier = Modifier
-                        .size(48.dp)
-                        .padding(bottom = 16.dp),
-                    tint = Color(0xFFFF6B6B)
-                )
-                
-                // Title
-                Text(
-                    text = "🔔 PILL REMINDER",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2C2C2C),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                // Time
-                Text(
-                    text = "Time: $pillTime",
-                    fontSize = 16.sp,
-                    color = Color(0xFF666666),
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                
-                // Medicine image or color circle
+                // Medicine image - MAXIMUM AREA
                 if (imagePath.isNotEmpty()) {
                     // Show medicine image
                     val bitmap = remember(imagePath) {
@@ -187,43 +159,121 @@ fun PillAlarmPopup(
                             bitmap = bitmap.asImageBitmap(),
                             contentDescription = "Medicine image",
                             modifier = Modifier
-                                .size(120.dp)
-                                .clip(RoundedCornerShape(12.dp)),
+                                .fillMaxWidth()
+                                .height(280.dp)
+                                .padding(0.dp),
                             contentScale = ContentScale.Crop
                         )
                     } else {
-                        // Fallback to color circle
-                        ColorCircle(color = pillColor, size = 120.dp)
+                        // Fallback to color circle with maximum area
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(280.dp)
+                                .background(
+                                    color = when (pillColor) {
+                                        "blue" -> Color(0xFF2196F3)
+                                        "red" -> Color(0xFFF44336)
+                                        "green" -> Color(0xFF4CAF50)
+                                        "orange" -> Color(0xFFFF9800)
+                                        "purple" -> Color(0xFF9C27B0)
+                                        else -> Color(0xFF2196F3)
+                                    }
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Medication,
+                                contentDescription = "Medicine",
+                                modifier = Modifier.size(120.dp),
+                                tint = Color.White
+                            )
+                        }
                     }
                 } else {
-                    // Show color circle
-                    ColorCircle(color = pillColor, size = 120.dp)
+                    // Show color circle with maximum area
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(280.dp)
+                            .background(
+                                color = when (pillColor) {
+                                    "blue" -> Color(0xFF2196F3)
+                                    "red" -> Color(0xFFF44336)
+                                    "green" -> Color(0xFF4CAF50)
+                                    "orange" -> Color(0xFFFF9800)
+                                    "purple" -> Color(0xFF9C27B0)
+                                    else -> Color(0xFF2196F3)
+                                }
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Medication,
+                            contentDescription = "Medicine",
+                            modifier = Modifier.size(120.dp),
+                            tint = Color.White
+                        )
+                    }
                 }
                 
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Medicine name
-                Text(
-                    text = pillName,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFF2C2C2C),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                // Dosage if available
-                if (pillDosage.isNotEmpty()) {
+                // Content section below the image
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    // Alarm icon
+                    Icon(
+                        imageVector = Icons.Default.NotificationsActive,
+                        contentDescription = "Alarm",
+                        modifier = Modifier
+                            .size(32.dp)
+                            .padding(bottom = 8.dp),
+                        tint = Color(0xFFFF6B6B)
+                    )
+                    
+                    // Title
                     Text(
-                        text = "Dosage: $pillDosage",
+                        text = "🔔 PILL REMINDER",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2C2C2C),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    // Time
+                    Text(
+                        text = "Time: $pillTime",
                         fontSize = 14.sp,
                         color = Color(0xFF666666),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(bottom = 24.dp)
+                        modifier = Modifier.padding(bottom = 12.dp)
                     )
-                } else {
-                    Spacer(modifier = Modifier.height(24.dp))
-                }
+                    
+                    // Medicine name
+                    Text(
+                        text = pillName,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF2C2C2C),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(bottom = 4.dp)
+                    )
+                    
+                    // Dosage if available
+                    if (pillDosage.isNotEmpty()) {
+                        Text(
+                            text = "Dosage: $pillDosage",
+                            fontSize = 12.sp,
+                            color = Color(0xFF666666),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(bottom = 16.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.height(16.dp))
+                    }
                 
                 // Action buttons
                 Row(
@@ -267,35 +317,5 @@ fun PillAlarmPopup(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun ColorCircle(
-    color: String,
-    size: androidx.compose.ui.unit.Dp
-) {
-    val colorValue = when (color) {
-        "blue" -> Color(0xFF2196F3)
-        "red" -> Color(0xFFF44336)
-        "green" -> Color(0xFF4CAF50)
-        "orange" -> Color(0xFFFF9800)
-        "purple" -> Color(0xFF9C27B0)
-        else -> Color(0xFF2196F3)
-    }
-    
-    Box(
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(colorValue),
-        contentAlignment = Alignment.Center
-    ) {
-        Icon(
-            imageVector = Icons.Default.Medication,
-            contentDescription = "Medicine",
-            tint = Color.White,
-            modifier = Modifier.size(size * 0.6f)
-        )
     }
 }
