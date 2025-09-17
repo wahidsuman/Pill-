@@ -216,7 +216,7 @@ fun CalendarDayItem(
                 fontWeight = if (isSelected || isToday) FontWeight.Bold else FontWeight.Normal,
                 color = when {
                     isSelected -> Color.White
-                    !isCurrentMonth -> Gray300
+                    !isCurrentMonth -> Gray400
                     isToday -> Blue600
                     else -> Gray800
                 }
@@ -272,7 +272,7 @@ fun SelectedDateDetails(selectedDate: Calendar) {
                 Text(
                     text = "No medications scheduled for this day",
                     fontSize = 14.sp,
-                    color = Gray500,
+                    color = Gray600,
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
