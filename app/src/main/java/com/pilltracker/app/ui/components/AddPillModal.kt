@@ -539,29 +539,37 @@ fun ImageCaptureSection(
         }
     }
 
-    // Simplified camera launcher - let Android handle the file creation
+    var imageUri by remember { mutableStateOf<Uri?>(null) }
+
+    // Camera launcher with proper file handling
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
         println("Camera result: success=$success")
-        if (success) {
-            // The image is already saved by TakePicture contract
-            // We just need to find the latest image file
+        if (success && imageUri != null) {
             try {
-                val imageFiles = imageFile.listFiles { file ->
-                    file.name.startsWith("pill_") && file.name.endsWith(".jpg")
-                }?.sortedByDescending { it.lastModified() }
+                // Copy the image from the URI to our file
+                val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
+                val finalFile = File(imageFile, "pill_camera_${timestamp}.jpg")
                 
-                imageFiles?.firstOrNull()?.let { latestFile ->
-                    println("Image captured: ${latestFile.absolutePath}")
-                    onImageCaptured(latestFile.absolutePath)
+                context.contentResolver.openInputStream(imageUri!!)?.use { inputStream ->
+                    finalFile.outputStream().use { outputStream ->
+                        inputStream.copyTo(outputStream)
+                    }
+                }
+                
+                if (finalFile.exists() && finalFile.length() > 0) {
+                    println("Image saved successfully: ${finalFile.absolutePath}")
+                    onImageCaptured(finalFile.absolutePath)
+                } else {
+                    println("Failed to save image: file doesn't exist or is empty")
                 }
             } catch (e: Exception) {
-                println("Error finding captured image: ${e.message}")
+                println("Error saving image: ${e.message}")
                 e.printStackTrace()
             }
         } else {
-            println("Camera capture failed")
+            println("Camera failed or imageUri is null")
         }
     }
 
@@ -581,7 +589,7 @@ fun ImageCaptureSection(
             println("File created: $created")
             println("File exists: ${photoFile.exists()}")
             
-            val imageUri = FileProvider.getUriForFile(
+            imageUri = FileProvider.getUriForFile(
                 context,
                 "${context.packageName}.fileprovider",
                 photoFile
