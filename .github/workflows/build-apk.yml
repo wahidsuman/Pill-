@@ -26,6 +26,9 @@ jobs:
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v4
+      with:
+        api-level: 34
+        build-tools: 34.0.0
 
     - name: Debug Environment
       run: |
@@ -33,8 +36,12 @@ jobs:
         java -version
         echo "Android SDK location:"
         echo $ANDROID_HOME
+        echo "Android SDK contents:"
+        ls -la $ANDROID_HOME || echo "ANDROID_HOME not set"
         echo "Gradle version:"
         ./gradlew --version
+        echo "Environment variables:"
+        env | grep -i android
 
     - name: Cache Gradle packages
       uses: actions/cache@v3
