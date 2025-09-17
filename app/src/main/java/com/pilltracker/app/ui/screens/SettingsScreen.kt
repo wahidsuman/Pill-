@@ -9,6 +9,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -144,6 +145,7 @@ fun SettingsSection(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlarmSettingsDialog(
     onDismiss: () -> Unit
@@ -291,6 +293,7 @@ fun AlarmSettingsDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NotificationSettingsDialog(
     onDismiss: () -> Unit
@@ -419,6 +422,7 @@ fun NotificationSettingsDialog(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppPreferencesDialog(
     onDismiss: () -> Unit
