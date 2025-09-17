@@ -146,29 +146,31 @@ fun StatBox(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.height(80.dp),
+        modifier = modifier.height(100.dp),
         colors = CardDefaults.cardColors(containerColor = Color.White),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
             Text(
                 text = value,
-                fontSize = 24.sp,
+                fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
                 color = color
             )
             Spacer(modifier = Modifier.height(4.dp))
             Text(
                 text = title,
-                fontSize = 12.sp,
+                fontSize = 11.sp,
                 color = Gray600,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 2,
+                lineHeight = 12.sp
             )
         }
     }
@@ -197,7 +199,11 @@ fun NextRemindersSection(
             )
             if (pills.filter { !it.taken }.size > 3) {
                 TextButton(onClick = { /* Navigate to see all reminders */ }) {
-                    Text("See More")
+                    Text(
+                        text = "See More",
+                        color = Blue600,
+                        fontWeight = FontWeight.Medium
+                    )
                 }
             }
         }
@@ -224,7 +230,7 @@ fun NextRemindersSection(
                     Text(
                         text = "No upcoming reminders",
                         fontSize = 14.sp,
-                        color = Gray600,
+                        color = Gray700,
                         textAlign = TextAlign.Center
                     )
                 }
@@ -330,13 +336,13 @@ fun MyMedicationSection(
                     Text(
                         text = "No medications added yet",
                         fontSize = 16.sp,
-                        color = Gray600,
+                        color = Gray700,
                         textAlign = TextAlign.Center
                     )
                     Text(
                         text = "Add your first medication using the + button above",
                         fontSize = 14.sp,
-                        color = Gray600,
+                        color = Gray700,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(top = 4.dp)
                     )

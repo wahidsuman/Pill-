@@ -391,6 +391,16 @@ fun AddPillModal(
                             if (name.isNotBlank()) {
                                 val validTimes = times.filter { it.isNotBlank() }
                                 if (validTimes.isNotEmpty()) {
+                                    // Convert 24-hour format to 12-hour format for nextDose
+                                    val firstTime = validTimes.first()
+                                    val timeParts = firstTime.split(":")
+                                    val hour = timeParts[0].toInt()
+                                    val minute = timeParts[1].toInt()
+                                    
+                                    val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+                                    val ampm = if (hour < 12) "AM" else "PM"
+                                    val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
+                                    
                                     val pill = Pill(
                                         id = editPill?.id ?: 0,
                                         name = name,
@@ -398,7 +408,7 @@ fun AddPillModal(
                                         times = validTimes,
                                         color = if (useImage) "" else color,
                                         imagePath = if (useImage) imagePath else "",
-                                        nextDose = validTimes.first(),
+                                        nextDose = displayTime,
                                         frequency = frequency,
                                         customDays = if (frequency == "custom") customDays else emptyList(),
                                         taken = editPill?.taken ?: false
