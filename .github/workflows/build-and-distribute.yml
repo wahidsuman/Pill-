@@ -45,17 +45,29 @@ jobs:
         if [ -n "${{ secrets.GOOGLE_SERVICES_JSON }}" ]; then
           echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
           echo "✅ google-services.json created from secret"
+          
+          # Check if the secret contains the correct package name
+          if grep -q "com.pillreminder.app" app/google-services.json; then
+            echo "✅ Secret google-services.json contains correct package name"
+          else
+            echo "⚠️  Secret google-services.json does not contain correct package name"
+            echo "Using template file instead"
+            cp app/google-services.json.template app/google-services.json
+            echo "✅ Template google-services.json copied"
+          fi
         else
           echo "⚠️  GOOGLE_SERVICES_JSON secret not set, using template file"
           cp app/google-services.json.template app/google-services.json
           echo "✅ Template google-services.json copied"
         fi
         
-        # Verify the file was created and has the correct package name
+        # Final verification
         if grep -q "com.pillreminder.app" app/google-services.json; then
-          echo "✅ google-services.json contains correct package name"
+          echo "✅ Final google-services.json contains correct package name"
         else
           echo "❌ google-services.json does not contain correct package name"
+          echo "File contents:"
+          cat app/google-services.json
           exit 1
         fi
         

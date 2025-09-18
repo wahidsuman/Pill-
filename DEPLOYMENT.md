@@ -144,12 +144,18 @@ Use `app/google-services.json.template` as a reference for your actual `google-s
    - Verify `google-services.json` is in the correct location
    - Ensure Gradle wrapper is executable
 
-2. **Firebase Distribution Fails**
+2. **Google Services Package Name Mismatch**
+   - Error: "No matching client found for package name 'com.pillreminder.app'"
+   - **Solution**: Update your `GOOGLE_SERVICES_JSON` secret with correct package name
+   - **Quick Fix**: Use the helper script: `./update-google-services.sh`
+   - **Manual Fix**: Ensure your google-services.json contains `"package_name": "com.pillreminder.app"`
+
+3. **Firebase Distribution Fails**
    - Verify Firebase token is valid
    - Check if App ID is correct
    - Ensure tester group exists
 
-3. **Permission Issues**
+4. **Permission Issues**
    - Make sure `gradlew` is executable: `chmod +x gradlew`
    - Verify Firebase service account has proper permissions
 
