@@ -22,5 +22,10 @@
   },
   "storage": {
     "rules": "storage.rules"
+  },
+  "appdistribution": {
+    "app": "${{ secrets.FIREBASE_APP_ID }}",
+    "groups": ["testers"],
+    "releaseNotes": "Automated build from GitHub Actions"
   }
 }
