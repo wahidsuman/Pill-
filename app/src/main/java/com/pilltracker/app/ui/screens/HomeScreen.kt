@@ -27,60 +27,143 @@ import com.pilltracker.app.ui.theme.*
 fun HomeScreen(
     viewModel: PillViewModel
 ) {
-    val pills by viewModel.pills.collectAsState()
-    val showAddForm by viewModel.showAddForm.collectAsState()
-    
-    // Removed duplicate modal state - using only viewModel.showAddForm
+    // Simplified version - no database operations initially
+    var showAddForm by remember { mutableStateOf(false) }
+    var pills by remember { mutableStateOf<List<Pill>>(emptyList()) }
     
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
     ) {
-        // Header (without add button)
-        HomeHeader()
-        
-        // Stats boxes
-        StatsBoxesSection(pills = pills)
-        
-        // Next reminders segment
-        NextRemindersSection(pills = pills, viewModel = viewModel)
-        
-        // My medication segment
-        MyMedicationSection(
-            pills = pills,
-            viewModel = viewModel,
-            onAddPill = { 
-                try {
-                    viewModel.showAddForm()
-                } catch (e: Exception) {
-                    android.util.Log.e("HomeScreen", "Error showing add form: ${e.message}")
-                }
-            }
+        // Simple header
+        Text(
+            text = "Pill Reminder",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.White,
+            modifier = Modifier.padding(bottom = 16.dp)
         )
-    }
-    
-    // Add Pill Modal
-    if (showAddForm) {
-        AddPillModal(
-            onDismiss = { 
-                try {
-                    viewModel.hideAddForm()
-                } catch (e: Exception) {
-                    android.util.Log.e("HomeScreen", "Error hiding add form: ${e.message}")
-                }
+        
+        // Simple add button
+        Button(
+            onClick = { 
+                android.util.Log.d("HomeScreen", "Add button clicked")
+                showAddForm = true 
             },
-            onAddPill = { pill -> 
-                try {
-                    viewModel.addPill(pill)
-                } catch (e: Exception) {
-                    android.util.Log.e("HomeScreen", "Error adding pill: ${e.message}")
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Add New Pill")
+        }
+        
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        // Simple pills list
+        if (pills.isEmpty()) {
+            Text(
+                text = "No pills added yet",
+                color = Color.White,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center
+            )
+        } else {
+            pills.forEach { pill ->
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color.White)
+                ) {
+                    Text(
+                        text = pill.name,
+                        modifier = Modifier.padding(16.dp),
+                        color = Color.Black
+                    )
                 }
+            }
+        }
+    }
+    
+    // Simple modal
+    if (showAddForm) {
+        SimpleAddPillModal(
+            onDismiss = { showAddForm = false },
+            onAddPill = { pillName ->
+                android.util.Log.d("HomeScreen", "Adding pill: $pillName")
+                pills = pills + Pill(
+                    name = pillName,
+                    dosage = "1 tablet",
+                    times = listOf("08:00"),
+                    color = "blue",
+                    nextDose = "08:00"
+                )
+                showAddForm = false
             }
         )
     }
+}
+
+@Composable
+fun SimpleAddPillModal(
+    onDismiss: () -> Unit,
+    onAddPill: (String) -> Unit
+) {
+    var pillName by remember { mutableStateOf("") }
     
-    // Removed duplicate AddPillModal - using only the one controlled by viewModel.showAddForm
+    Dialog(onDismissRequest = onDismiss) {
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            colors = CardDefaults.cardColors(containerColor = Color.White)
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(
+                    text = "Add New Pill",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                OutlinedTextField(
+                    value = pillName,
+                    onValueChange = { pillName = it },
+                    label = { Text("Pill Name") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text("Cancel")
+                    }
+                    
+                    Button(
+                        onClick = { 
+                            if (pillName.isNotBlank()) {
+                                onAddPill(pillName.trim())
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        enabled = pillName.isNotBlank()
+                    ) {
+                        Text("Add")
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable

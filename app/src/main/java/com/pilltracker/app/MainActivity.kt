@@ -22,15 +22,30 @@ class MainActivity : ComponentActivity() {
             enableEdgeToEdge()
             setContent {
                 PillTrackerTheme {
-                    val pillViewModel: PillViewModel = hiltViewModel()
-                    
-                    Scaffold { paddingValues ->
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(paddingValues)
+                    // Ultra-simple version to isolate crash
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = androidx.compose.ui.Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                         ) {
-                            HomeScreen(viewModel = pillViewModel)
+                            androidx.compose.material3.Text(
+                                text = "Pill Tracker",
+                                fontSize = 24.sp,
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+                                color = androidx.compose.ui.graphics.Color.White
+                            )
+                            
+                            androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
+                            
+                            androidx.compose.material3.Button(
+                                onClick = { 
+                                    android.util.Log.d("MainActivity", "Button clicked - app is working!")
+                                }
+                            ) {
+                                androidx.compose.material3.Text("Test Button")
+                            }
                         }
                     }
                 }
