@@ -8,8 +8,9 @@ A modern Android pill reminder app built with Jetpack Compose, following the sam
 - **Pill Management**: Add, edit, and delete medications
 - **Reminder System**: Set multiple reminder times for each medication
 - **Visual Indicators**: Color-coded pills with taken/not taken status
-- **Statistics**: Track taken, pending, and total pills
+- **Quick Stats**: Track taken, pending, and total pills
 - **Local Storage**: Room database for data persistence
+- **Simplified Interface**: Clean, single-screen design focused on core functionality
 
 ## Architecture
 
@@ -32,10 +33,7 @@ app/
 │   │   └── converter/Converters.kt
 │   ├── ui/
 │   │   ├── screens/
-│   │   │   ├── HomeScreen.kt
-│   │   │   ├── StatsScreen.kt
-│   │   │   ├── CalendarScreen.kt
-│   │   │   └── SettingsScreen.kt
+│   │   │   └── HomeScreen.kt
 │   │   ├── components/
 │   │   │   ├── PillCard.kt
 │   │   │   ├── PillIcon.kt
@@ -105,12 +103,13 @@ Usage:
 
 ✅ **Header Section**: Shows app name, current date, and time  
 ✅ **Quick Stats**: Displays taken, pending, and total pill counts  
-✅ **Upcoming Reminders**: Shows next 2 upcoming medications  
+✅ **Upcoming Reminders**: Shows next 3 upcoming medications  
 ✅ **Pill List**: Displays all medications with status indicators  
 ✅ **Add Pill Modal**: Form to add new medications  
 ✅ **Color-coded Pills**: Visual distinction with different colors  
 ✅ **Time Management**: Multiple reminder times per medication  
 ✅ **Mark as Taken**: Toggle medication status  
+✅ **Simplified Navigation**: Single-screen design for better stability  
 
 ## Future Enhancements
 
