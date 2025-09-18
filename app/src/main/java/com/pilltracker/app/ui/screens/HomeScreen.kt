@@ -22,18 +22,28 @@ fun HomeScreen() {
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .padding(top = 24.dp) // Add top padding to avoid status bar overlap
     ) {
         // Header Section
         HomeHeader()
         
+        Spacer(modifier = Modifier.height(16.dp))
+        
         // Stats Boxes Section
         StatsBoxesSection()
+        
+        Spacer(modifier = Modifier.height(16.dp))
         
         // Next Reminders Section
         NextRemindersSection()
         
+        Spacer(modifier = Modifier.height(16.dp))
+        
         // My Medication Section
         MyMedicationSection()
+        
+        // Add bottom padding for better scrolling
+        Spacer(modifier = Modifier.height(24.dp))
     }
 }
 
@@ -141,7 +151,7 @@ fun StatBox(
 @Composable
 fun NextRemindersSection() {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -155,6 +165,8 @@ fun NextRemindersSection() {
                 color = Color.White
             )
         }
+        
+        Spacer(modifier = Modifier.height(12.dp))
         
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -189,7 +201,7 @@ fun NextRemindersSection() {
 @Composable
 fun MyMedicationSection() {
     Column(
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+        modifier = Modifier.padding(horizontal = 16.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
