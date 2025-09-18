@@ -428,7 +428,7 @@ fun AddPillModal(
                                                     times = validTimes,
                                                     color = if (useImage) "" else color,
                                                     imagePath = if (useImage) imagePath else "",
-                                                    nextDose = firstTime,
+                                                    nextDose = displayTime,
                                                     frequency = frequency,
                                                     customDays = if (frequency == "custom") customDays else emptyList(),
                                                     taken = editPill?.taken ?: false,
@@ -447,7 +447,7 @@ fun AddPillModal(
                                                     times = validTimes,
                                                     color = if (useImage) "" else color,
                                                     imagePath = if (useImage) imagePath else "",
-                                                    nextDose = firstTime, // Use original time if parsing fails
+                                                    nextDose = "12:00 PM", // Default fallback time
                                                     frequency = frequency,
                                                     customDays = if (frequency == "custom") customDays else emptyList(),
                                                     taken = editPill?.taken ?: false,

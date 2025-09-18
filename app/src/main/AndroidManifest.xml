@@ -41,17 +41,6 @@
         </activity>
         
         <activity
-            android:name="com.pilltracker.SimpleMainActivity"
-            android:exported="true"
-            android:label="PillTracker Simple"
-            android:theme="@style/Theme.PillTracker">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
-        
-        <activity
             android:name=".ui.PillAlarmPopupActivity"
             android:exported="false"
             android:launchMode="singleInstance"
