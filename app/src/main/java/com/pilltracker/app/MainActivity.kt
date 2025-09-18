@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.pilltracker.app.ui.theme.PillTrackerTheme
 
 // Temporarily remove @AndroidEntryPoint to test without Hilt
 class MainActivity : ComponentActivity() {
@@ -17,8 +16,8 @@ class MainActivity : ComponentActivity() {
         try {
             enableEdgeToEdge()
             setContent {
-                PillTrackerTheme {
-                    // Ultra-simple version without any dependencies
+                // Use default Material3 theme instead of custom theme
+                androidx.compose.material3.MaterialTheme {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = androidx.compose.ui.Alignment.Center
@@ -29,16 +28,14 @@ class MainActivity : ComponentActivity() {
                             androidx.compose.material3.Text(
                                 text = "Pill Tracker - Working!",
                                 fontSize = 24.sp,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                                color = androidx.compose.ui.graphics.Color.White
+                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
                             )
                             
                             androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
                             
                             androidx.compose.material3.Text(
                                 text = "App is running successfully",
-                                fontSize = 16.sp,
-                                color = androidx.compose.ui.graphics.Color.White
+                                fontSize = 16.sp
                             )
                             
                             androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
