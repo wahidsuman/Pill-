@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalContext
 import android.Manifest
 import android.content.pm.PackageManager
@@ -76,7 +77,7 @@ fun AddPillModal(
     var color by remember { mutableStateOf(editPill?.color ?: "blue") }
     var imagePath by remember { mutableStateOf(editPill?.imagePath ?: "") }
     var useImage by remember { mutableStateOf(editPill?.imagePath?.isNotEmpty() == true) }
-    var times by remember { mutableStateOf(editPill?.times ?: listOf("")) }
+    var times by remember { mutableStateOf(editPill?.times?.takeIf { it.isNotEmpty() } ?: listOf("12:00")) }
     var showTimePicker by remember { mutableStateOf(false) }
     var selectedTimeIndex by remember { mutableStateOf(0) }
     var frequency by remember { mutableStateOf(editPill?.frequency ?: "daily") }
@@ -536,32 +537,38 @@ fun AddPillModal(
             calendar.set(Calendar.MINUTE, 0)
         }
 
-        LaunchedEffect(showTimePicker) {
-            if (showTimePicker) {
-                try {
-                    val timePickerDialog = TimePickerDialog(
-                        context,
-                        { _, hourOfDay, minute ->
-                            try {
-                                val newTimes = times.toMutableList()
-                                if (selectedTimeIndex < newTimes.size) {
-                                    newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
-                                    times = newTimes
-                                }
-                                showTimePicker = false
-                            } catch (e: Exception) {
-                                android.util.Log.e("AddPillModal", "Error updating time: ${e.message}")
-                                showTimePicker = false
+        // Time Picker Dialog - moved outside LaunchedEffect to prevent crashes
+        if (showTimePicker) {
+            DisposableEffect(Unit) {
+                val timePickerDialog = TimePickerDialog(
+                    context,
+                    { _, hourOfDay, minute ->
+                        try {
+                            val newTimes = times.toMutableList()
+                            if (selectedTimeIndex < newTimes.size) {
+                                newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
+                                times = newTimes
                             }
-                        },
-                        calendar.get(Calendar.HOUR_OF_DAY),
-                        calendar.get(Calendar.MINUTE),
-                        false // 24-hour format
-                    )
-                    timePickerDialog.show()
-                } catch (e: Exception) {
-                    android.util.Log.e("AddPillModal", "Error showing time picker: ${e.message}")
-                    showTimePicker = false
+                            showTimePicker = false
+                        } catch (e: Exception) {
+                            android.util.Log.e("AddPillModal", "Error updating time: ${e.message}")
+                            showTimePicker = false
+                        }
+                    },
+                    calendar.get(Calendar.HOUR_OF_DAY),
+                    calendar.get(Calendar.MINUTE),
+                    false // 24-hour format
+                )
+                timePickerDialog.show()
+                
+                onDispose {
+                    try {
+                        if (timePickerDialog.isShowing) {
+                            timePickerDialog.dismiss()
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("AddPillModal", "Error disposing time picker: ${e.message}")
+                    }
                 }
             }
         }
