@@ -23,11 +23,17 @@ if [ -z "$FIREBASE_PROJECT_ID" ]; then
     exit 1
 fi
 
-# Check if google-services.json exists
+# Check if google-services.json exists, create from template if not
 if [ ! -f "app/google-services.json" ]; then
-    echo "❌ google-services.json not found"
-    echo "Please add your google-services.json file to app/ directory"
-    exit 1
+    echo "⚠️  google-services.json not found, using template file"
+    if [ -f "app/google-services.json.template" ]; then
+        cp app/google-services.json.template app/google-services.json
+        echo "✅ Template google-services.json copied"
+    else
+        echo "❌ google-services.json.template not found"
+        echo "Please add your google-services.json file to app/ directory"
+        exit 1
+    fi
 fi
 
 echo "✅ Environment variables validated"

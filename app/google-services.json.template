@@ -1,33 +1,33 @@
 {
   "project_info": {
-    "project_number": "YOUR_PROJECT_NUMBER",
-    "project_id": "YOUR_PROJECT_ID",
-    "storage_bucket": "YOUR_PROJECT_ID.appspot.com"
+    "project_number": "123456789",
+    "project_id": "pill-reminder-app",
+    "storage_bucket": "pill-reminder-app.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "YOUR_APP_ID",
+        "mobilesdk_app_id": "1:123456789:android:abcdef123456",
         "android_client_info": {
           "package_name": "com.pillreminder.app"
         }
       },
       "oauth_client": [
         {
-          "client_id": "YOUR_CLIENT_ID",
+          "client_id": "123456789-abcdefghijklmnop.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "YOUR_API_KEY"
+          "current_key": "AIzaSyDummyKeyForTesting123456789"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "YOUR_CLIENT_ID",
+              "client_id": "123456789-abcdefghijklmnop.apps.googleusercontent.com",
               "client_type": 3
             }
           ]
