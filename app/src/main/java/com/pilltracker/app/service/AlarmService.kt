@@ -20,7 +20,6 @@ import android.os.VibratorManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.pilltracker.app.MainActivity
-import com.pilltracker.app.R
 import com.pilltracker.app.ui.PillAlarmPopupActivity
 
 class AlarmService : Service() {
@@ -302,12 +301,12 @@ class AlarmService : Service() {
             .setOngoing(true)
             .setContentIntent(appPendingIntent)
             .addAction(
-                R.drawable.ic_launcher_foreground,
+                android.R.drawable.ic_media_pause,
                 "Stop",
                 stopPendingIntent
             )
             .addAction(
-                R.drawable.ic_launcher_foreground,
+                android.R.drawable.ic_media_play,
                 "Snooze (5min)",
                 snoozePendingIntent
             )
