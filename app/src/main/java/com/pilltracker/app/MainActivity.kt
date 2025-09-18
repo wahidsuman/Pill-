@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import com.pilltracker.app.ui.screens.HomeScreen
 
 // Temporarily remove @AndroidEntryPoint to test without Hilt
 class MainActivity : ComponentActivity() {
@@ -19,35 +20,9 @@ class MainActivity : ComponentActivity() {
                 // Use default Material3 theme instead of custom theme
                 androidx.compose.material3.MaterialTheme {
                     Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = androidx.compose.ui.Alignment.Center
+                        modifier = Modifier.fillMaxSize()
                     ) {
-                        Column(
-                            horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
-                        ) {
-                            androidx.compose.material3.Text(
-                                text = "Pill Tracker - Working!",
-                                fontSize = 24.sp,
-                                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold
-                            )
-                            
-                            androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
-                            
-                            androidx.compose.material3.Text(
-                                text = "App is running successfully",
-                                fontSize = 16.sp
-                            )
-                            
-                            androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
-                            
-                            androidx.compose.material3.Button(
-                                onClick = { 
-                                    android.util.Log.d("MainActivity", "Button clicked - App is working!")
-                                }
-                            ) {
-                                androidx.compose.material3.Text("Test Button")
-                            }
-                        }
+                        HomeScreen()
                     }
                 }
             }

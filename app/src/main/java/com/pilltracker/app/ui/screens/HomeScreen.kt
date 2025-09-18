@@ -1,6 +1,11 @@
 package com.pilltracker.app.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,174 +21,22 @@ fun HomeScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
-        // Simple header
-        Text(
-            text = "Pill Reminder",
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            color = Color.Black,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
+        // Header Section
+        HomeHeader()
         
-        // Welcome message
-        Text(
-            text = "Welcome to your pill reminder app!",
-            fontSize = 18.sp,
-            color = Color.Gray,
-            modifier = Modifier.padding(bottom = 32.dp)
-        )
+        // Stats Boxes Section
+        StatsBoxesSection()
         
-        // Simple stats cards
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            StatCard(
-                title = "Today",
-                value = "0",
-                modifier = Modifier.weight(1f)
-            )
-            StatCard(
-                title = "This Week",
-                value = "0",
-                modifier = Modifier.weight(1f)
-            )
-        }
+        // Next Reminders Section
+        NextRemindersSection()
         
-        Spacer(modifier = Modifier.height(32.dp))
-        
-        // Simple message
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F4F6))
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Text(
-                    text = "📱",
-                    fontSize = 48.sp,
-                    modifier = Modifier.padding(bottom = 16.dp)
-                )
-                Text(
-                    text = "Your pill reminder app is ready!",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Black,
-                    textAlign = TextAlign.Center
-                )
-                Text(
-                    text = "Add your medications to get started",
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 8.dp)
-                )
-            }
-        }
+        // My Medication Section
+        MyMedicationSection()
     }
 }
 
-@Composable
-fun StatCard(
-    title: String,
-    value: String,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier.height(100.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = value,
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color(0xFF3B82F6)
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = title,
-                fontSize = 12.sp,
-                color = Color.Gray,
-                textAlign = TextAlign.Center
-            )
-        }
-    }
-}
-
-@Composable
-fun SimpleAddPillModal(
-    onDismiss: () -> Unit,
-    onAddPill: (String) -> Unit
-) {
-    var pillName by remember { mutableStateOf("") }
-    
-    Dialog(onDismissRequest = onDismiss) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White)
-        ) {
-            Column(
-                modifier = Modifier.padding(24.dp)
-            ) {
-                Text(
-                    text = "Add New Pill",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                OutlinedTextField(
-                    value = pillName,
-                    onValueChange = { pillName = it },
-                    label = { Text("Pill Name") },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Text("Cancel")
-                    }
-                    
-                    Button(
-                        onClick = { 
-                            if (pillName.isNotBlank()) {
-                                onAddPill(pillName.trim())
-                            }
-                        },
-                        modifier = Modifier.weight(1f),
-                        enabled = pillName.isNotBlank()
-                    ) {
-                        Text("Add")
-                    }
-                }
-            }
-        }
-    }
-}
 
 @Composable
 fun HomeHeader() {
@@ -191,7 +44,7 @@ fun HomeHeader() {
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Blue600),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF3B82F6)),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
         Column(
@@ -219,11 +72,7 @@ fun HomeHeader() {
 }
 
 @Composable
-fun StatsBoxesSection(pills: List<Pill>) {
-    val takenToday = pills.count { it.taken }
-    val totalToday = pills.size
-    val pendingToday = totalToday - takenToday
-    
+fun StatsBoxesSection() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -232,20 +81,20 @@ fun StatsBoxesSection(pills: List<Pill>) {
     ) {
         StatBox(
             title = "Taken Today",
-            value = takenToday.toString(),
-            color = Green600,
+            value = "0",
+            color = Color(0xFF10B981),
             modifier = Modifier.weight(1f)
         )
         StatBox(
             title = "Pending",
-            value = pendingToday.toString(),
-            color = Orange600,
+            value = "0",
+            color = Color(0xFFF59E0B),
             modifier = Modifier.weight(1f)
         )
         StatBox(
             title = "Total",
-            value = totalToday.toString(),
-            color = Blue600,
+            value = "0",
+            color = Color(0xFF3B82F6),
             modifier = Modifier.weight(1f)
         )
     }
@@ -260,7 +109,7 @@ fun StatBox(
 ) {
     Card(
         modifier = modifier.height(100.dp),
-        colors = CardDefaults.cardColors(containerColor = Gray800),
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(
@@ -290,12 +139,7 @@ fun StatBox(
 }
 
 @Composable
-fun NextRemindersSection(
-    pills: List<Pill>,
-    viewModel: PillViewModel
-) {
-    val upcomingPills = pills.filter { !it.taken }.take(3)
-    
+fun NextRemindersSection() {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
@@ -310,92 +154,40 @@ fun NextRemindersSection(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            if (pills.filter { !it.taken }.size > 3) {
-                TextButton(onClick = { /* Navigate to see all reminders */ }) {
-                    Text(
-                        text = "See More",
-                        color = Blue600,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-            }
         }
         
-        if (upcomingPills.isEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Gray800),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = null,
-                        tint = Gray400,
-                        modifier = Modifier.size(32.dp)
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "No upcoming reminders",
-                        fontSize = 14.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(upcomingPills) { pill ->
-                    SimpleReminderCard(pill = pill)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun SimpleReminderCard(pill: Pill) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Gray800),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
         ) {
-            Text(
-                text = pill.name,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = Color.White,
-                modifier = Modifier.weight(1f)
-            )
-            Text(
-                text = pill.nextDose,
-                fontSize = 14.sp,
-                color = Blue600,
-                fontWeight = FontWeight.Medium
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Notifications,
+                    contentDescription = null,
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(32.dp)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "No upcoming reminders",
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
 
+
 @Composable
-fun MyMedicationSection(
-    pills: List<Pill>,
-    viewModel: PillViewModel,
-    onAddPill: () -> Unit
-) {
+fun MyMedicationSection() {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
@@ -412,9 +204,9 @@ fun MyMedicationSection(
             )
             
             FloatingActionButton(
-                onClick = onAddPill,
+                onClick = { /* Add medication functionality removed */ },
                 modifier = Modifier.size(48.dp),
-                containerColor = Blue600,
+                containerColor = Color(0xFF3B82F6),
                 contentColor = Color.White
             ) {
                 Icon(
@@ -427,52 +219,37 @@ fun MyMedicationSection(
         
         Spacer(modifier = Modifier.height(12.dp))
         
-        if (pills.isEmpty()) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Gray800),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF1F2937)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(32.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Medication,
-                        contentDescription = null,
-                        tint = Gray400,
-                        modifier = Modifier.size(48.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "No medications added yet",
-                        fontSize = 16.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center
-                    )
-                    Text(
-                        text = "Add your first medication using the + button above",
-                        fontSize = 14.sp,
-                        color = Color.White,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 4.dp)
-                    )
-                }
-            }
-        } else {
-            LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(pills) { pill ->
-                    PillCard(
-                        pill = pill,
-                        onMarkAsTaken = { viewModel.markAsTaken(pill) },
-                        onEditPill = { viewModel.showEditForm(pill) },
-                        onDeletePill = { viewModel.deletePill(pill) }
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Default.Medication,
+                    contentDescription = null,
+                    tint = Color(0xFF9CA3AF),
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "No medications added yet",
+                    fontSize = 16.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Add your first medication using the + button above",
+                    fontSize = 14.sp,
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 4.dp)
+                )
             }
         }
     }
