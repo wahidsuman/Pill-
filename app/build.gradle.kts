@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
 }
@@ -82,6 +83,10 @@ dependencies {
     
     // Work Manager for notifications
     implementation("androidx.work:work-runtime-ktx:2.9.0")
+    
+    // Koin for dependency injection
+    implementation("io.insert-koin:koin-android:3.5.0")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.0")
     
     // Testing
     testImplementation("junit:junit:4.13.2")
