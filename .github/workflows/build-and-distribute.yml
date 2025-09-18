@@ -122,20 +122,32 @@ jobs:
       run: |
         if [ -n "${{ secrets.FIREBASE_APP_ID }}" ] && [ -n "${{ secrets.FIREBASE_TOKEN }}" ]; then
           echo "📱 Distributing APK to Firebase App Distribution..."
+          echo "🔧 Debug information:"
+          echo "   - App ID: ${{ secrets.FIREBASE_APP_ID }}"
+          echo "   - Token: ${FIREBASE_TOKEN:0:10}... (truncated)"
+          echo "   - APK file: app/build/outputs/apk/release/app-release.apk"
+          echo "   - File exists: $(test -f app/build/outputs/apk/release/app-release.apk && echo 'Yes' || echo 'No')"
+          echo ""
+          
           if firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
             --app "${{ secrets.FIREBASE_APP_ID }}" \
             --groups "testers" \
             --release-notes "Build from commit ${{ github.sha }} - ${{ github.event.head_commit.message }}" \
-            --token "${{ secrets.FIREBASE_TOKEN }}" 2>/dev/null; then
+            --token "${{ secrets.FIREBASE_TOKEN }}"; then
             echo "✅ APK distributed successfully to Firebase App Distribution"
           else
-            echo "⚠️  Failed to distribute APK to Firebase App Distribution"
-            echo "   App ID: ${{ secrets.FIREBASE_APP_ID }}"
-            echo "   This may be due to invalid App ID or insufficient permissions"
+            echo "❌ Failed to distribute APK to Firebase App Distribution"
+            echo "   Please check the error messages above for details"
+            echo "   Common issues:"
+            echo "   - Invalid App ID"
+            echo "   - Invalid Firebase token"
+            echo "   - Insufficient permissions"
+            echo "   - App not found in Firebase project"
             echo "   APK files are still available as artifacts"
           fi
         else
           echo "⚠️  Firebase App ID or token not set, skipping distribution"
+          echo "   Required secrets: FIREBASE_APP_ID, FIREBASE_TOKEN"
           echo "   APK files are available as artifacts for manual distribution"
         fi
       env:
