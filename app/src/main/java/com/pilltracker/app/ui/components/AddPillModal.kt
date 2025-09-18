@@ -409,6 +409,8 @@ fun AddPillModal(
                                     val validTimes = times.filter { it.isNotBlank() && it.trim().isNotEmpty() }
                                     android.util.Log.d("AddPillModal", "Valid times: $validTimes")
                                     if (validTimes.isNotEmpty()) {
+                                        // Ensure we have at least one valid time
+                                        val safeTimes = if (validTimes.isEmpty()) listOf("12:00") else validTimes
                                         // Convert 24-hour format to 12-hour format for nextDose
                                         val firstTime = validTimes.first()
                                         val timeParts = firstTime.split(":")
@@ -425,7 +427,7 @@ fun AddPillModal(
                                                     id = editPill?.id ?: 0,
                                                     name = name.trim(),
                                                     dosage = "1 tablet", // Default dosage
-                                                    times = validTimes,
+                                                    times = safeTimes,
                                                     color = if (useImage) "" else color,
                                                     imagePath = if (useImage) imagePath else "",
                                                     nextDose = displayTime,
@@ -444,7 +446,7 @@ fun AddPillModal(
                                                     id = editPill?.id ?: 0,
                                                     name = name.trim(),
                                                     dosage = "1 tablet",
-                                                    times = validTimes,
+                                                    times = safeTimes,
                                                     color = if (useImage) "" else color,
                                                     imagePath = if (useImage) imagePath else "",
                                                     nextDose = "12:00 PM", // Default fallback time
@@ -461,7 +463,23 @@ fun AddPillModal(
                                             android.util.Log.e("AddPillModal", "Invalid time format: $firstTime")
                                         }
                                     } else {
-                                        android.util.Log.e("AddPillModal", "No valid times provided")
+                                        android.util.Log.e("AddPillModal", "No valid times provided, using default")
+                                        // Create pill with default time
+                                        val pill = Pill(
+                                            id = editPill?.id ?: 0,
+                                            name = name.trim(),
+                                            dosage = "1 tablet",
+                                            times = listOf("12:00"),
+                                            color = if (useImage) "" else color,
+                                            imagePath = if (useImage) imagePath else "",
+                                            nextDose = "12:00 PM",
+                                            frequency = frequency,
+                                            customDays = if (frequency == "custom") customDays else emptyList(),
+                                            taken = editPill?.taken ?: false,
+                                            createdAt = System.currentTimeMillis()
+                                        )
+                                        android.util.Log.d("AddPillModal", "Created default time pill: $pill")
+                                        onAddPill(pill)
                                     }
                                 } else {
                                     android.util.Log.e("AddPillModal", "Pill name is blank")

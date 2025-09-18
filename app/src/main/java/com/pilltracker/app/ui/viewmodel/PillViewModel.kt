@@ -109,10 +109,20 @@ class PillViewModel @Inject constructor(
                 android.util.Log.d("PillViewModel", "Adding pill: name=${pill.name}, times=${pill.times}, color=${pill.color}")
                 
                 val pillId = try {
+                    // Validate pill data before insertion
+                    if (pill.name.isBlank()) {
+                        android.util.Log.e("PillViewModel", "Cannot insert pill: name is blank")
+                        return@launch
+                    }
+                    if (pill.times.isEmpty()) {
+                        android.util.Log.e("PillViewModel", "Cannot insert pill: times list is empty")
+                        return@launch
+                    }
                     repository.insertPill(pill)
                 } catch (e: Exception) {
                     android.util.Log.e("PillViewModel", "Database insert failed: ${e.message}", e)
-                    throw e // Re-throw to be caught by outer try-catch
+                    // Don't re-throw, just log and continue
+                    return@launch
                 }
                 val pillWithId = pill.copy(id = pillId)
                 
