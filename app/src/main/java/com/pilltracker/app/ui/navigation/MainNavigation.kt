@@ -32,7 +32,6 @@ fun MainNavigation() {
     Scaffold(
         bottomBar = {
             NavigationBar(
-                modifier = Modifier.height(80.dp),
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = MaterialTheme.colorScheme.onSurface
             ) {

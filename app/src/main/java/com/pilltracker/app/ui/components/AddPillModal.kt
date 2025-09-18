@@ -83,7 +83,15 @@ fun AddPillModal(
     var customDays by remember { mutableStateOf(editPill?.customDays ?: listOf<String>()) }
     var showCustomDaysPicker by remember { mutableStateOf(false) }
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = {
+            try {
+                onDismiss()
+            } catch (e: Exception) {
+                android.util.Log.e("AddPillModal", "Error dismissing dialog: ${e.message}")
+            }
+        }
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
@@ -862,7 +870,15 @@ fun CustomDaysPickerDialog(
     
     val daysOfWeek = listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
 
-    Dialog(onDismissRequest = onDismiss) {
+    Dialog(
+        onDismissRequest = {
+            try {
+                onDismiss()
+            } catch (e: Exception) {
+                android.util.Log.e("AddPillModal", "Error dismissing custom days dialog: ${e.message}")
+            }
+        }
+    ) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()

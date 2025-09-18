@@ -171,8 +171,9 @@ class PillViewModel @Inject constructor(
 
     fun showAddForm() {
         try {
+            android.util.Log.d("PillViewModel", "Attempting to show add form")
             _showAddForm.value = true
-            android.util.Log.d("PillViewModel", "Showing add form")
+            android.util.Log.d("PillViewModel", "Successfully showed add form")
         } catch (e: Exception) {
             android.util.Log.e("PillViewModel", "Error showing add form: ${e.message}", e)
         }
@@ -180,8 +181,9 @@ class PillViewModel @Inject constructor(
 
     fun hideAddForm() {
         try {
+            android.util.Log.d("PillViewModel", "Attempting to hide add form")
             _showAddForm.value = false
-            android.util.Log.d("PillViewModel", "Hiding add form")
+            android.util.Log.d("PillViewModel", "Successfully hid add form")
         } catch (e: Exception) {
             android.util.Log.e("PillViewModel", "Error hiding add form: ${e.message}", e)
         }

@@ -30,7 +30,7 @@ fun HomeScreen(
     val pills by viewModel.pills.collectAsState()
     val showAddForm by viewModel.showAddForm.collectAsState()
     
-    var showAddPillModal by remember { mutableStateOf(false) }
+    // Removed duplicate modal state - using only viewModel.showAddForm
     
     Column(
         modifier = Modifier
@@ -55,7 +55,6 @@ fun HomeScreen(
                     viewModel.showAddForm()
                 } catch (e: Exception) {
                     android.util.Log.e("HomeScreen", "Error showing add form: ${e.message}")
-                    showAddPillModal = true
                 }
             }
         )
@@ -81,19 +80,7 @@ fun HomeScreen(
         )
     }
     
-    if (showAddPillModal) {
-        AddPillModal(
-            onDismiss = { showAddPillModal = false },
-            onAddPill = { pill -> 
-                try {
-                    viewModel.addPill(pill)
-                    showAddPillModal = false
-                } catch (e: Exception) {
-                    android.util.Log.e("HomeScreen", "Error adding pill from modal: ${e.message}")
-                }
-            }
-        )
-    }
+    // Removed duplicate AddPillModal - using only the one controlled by viewModel.showAddForm
 }
 
 @Composable
