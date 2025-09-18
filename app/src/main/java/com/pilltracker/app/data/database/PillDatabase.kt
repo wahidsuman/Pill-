@@ -9,7 +9,7 @@ import com.pilltracker.app.data.model.Pill
 
 @Database(
     entities = [Pill::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

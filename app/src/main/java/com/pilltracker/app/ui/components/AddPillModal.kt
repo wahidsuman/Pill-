@@ -397,8 +397,8 @@ fun AddPillModal(
                                 android.util.Log.d("AddPillModal", "Frequency: '$frequency'")
                                 android.util.Log.d("AddPillModal", "CustomDays: $customDays")
                                 
-                                if (name.isNotBlank()) {
-                                    val validTimes = times.filter { it.isNotBlank() }
+                                if (name.isNotBlank() && name.trim().isNotEmpty()) {
+                                    val validTimes = times.filter { it.isNotBlank() && it.trim().isNotEmpty() }
                                     android.util.Log.d("AddPillModal", "Valid times: $validTimes")
                                     if (validTimes.isNotEmpty()) {
                                         // Convert 24-hour format to 12-hour format for nextDose
@@ -464,7 +464,8 @@ fun AddPillModal(
                         },
                         modifier = Modifier.weight(1f),
                         enabled = name.isNotBlank() && times.any { it.isNotBlank() } && 
-                                (frequency != "custom" || customDays.isNotEmpty()),
+                                (frequency != "custom" || customDays.isNotEmpty()) &&
+                                name.trim().length > 0,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Blue600,
                             contentColor = Color.White,
