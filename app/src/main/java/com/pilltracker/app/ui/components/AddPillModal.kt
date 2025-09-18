@@ -616,10 +616,18 @@ fun ImageCaptureSection(
         )
     }
 
-    // Create image file directory - use internal storage for FileProvider compatibility
-    val imageFile = remember {
-        File(context.filesDir, "pill_images").apply {
-            if (!exists()) mkdirs()
+    // Use internal app storage for better security and reliability
+    val imageDirectory = remember {
+        try {
+            val dir = File(context.filesDir, "pill_images")
+            if (!dir.exists()) {
+                val created = dir.mkdirs()
+                android.util.Log.d("ImageCapture", "Created directory: $created")
+            }
+            dir
+        } catch (e: Exception) {
+            android.util.Log.e("ImageCapture", "Error creating directory: ${e.message}")
+            context.filesDir // Fallback to files directory
         }
     }
 
@@ -629,13 +637,15 @@ fun ImageCaptureSection(
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        android.util.Log.d("AddPillModal", "Camera result: success=$success")
+        android.util.Log.d("ImageCapture", "Camera result: success=$success")
         if (success && imageUri != null) {
             try {
-                // Copy the image from the URI to our file
+                // The image is already saved to the file specified by imageUri
+                // We just need to verify it exists and get the path
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val finalFile = File(imageFile, "pill_camera_${timestamp}.jpg")
+                val finalFile = File(imageDirectory, "pill_camera_${timestamp}.jpg")
                 
+                // Copy from the temporary URI location to our permanent location
                 context.contentResolver.openInputStream(imageUri!!)?.use { inputStream ->
                     finalFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
@@ -643,44 +653,44 @@ fun ImageCaptureSection(
                 }
                 
                 if (finalFile.exists() && finalFile.length() > 0) {
-                    android.util.Log.d("AddPillModal", "Image saved successfully: ${finalFile.absolutePath}")
+                    android.util.Log.d("ImageCapture", "Image saved successfully: ${finalFile.absolutePath}")
                     onImageCaptured(finalFile.absolutePath)
                 } else {
-                    android.util.Log.e("AddPillModal", "Failed to save image: file doesn't exist or is empty")
+                    android.util.Log.e("ImageCapture", "Failed to save image: file doesn't exist or is empty")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AddPillModal", "Error saving image: ${e.message}")
+                android.util.Log.e("ImageCapture", "Error saving image: ${e.message}")
                 e.printStackTrace()
             }
         } else {
-            android.util.Log.e("AddPillModal", "Camera failed or imageUri is null")
+            android.util.Log.e("ImageCapture", "Camera failed or imageUri is null")
         }
     }
 
     // Function to launch camera
     val launchCamera: () -> Unit = {
         try {
-            android.util.Log.d("AddPillModal", "=== CAMERA LAUNCH DEBUG ===")
-            android.util.Log.d("AddPillModal", "Image directory: ${imageFile.absolutePath}")
-            android.util.Log.d("AddPillModal", "Directory exists: ${imageFile.exists()}")
-            android.util.Log.d("AddPillModal", "Directory writable: ${imageFile.canWrite()}")
+            android.util.Log.d("ImageCapture", "=== CAMERA LAUNCH DEBUG ===")
+            android.util.Log.d("ImageCapture", "Image directory: ${imageDirectory.absolutePath}")
+            android.util.Log.d("ImageCapture", "Directory exists: ${imageDirectory.exists()}")
+            android.util.Log.d("ImageCapture", "Directory writable: ${imageDirectory.canWrite()}")
             
             // Ensure directory exists
-            if (!imageFile.exists()) {
-                val created = imageFile.mkdirs()
-                android.util.Log.d("AddPillModal", "Directory created: $created")
+            if (!imageDirectory.exists()) {
+                val created = imageDirectory.mkdirs()
+                android.util.Log.d("ImageCapture", "Directory created: $created")
             }
             
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-            val photoFile = File(imageFile, "pill_${timestamp}.jpg")
-            android.util.Log.d("AddPillModal", "Photo file path: ${photoFile.absolutePath}")
+            val photoFile = File(imageDirectory, "pill_temp_${timestamp}.jpg")
+            android.util.Log.d("ImageCapture", "Photo file path: ${photoFile.absolutePath}")
             
             // Create the file safely
             if (!photoFile.exists()) {
                 val created = photoFile.createNewFile()
-                android.util.Log.d("AddPillModal", "File created: $created")
+                android.util.Log.d("ImageCapture", "File created: $created")
             }
-            android.util.Log.d("AddPillModal", "File exists: ${photoFile.exists()}")
+            android.util.Log.d("ImageCapture", "File exists: ${photoFile.exists()}")
             
             // Generate URI with proper error handling
             imageUri = try {
@@ -690,22 +700,22 @@ fun ImageCaptureSection(
                     photoFile
                 )
             } catch (e: Exception) {
-                android.util.Log.e("AddPillModal", "Error generating FileProvider URI: ${e.message}")
+                android.util.Log.e("ImageCapture", "Error generating FileProvider URI: ${e.message}")
                 null
             }
             
             if (imageUri != null) {
-                android.util.Log.d("AddPillModal", "Generated URI: $imageUri")
-                android.util.Log.d("AddPillModal", "Package name: ${context.packageName}")
+                android.util.Log.d("ImageCapture", "Generated URI: $imageUri")
+                android.util.Log.d("ImageCapture", "Package name: ${context.packageName}")
                 
-                android.util.Log.d("AddPillModal", "Launching camera...")
+                android.util.Log.d("ImageCapture", "Launching camera...")
                 cameraLauncher.launch(imageUri)
-                android.util.Log.d("AddPillModal", "Camera launch called")
+                android.util.Log.d("ImageCapture", "Camera launch called")
             } else {
-                android.util.Log.e("AddPillModal", "Failed to generate URI, cannot launch camera")
+                android.util.Log.e("ImageCapture", "Failed to generate URI, cannot launch camera")
             }
         } catch (e: Exception) {
-            android.util.Log.e("AddPillModal", "Error launching camera: ${e.message}")
+            android.util.Log.e("ImageCapture", "Error launching camera: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -715,11 +725,11 @@ fun ImageCaptureSection(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         hasCameraPermission = isGranted
-        android.util.Log.d("AddPillModal", "Camera permission granted: $isGranted")
+        android.util.Log.d("ImageCapture", "Camera permission granted: $isGranted")
         if (isGranted) {
             launchCamera()
         } else {
-            android.util.Log.w("AddPillModal", "Camera permission denied")
+            android.util.Log.w("ImageCapture", "Camera permission denied")
         }
     }
 
@@ -730,20 +740,20 @@ fun ImageCaptureSection(
         uri?.let {
             try {
                 val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-                val photoFile = File(imageFile, "pill_gallery_${timestamp}.jpg")
+                val photoFile = File(imageDirectory, "pill_gallery_${timestamp}.jpg")
                 context.contentResolver.openInputStream(it)?.use { inputStream ->
                     photoFile.outputStream().use { outputStream ->
                         inputStream.copyTo(outputStream)
                     }
                 }
                 if (photoFile.exists() && photoFile.length() > 0) {
-                    android.util.Log.d("AddPillModal", "Gallery image saved: ${photoFile.absolutePath}")
+                    android.util.Log.d("ImageCapture", "Gallery image saved: ${photoFile.absolutePath}")
                     onImageCaptured(photoFile.absolutePath)
                 } else {
-                    android.util.Log.e("AddPillModal", "Failed to save gallery image")
+                    android.util.Log.e("ImageCapture", "Failed to save gallery image")
                 }
             } catch (e: Exception) {
-                android.util.Log.e("AddPillModal", "Error saving gallery image: ${e.message}")
+                android.util.Log.e("ImageCapture", "Error saving gallery image: ${e.message}")
                 e.printStackTrace()
             }
         }
@@ -790,16 +800,16 @@ fun ImageCaptureSection(
         // Camera button
         OutlinedButton(
             onClick = {
-                android.util.Log.d("AddPillModal", "=== CAMERA BUTTON CLICKED ===")
-                android.util.Log.d("AddPillModal", "hasCameraPermission: $hasCameraPermission")
-                android.util.Log.d("AddPillModal", "Context: $context")
-                android.util.Log.d("AddPillModal", "Image directory: ${imageFile.absolutePath}")
+                android.util.Log.d("ImageCapture", "=== CAMERA BUTTON CLICKED ===")
+                android.util.Log.d("ImageCapture", "hasCameraPermission: $hasCameraPermission")
+                android.util.Log.d("ImageCapture", "Context: $context")
+                android.util.Log.d("ImageCapture", "Image directory: ${imageDirectory.absolutePath}")
                 
                 if (!hasCameraPermission) {
-                    android.util.Log.d("AddPillModal", "Requesting camera permission...")
+                    android.util.Log.d("ImageCapture", "Requesting camera permission...")
                     permissionLauncher.launch(Manifest.permission.CAMERA)
                 } else {
-                    android.util.Log.d("AddPillModal", "Opening camera directly...")
+                    android.util.Log.d("ImageCapture", "Opening camera directly...")
                     launchCamera()
                 }
             },

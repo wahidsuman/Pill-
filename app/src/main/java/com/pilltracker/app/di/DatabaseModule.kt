@@ -24,7 +24,6 @@ object DatabaseModule {
             "pill_database"
         )
         .fallbackToDestructiveMigration() // For development - in production, use proper migrations
-        .allowMainThreadQueries() // Allow main thread queries for development
         .build()
     }
 
