@@ -105,40 +105,83 @@ jobs:
         
     - name: Set Firebase project
       run: |
-        firebase use ${{ secrets.FIREBASE_PROJECT_ID }} --token ${{ secrets.FIREBASE_TOKEN }}
-        echo "✅ Firebase project set to ${{ secrets.FIREBASE_PROJECT_ID }}"
+        if [ -n "${{ secrets.FIREBASE_PROJECT_ID }}" ] && [ -n "${{ secrets.FIREBASE_TOKEN }}" ]; then
+          echo "🔧 Setting Firebase project..."
+          if firebase use "${{ secrets.FIREBASE_PROJECT_ID }}" --token "${{ secrets.FIREBASE_TOKEN }}" 2>/dev/null; then
+            echo "✅ Firebase project set to ${{ secrets.FIREBASE_PROJECT_ID }}"
+          else
+            echo "⚠️  Failed to set Firebase project, continuing with build only"
+            echo "   Project ID: ${{ secrets.FIREBASE_PROJECT_ID }}"
+            echo "   This may be due to invalid project ID or insufficient permissions"
+          fi
+        else
+          echo "⚠️  Firebase project ID or token not set, skipping Firebase setup"
+        fi
         
     - name: Distribute APK to Firebase App Distribution
       run: |
-        firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
-          --app ${{ secrets.FIREBASE_APP_ID }} \
-          --groups "testers" \
-          --release-notes "Build from commit ${{ github.sha }} - ${{ github.event.head_commit.message }}" \
-          --token ${{ secrets.FIREBASE_TOKEN }}
+        if [ -n "${{ secrets.FIREBASE_APP_ID }}" ] && [ -n "${{ secrets.FIREBASE_TOKEN }}" ]; then
+          echo "📱 Distributing APK to Firebase App Distribution..."
+          if firebase appdistribution:distribute app/build/outputs/apk/release/app-release.apk \
+            --app "${{ secrets.FIREBASE_APP_ID }}" \
+            --groups "testers" \
+            --release-notes "Build from commit ${{ github.sha }} - ${{ github.event.head_commit.message }}" \
+            --token "${{ secrets.FIREBASE_TOKEN }}" 2>/dev/null; then
+            echo "✅ APK distributed successfully to Firebase App Distribution"
+          else
+            echo "⚠️  Failed to distribute APK to Firebase App Distribution"
+            echo "   App ID: ${{ secrets.FIREBASE_APP_ID }}"
+            echo "   This may be due to invalid App ID or insufficient permissions"
+            echo "   APK files are still available as artifacts"
+          fi
+        else
+          echo "⚠️  Firebase App ID or token not set, skipping distribution"
+          echo "   APK files are available as artifacts for manual distribution"
+        fi
       env:
         FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         
-    - name: Notify testers
+    - name: Build Summary
       run: |
-        echo "📱 APK distributed to Firebase App Distribution"
-        echo "🔗 App ID: ${{ secrets.FIREBASE_APP_ID }}"
-        echo "👥 Testers: ${{ secrets.TESTER_EMAILS }}"
-        echo "📝 Release notes: Build from commit ${{ github.sha }}"
+        echo "🎉 Build completed successfully!"
+        echo ""
+        echo "📦 Generated APKs:"
+        echo "   - Debug APK: app-debug.apk"
+        echo "   - Release APK: app-release.apk"
+        echo ""
+        if [ -n "${{ secrets.FIREBASE_APP_ID }}" ]; then
+          echo "📱 Firebase App Distribution:"
+          echo "   - App ID: ${{ secrets.FIREBASE_APP_ID }}"
+          echo "   - Testers: ${{ secrets.TESTER_EMAILS }}"
+        else
+          echo "⚠️  Firebase App Distribution: Not configured"
+        fi
+        echo ""
+        echo "📝 Build Info:"
+        echo "   - Commit: ${{ github.sha }}"
+        echo "   - Message: ${{ github.event.head_commit.message }}"
         
     - name: Comment on PR (if applicable)
       if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
+          const firebaseConfigured = '${{ secrets.FIREBASE_APP_ID }}' !== '';
+          const body = '🚀 **APK Build Completed!**\n\n' +
+                      '✅ Debug APK: `app-debug.apk`\n' +
+                      '✅ Release APK: `app-release.apk`\n\n' +
+                      (firebaseConfigured ? 
+                        '📱 **Firebase App Distribution:**\n' +
+                        '   - App ID: `${{ secrets.FIREBASE_APP_ID }}`\n' +
+                        '   - Testers: `${{ secrets.TESTER_EMAILS }}`\n\n' :
+                        '⚠️ **Firebase App Distribution:** Not configured\n' +
+                        '   APK files are available as artifacts for manual distribution\n\n') +
+                      '**Commit:** `${{ github.sha }}`\n' +
+                      '**Message:** ${{ github.event.head_commit.message }}';
+          
           github.rest.issues.createComment({
             issue_number: context.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
-            body: '🚀 **APK Built and Distributed!**\n\n' +
-                  '✅ Debug APK: `app-debug.apk`\n' +
-                  '✅ Release APK: `app-release.apk`\n' +
-                  '📱 Distributed to Firebase App Distribution\n' +
-                  '👥 Testers: `${{ secrets.TESTER_EMAILS }}`\n\n' +
-                  '**Commit:** `${{ github.sha }}`\n' +
-                  '**Message:** ${{ github.event.head_commit.message }}'
+            body: body
           })
