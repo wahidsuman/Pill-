@@ -18,13 +18,18 @@ object DatabaseModule {
     @Provides
     @Singleton
     fun providePillDatabase(@ApplicationContext context: Context): PillDatabase {
-        return Room.databaseBuilder(
-            context.applicationContext,
-            PillDatabase::class.java,
-            "pill_database"
-        )
-        .fallbackToDestructiveMigration() // For development - in production, use proper migrations
-        .build()
+        return try {
+            Room.databaseBuilder(
+                context.applicationContext,
+                PillDatabase::class.java,
+                "pill_database"
+            )
+            .fallbackToDestructiveMigration() // For development - in production, use proper migrations
+            .build()
+        } catch (e: Exception) {
+            android.util.Log.e("DatabaseModule", "Error creating database: ${e.message}", e)
+            throw e
+        }
     }
 
     @Provides

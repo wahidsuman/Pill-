@@ -7,12 +7,12 @@ import androidx.room.PrimaryKey
 data class Pill(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val name: String,
-    val dosage: String,
-    val times: List<String>, // JSON string of times
-    val color: String,
+    val name: String = "",
+    val dosage: String = "1 tablet",
+    val times: List<String> = listOf("08:00"), // JSON string of times
+    val color: String = "blue",
     val imagePath: String = "",
-    val nextDose: String,
+    val nextDose: String = "08:00",
     val taken: Boolean = false,
     val frequency: String = "daily", // daily, weekly, monthly, custom
     val customDays: List<String> = emptyList(), // For custom frequency (e.g., ["monday", "wednesday", "friday"])

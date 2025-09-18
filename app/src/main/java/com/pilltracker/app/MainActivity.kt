@@ -22,7 +22,9 @@ class MainActivity : ComponentActivity() {
             enableEdgeToEdge()
             setContent {
                 PillTrackerTheme {
-                    // Ultra-simple version to isolate crash
+                    // Step 2: Add ViewModel back with minimal functionality
+                    val pillViewModel: PillViewModel = hiltViewModel()
+                    
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = androidx.compose.ui.Alignment.Center
@@ -41,10 +43,10 @@ class MainActivity : ComponentActivity() {
                             
                             androidx.compose.material3.Button(
                                 onClick = { 
-                                    android.util.Log.d("MainActivity", "Button clicked - app is working!")
+                                    android.util.Log.d("MainActivity", "Button clicked - ViewModel loaded successfully!")
                                 }
                             ) {
-                                androidx.compose.material3.Text("Test Button")
+                                androidx.compose.material3.Text("Test ViewModel")
                             }
                         }
                     }

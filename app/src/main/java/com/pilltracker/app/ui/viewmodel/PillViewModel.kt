@@ -40,9 +40,9 @@ class PillViewModel @Inject constructor(
     val showEditForm: StateFlow<Pill?> = _showEditForm.asStateFlow()
 
     init {
-        loadPills()
-        // Don't schedule alarms immediately on startup to avoid crashes
-        // Alarms will be scheduled when pills are added
+        // Temporarily disable database loading to isolate crash
+        // loadPills()
+        android.util.Log.d("PillViewModel", "ViewModel initialized successfully")
     }
 
     private fun loadPills() {
