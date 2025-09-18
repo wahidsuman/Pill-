@@ -390,33 +390,65 @@ fun AddPillModal(
                     Button(
                         onClick = {
                             try {
+                                android.util.Log.d("AddPillModal", "=== ADD PILL DEBUG ===")
+                                android.util.Log.d("AddPillModal", "Name: '$name'")
+                                android.util.Log.d("AddPillModal", "Times: $times")
+                                android.util.Log.d("AddPillModal", "Color: '$color'")
+                                android.util.Log.d("AddPillModal", "Frequency: '$frequency'")
+                                android.util.Log.d("AddPillModal", "CustomDays: $customDays")
+                                
                                 if (name.isNotBlank()) {
                                     val validTimes = times.filter { it.isNotBlank() }
+                                    android.util.Log.d("AddPillModal", "Valid times: $validTimes")
                                     if (validTimes.isNotEmpty()) {
                                         // Convert 24-hour format to 12-hour format for nextDose
                                         val firstTime = validTimes.first()
                                         val timeParts = firstTime.split(":")
                                         if (timeParts.size == 2) {
-                                            val hour = timeParts[0].toInt()
-                                            val minute = timeParts[1].toInt()
-                                            
-                                            val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
-                                            val ampm = if (hour < 12) "AM" else "PM"
-                                            val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
-                                            
-                                            val pill = Pill(
-                                                id = editPill?.id ?: 0,
-                                                name = name.trim(),
-                                                dosage = "1 tablet", // Default dosage
-                                                times = validTimes,
-                                                color = if (useImage) "" else color,
-                                                imagePath = if (useImage) imagePath else "",
-                                                nextDose = displayTime,
-                                                frequency = frequency,
-                                                customDays = if (frequency == "custom") customDays else emptyList(),
-                                                taken = editPill?.taken ?: false
-                                            )
-                                            onAddPill(pill)
+                                            try {
+                                                val hour = timeParts[0].toInt()
+                                                val minute = timeParts[1].toInt()
+                                                
+                                                val displayHour = if (hour == 0) 12 else if (hour > 12) hour - 12 else hour
+                                                val ampm = if (hour < 12) "AM" else "PM"
+                                                val displayTime = String.format("%02d:%02d %s", displayHour, minute, ampm)
+                                                
+                                                val pill = Pill(
+                                                    id = editPill?.id ?: 0,
+                                                    name = name.trim(),
+                                                    dosage = "1 tablet", // Default dosage
+                                                    times = validTimes,
+                                                    color = if (useImage) "" else color,
+                                                    imagePath = if (useImage) imagePath else "",
+                                                    nextDose = displayTime,
+                                                    frequency = frequency,
+                                                    customDays = if (frequency == "custom") customDays else emptyList(),
+                                                    taken = editPill?.taken ?: false,
+                                                    createdAt = System.currentTimeMillis()
+                                                )
+                                                
+                                                android.util.Log.d("AddPillModal", "Created pill: $pill")
+                                                onAddPill(pill)
+                                            } catch (e: NumberFormatException) {
+                                                android.util.Log.e("AddPillModal", "Error parsing time: $firstTime", e)
+                                                // Use a default time format
+                                                val pill = Pill(
+                                                    id = editPill?.id ?: 0,
+                                                    name = name.trim(),
+                                                    dosage = "1 tablet",
+                                                    times = validTimes,
+                                                    color = if (useImage) "" else color,
+                                                    imagePath = if (useImage) imagePath else "",
+                                                    nextDose = firstTime, // Use original time if parsing fails
+                                                    frequency = frequency,
+                                                    customDays = if (frequency == "custom") customDays else emptyList(),
+                                                    taken = editPill?.taken ?: false,
+                                                    createdAt = System.currentTimeMillis()
+                                                )
+                                                
+                                                android.util.Log.d("AddPillModal", "Created fallback pill: $pill")
+                                                onAddPill(pill)
+                                            }
                                         } else {
                                             android.util.Log.e("AddPillModal", "Invalid time format: $firstTime")
                                         }

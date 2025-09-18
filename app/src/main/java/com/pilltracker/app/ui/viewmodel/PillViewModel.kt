@@ -105,8 +105,18 @@ class PillViewModel @Inject constructor(
                     return@launch
                 }
                 
-                val pillId = repository.insertPill(pill)
+                // Validate pill data before inserting
+                android.util.Log.d("PillViewModel", "Adding pill: name=${pill.name}, times=${pill.times}, color=${pill.color}")
+                
+                val pillId = try {
+                    repository.insertPill(pill)
+                } catch (e: Exception) {
+                    android.util.Log.e("PillViewModel", "Database insert failed: ${e.message}", e)
+                    throw e // Re-throw to be caught by outer try-catch
+                }
                 val pillWithId = pill.copy(id = pillId)
+                
+                android.util.Log.d("PillViewModel", "Pill inserted with ID: $pillId")
                 
                 // Only schedule alarm if we have permission
                 try {
