@@ -1,0 +1,67 @@
+name: Firebase Deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+      
+    - name: Create Firebase service account file
+      run: |
+        echo '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}' > firebase-service-account.json
+        export GOOGLE_APPLICATION_CREDENTIALS=firebase-service-account.json
+        
+    - name: Set Firebase project
+      run: |
+        firebase use pilltracker-android --token ${{ secrets.FIREBASE_TOKEN }}
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: firebase-service-account.json
+        
+    - name: Deploy to Firebase
+      run: |
+        firebase deploy --only hosting,firestore:rules,firestore:indexes,storage --token ${{ secrets.FIREBASE_TOKEN }}
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: firebase-service-account.json
+        
+    - name: Build Android APK
+      run: |
+        # Set up Android SDK
+        export ANDROID_HOME=/usr/local/lib/android/sdk
+        export PATH=$PATH:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools
+        
+        # Make gradlew executable
+        chmod +x ./gradlew
+        
+        # Update local.properties
+        echo "sdk.dir=$ANDROID_HOME" > local.properties
+        
+        # Build debug APK
+        ./gradlew assembleDebug
+        
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: pilltracker-debug-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Deploy status
+      run: |
+        echo "✅ Firebase deployment completed successfully!"
+        echo "🌐 App available at: https://pilltracker-android.web.app"
+        echo "📱 APK built and uploaded as artifact"
