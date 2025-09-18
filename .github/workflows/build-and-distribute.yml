@@ -37,6 +37,9 @@ jobs:
     - name: Make gradlew executable
       run: chmod +x ./gradlew
       
+    - name: Verify Gradle wrapper
+      run: ./gradlew --version
+      
     - name: Create google-services.json from secret
       run: |
         echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > app/google-services.json
