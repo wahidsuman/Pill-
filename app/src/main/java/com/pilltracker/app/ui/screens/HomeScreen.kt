@@ -35,7 +35,6 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
     ) {
         // Header (without add button)
         HomeHeader()
