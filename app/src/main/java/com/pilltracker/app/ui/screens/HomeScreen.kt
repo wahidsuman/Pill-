@@ -1,12 +1,6 @@
 package com.pilltracker.app.ui.screens
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -16,21 +10,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.pilltracker.app.data.model.Pill
-import com.pilltracker.app.ui.components.PillCard
-import com.pilltracker.app.ui.components.AddPillModal
-import com.pilltracker.app.ui.viewmodel.PillViewModel
-import com.pilltracker.app.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(
-    viewModel: PillViewModel
-) {
-    // Simplified version - no database operations initially
-    var showAddForm by remember { mutableStateOf(false) }
-    var pills by remember { mutableStateOf<List<Pill>>(emptyList()) }
-    
+fun HomeScreen() {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -39,67 +21,104 @@ fun HomeScreen(
         // Simple header
         Text(
             text = "Pill Reminder",
-            fontSize = 24.sp,
+            fontSize = 28.sp,
             fontWeight = FontWeight.Bold,
-            color = Color.White,
-            modifier = Modifier.padding(bottom = 16.dp)
+            color = Color.Black,
+            modifier = Modifier.padding(bottom = 24.dp)
         )
         
-        // Simple add button
-        Button(
-            onClick = { 
-                android.util.Log.d("HomeScreen", "Add button clicked")
-                showAddForm = true 
-            },
-            modifier = Modifier.fillMaxWidth()
+        // Welcome message
+        Text(
+            text = "Welcome to your pill reminder app!",
+            fontSize = 18.sp,
+            color = Color.Gray,
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
+        
+        // Simple stats cards
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Add New Pill")
+            StatCard(
+                title = "Today",
+                value = "0",
+                modifier = Modifier.weight(1f)
+            )
+            StatCard(
+                title = "This Week",
+                value = "0",
+                modifier = Modifier.weight(1f)
+            )
         }
         
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
         
-        // Simple pills list
-        if (pills.isEmpty()) {
-            Text(
-                text = "No pills added yet",
-                color = Color.White,
-                modifier = Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center
-            )
-        } else {
-            pills.forEach { pill ->
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    colors = CardDefaults.cardColors(containerColor = Color.White)
-                ) {
-                    Text(
-                        text = pill.name,
-                        modifier = Modifier.padding(16.dp),
-                        color = Color.Black
-                    )
-                }
+        // Simple message
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFFF3F4F6))
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "📱",
+                    fontSize = 48.sp,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
+                Text(
+                    text = "Your pill reminder app is ready!",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Medium,
+                    color = Color.Black,
+                    textAlign = TextAlign.Center
+                )
+                Text(
+                    text = "Add your medications to get started",
+                    fontSize = 14.sp,
+                    color = Color.Gray,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(top = 8.dp)
+                )
             }
         }
     }
-    
-    // Simple modal
-    if (showAddForm) {
-        SimpleAddPillModal(
-            onDismiss = { showAddForm = false },
-            onAddPill = { pillName ->
-                android.util.Log.d("HomeScreen", "Adding pill: $pillName")
-                pills = pills + Pill(
-                    name = pillName,
-                    dosage = "1 tablet",
-                    times = listOf("08:00"),
-                    color = "blue",
-                    nextDose = "08:00"
-                )
-                showAddForm = false
-            }
-        )
+}
+
+@Composable
+fun StatCard(
+    title: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.height(100.dp),
+        colors = CardDefaults.cardColors(containerColor = Color.White),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = value,
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF3B82F6)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                color = Color.Gray,
+                textAlign = TextAlign.Center
+            )
+        }
     }
 }
 
