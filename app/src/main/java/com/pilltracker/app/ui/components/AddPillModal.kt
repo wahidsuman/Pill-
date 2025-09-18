@@ -537,38 +537,33 @@ fun AddPillModal(
             calendar.set(Calendar.MINUTE, 0)
         }
 
-        // Time Picker Dialog - moved outside LaunchedEffect to prevent crashes
-        if (showTimePicker) {
-            DisposableEffect(Unit) {
-                val timePickerDialog = TimePickerDialog(
-                    context,
-                    { _, hourOfDay, minute ->
-                        try {
-                            val newTimes = times.toMutableList()
-                            if (selectedTimeIndex < newTimes.size) {
-                                newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
-                                times = newTimes
+        // Time Picker Dialog - using LaunchedEffect with proper state management
+        LaunchedEffect(showTimePicker) {
+            if (showTimePicker) {
+                try {
+                    val timePickerDialog = TimePickerDialog(
+                        context,
+                        { _, hourOfDay, minute ->
+                            try {
+                                val newTimes = times.toMutableList()
+                                if (selectedTimeIndex < newTimes.size) {
+                                    newTimes[selectedTimeIndex] = String.format("%02d:%02d", hourOfDay, minute)
+                                    times = newTimes
+                                }
+                                showTimePicker = false
+                            } catch (e: Exception) {
+                                android.util.Log.e("AddPillModal", "Error updating time: ${e.message}")
+                                showTimePicker = false
                             }
-                            showTimePicker = false
-                        } catch (e: Exception) {
-                            android.util.Log.e("AddPillModal", "Error updating time: ${e.message}")
-                            showTimePicker = false
-                        }
-                    },
-                    calendar.get(Calendar.HOUR_OF_DAY),
-                    calendar.get(Calendar.MINUTE),
-                    false // 24-hour format
-                )
-                timePickerDialog.show()
-                
-                onDispose {
-                    try {
-                        if (timePickerDialog.isShowing) {
-                            timePickerDialog.dismiss()
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("AddPillModal", "Error disposing time picker: ${e.message}")
-                    }
+                        },
+                        calendar.get(Calendar.HOUR_OF_DAY),
+                        calendar.get(Calendar.MINUTE),
+                        false // 24-hour format
+                    )
+                    timePickerDialog.show()
+                } catch (e: Exception) {
+                    android.util.Log.e("AddPillModal", "Error showing time picker: ${e.message}")
+                    showTimePicker = false
                 }
             }
         }

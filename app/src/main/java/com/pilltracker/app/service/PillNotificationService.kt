@@ -11,7 +11,6 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.pilltracker.app.MainActivity
-import com.pilltracker.app.R
 
 class PillNotificationService(private val context: Context) {
     
@@ -58,7 +57,7 @@ class PillNotificationService(private val context: Context) {
         )
         
         val notification = NotificationCompat.Builder(context, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(android.R.drawable.ic_dialog_alert)
             .setContentTitle("💊 Time to take your medication!")
             .setContentText("$pillName - $dosage")
             .setPriority(NotificationCompat.PRIORITY_HIGH)
