@@ -8,13 +8,9 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.hilt.navigation.compose.hiltViewModel
-import com.pilltracker.app.ui.screens.HomeScreen
 import com.pilltracker.app.ui.theme.PillTrackerTheme
-import com.pilltracker.app.ui.viewmodel.PillViewModel
-import dagger.hilt.android.AndroidEntryPoint
 
-@AndroidEntryPoint
+// Temporarily remove @AndroidEntryPoint to test without Hilt
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -22,9 +18,7 @@ class MainActivity : ComponentActivity() {
             enableEdgeToEdge()
             setContent {
                 PillTrackerTheme {
-                    // Step 2: Add ViewModel back with minimal functionality
-                    val pillViewModel: PillViewModel = hiltViewModel()
-                    
+                    // Ultra-simple version without any dependencies
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = androidx.compose.ui.Alignment.Center
@@ -33,7 +27,7 @@ class MainActivity : ComponentActivity() {
                             horizontalAlignment = androidx.compose.ui.Alignment.CenterHorizontally
                         ) {
                             androidx.compose.material3.Text(
-                                text = "Pill Tracker",
+                                text = "Pill Tracker - Working!",
                                 fontSize = 24.sp,
                                 fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                                 color = androidx.compose.ui.graphics.Color.White
@@ -41,12 +35,20 @@ class MainActivity : ComponentActivity() {
                             
                             androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
                             
+                            androidx.compose.material3.Text(
+                                text = "App is running successfully",
+                                fontSize = 16.sp,
+                                color = androidx.compose.ui.graphics.Color.White
+                            )
+                            
+                            androidx.compose.foundation.layout.Spacer(modifier = androidx.compose.ui.Modifier.height(16.dp))
+                            
                             androidx.compose.material3.Button(
                                 onClick = { 
-                                    android.util.Log.d("MainActivity", "Button clicked - ViewModel loaded successfully!")
+                                    android.util.Log.d("MainActivity", "Button clicked - App is working!")
                                 }
                             ) {
-                                androidx.compose.material3.Text("Test ViewModel")
+                                androidx.compose.material3.Text("Test Button")
                             }
                         }
                     }
