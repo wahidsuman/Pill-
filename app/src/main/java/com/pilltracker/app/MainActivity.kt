@@ -22,29 +22,15 @@ class MainActivity : ComponentActivity() {
             enableEdgeToEdge()
             setContent {
                 PillTrackerTheme {
-                    try {
-                        val pillViewModel: PillViewModel = hiltViewModel()
-                        
-                        Scaffold { paddingValues ->
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(paddingValues)
-                            ) {
-                                HomeScreen(viewModel = pillViewModel)
-                            }
-                        }
-                    } catch (e: Exception) {
-                        android.util.Log.e("MainActivity", "Error in Compose content: ${e.message}", e)
-                        // Fallback UI in case of errors
+                    val pillViewModel: PillViewModel = hiltViewModel()
+                    
+                    Scaffold { paddingValues ->
                         Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = androidx.compose.ui.Alignment.Center
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(paddingValues)
                         ) {
-                            androidx.compose.material3.Text(
-                                text = "Error loading app. Please restart.",
-                                color = androidx.compose.ui.graphics.Color.Red
-                            )
+                            HomeScreen(viewModel = pillViewModel)
                         }
                     }
                 }
