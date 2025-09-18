@@ -6,6 +6,7 @@ import android.widget.ImageButton
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.floatingactionbutton.FloatingActionButton
+import com.pilltracker.app.R
 import java.text.SimpleDateFormat
 import java.util.*
 
