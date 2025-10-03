@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expo QR Code</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        #qrcode {
+            margin: 20px 0;
+        }
+        .url {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 20px 0;
+            word-break: break-all;
+        }
+        .instructions {
+            text-align: left;
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .step {
+            margin: 10px 0;
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📱 Your Expo App QR Code</h1>
+        
+        <div id="qrcode"></div>
+        
+        <div class="url">
+            <strong>URL:</strong> exp://127.0.0.1:8082
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 How to Test on Your Phone:</h3>
+            <div class="step">1. Install "Expo Go" app on your phone from App Store/Play Store</div>
+            <div class="step">2. Open Expo Go app</div>
+            <div class="step">3. Scan the QR code above with your phone camera or Expo Go app</div>
+            <div class="step">4. Your app will load on your phone!</div>
+        </div>
+        
+        <div class="instructions">
+            <h3>🔗 Alternative Method:</h3>
+            <div class="step">You can also manually type this URL in Expo Go:</div>
+            <div class="url">exp://127.0.0.1:8082</div>
+        </div>
+    </div>
+
+    <script>
+        const expoUrl = 'exp://127.0.0.1:8082';
+        
+        QRCode.toCanvas(document.getElementById('qrcode'), expoUrl, {
+            width: 300,
+            margin: 2,
+            color: {
+                dark: '#000000',
+                light: '#FFFFFF'
+            }
+        }, function (error) {
+            if (error) console.error(error);
+            console.log('QR code generated successfully!');
+        });
+    </script>
+</body>
+</html>
