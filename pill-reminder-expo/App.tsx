@@ -250,7 +250,11 @@ export default function App() {
       
       if (shouldShow) {
         med.reminderTimes.forEach((time) => {
-          reminders.push({ med, time });
+          const key = `${med.id}-${time}`;
+          // Only add if not marked as taken
+          if (!takenReminders.includes(key)) {
+            reminders.push({ med, time });
+          }
         });
       }
     });
@@ -524,30 +528,27 @@ export default function App() {
           {getUpcomingReminders().length === 0 ? (
             <Text style={styles.emptyText}>No upcoming reminders</Text>
           ) : (
-            getUpcomingReminders().map((reminder, index) => {
-              const isTaken = takenReminders.includes(`${reminder.med.id}-${reminder.time}`);
-              return (
-                <View key={index} style={styles.reminderItem}>
-                  <View style={[styles.reminderColorDot, { backgroundColor: reminder.med.color }]} />
-                  <View style={styles.reminderInfo}>
-                    <Text style={[styles.reminderMedName, isTaken && styles.reminderMedNameTaken]}>
-                      {reminder.med.name}
-                    </Text>
-                    <Text style={[styles.reminderTime, isTaken && styles.reminderTimeTaken]}>
-                      ⏰ {reminder.time}
-                    </Text>
-                  </View>
-                  <TouchableOpacity 
-                    style={[styles.takenButton, isTaken && styles.takenButtonActive]}
-                    onPress={() => markAsTaken(reminder.med.id, reminder.time)}
-                  >
-                    <Text style={[styles.takenButtonText, isTaken && styles.takenButtonTextActive]}>
-                      {isTaken ? '✓ Taken' : 'Take'}
-                    </Text>
-                  </TouchableOpacity>
+            getUpcomingReminders().map((reminder, index) => (
+              <View key={index} style={styles.reminderItem}>
+                <View style={[styles.reminderColorDot, { backgroundColor: reminder.med.color }]} />
+                <View style={styles.reminderInfo}>
+                  <Text style={styles.reminderMedName}>
+                    {reminder.med.name}
+                  </Text>
+                  <Text style={styles.reminderTime}>
+                    ⏰ {reminder.time}
+                  </Text>
                 </View>
-              );
-            })
+                <TouchableOpacity 
+                  style={styles.takenButton}
+                  onPress={() => markAsTaken(reminder.med.id, reminder.time)}
+                >
+                  <Text style={styles.takenButtonText}>
+                    Take
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ))
           )}
         </View>
 
@@ -1113,31 +1114,20 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#2196F3',
   },
-  reminderMedNameTaken: {
-    textDecorationLine: 'line-through',
-    opacity: 0.5,
-  },
-  reminderTimeTaken: {
-    textDecorationLine: 'line-through',
-    opacity: 0.5,
-  },
   takenButton: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#4CAF50',
+    backgroundColor: '#4CAF50',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 8,
-  },
-  takenButtonActive: {
-    backgroundColor: '#4CAF50',
+    shadowColor: '#4CAF50',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+    elevation: 3,
   },
   takenButtonText: {
     fontSize: 13,
     fontWeight: '600',
-    color: '#4CAF50',
-  },
-  takenButtonTextActive: {
     color: '#FFFFFF',
   },
   medActions: {
