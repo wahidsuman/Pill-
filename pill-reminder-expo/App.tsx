@@ -23,6 +23,7 @@ export default function App() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customDays, setCustomDays] = useState<string[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [activeScreen, setActiveScreen] = useState('Home');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -124,10 +125,40 @@ export default function App() {
   };
 
   const onTimeChange = (event: any, selectedDate?: Date) => {
-    setShowTimePicker(Platform.OS === 'ios');
+    if (Platform.OS === 'android') {
+      setShowTimePicker(false);
+    }
     if (selectedDate) {
       setReminderTime(selectedDate);
     }
+  };
+
+  const getUpcomingReminders = () => {
+    const reminders: Array<{med: Medication, time: string}> = [];
+    const now = new Date();
+    const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()];
+    
+    medications.forEach((med) => {
+      let shouldShow = false;
+      
+      if (med.frequency === 'Daily') {
+        shouldShow = true;
+      } else if (med.frequency === 'Weekly') {
+        shouldShow = true;
+      } else if (med.frequency === 'Monthly') {
+        shouldShow = true;
+      } else if (med.frequency === 'Custom' && med.customDays) {
+        shouldShow = med.customDays.includes(currentDay);
+      }
+      
+      if (shouldShow) {
+        med.reminderTimes.forEach((time) => {
+          reminders.push({ med, time });
+        });
+      }
+    });
+    
+    return reminders.slice(0, 3);
   };
 
   const colors = [
@@ -252,10 +283,11 @@ export default function App() {
             </TouchableOpacity>
             {showTimePicker && (
               <DateTimePicker
+                testID="dateTimePicker"
                 value={reminderTime}
                 mode="time"
                 is24Hour={false}
-                display="default"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
                 onChange={onTimeChange}
               />
             )}
@@ -306,10 +338,36 @@ export default function App() {
     );
   }
 
-  // Home Screen
-  return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar style="dark" />
+  const renderScreen = () => {
+    switch (activeScreen) {
+      case 'Stats':
+        return (
+          <View style={styles.screenContainer}>
+            <Text style={styles.screenTitle}>📊 Statistics</Text>
+            <Text style={styles.screenSubtitle}>Your medication statistics will appear here</Text>
+          </View>
+        );
+      case 'Calendar':
+        return (
+          <View style={styles.screenContainer}>
+            <Text style={styles.screenTitle}>📅 Calendar</Text>
+            <Text style={styles.screenSubtitle}>Your medication calendar will appear here</Text>
+          </View>
+        );
+      case 'Settings':
+        return (
+          <View style={styles.screenContainer}>
+            <Text style={styles.screenTitle}>⚙️ Settings</Text>
+            <Text style={styles.screenSubtitle}>App settings will appear here</Text>
+          </View>
+        );
+      default:
+        return renderHomeScreen();
+    }
+  };
+
+  const renderHomeScreen = () => {
+    return (
       <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
         {/* Top Section - Title Card */}
         <View style={styles.headerCard}>
@@ -340,7 +398,19 @@ export default function App() {
             <Text style={styles.iconBell}>🔔</Text>
             <Text style={styles.sectionTitle}>Next Reminders</Text>
           </View>
-          <Text style={styles.emptyText}>No upcoming reminders</Text>
+          {getUpcomingReminders().length === 0 ? (
+            <Text style={styles.emptyText}>No upcoming reminders</Text>
+          ) : (
+            getUpcomingReminders().map((reminder, index) => (
+              <View key={index} style={styles.reminderItem}>
+                <View style={[styles.reminderColorDot, { backgroundColor: reminder.med.color }]} />
+                <View style={styles.reminderInfo}>
+                  <Text style={styles.reminderMedName}>{reminder.med.name}</Text>
+                  <Text style={styles.reminderTime}>⏰ {reminder.time}</Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         {/* My Medication Section */}
@@ -375,33 +445,56 @@ export default function App() {
 
         <View style={{ height: 100 }} />
       </ScrollView>
+    );
+  };
 
-      {/* Floating Add Button */}
-      <TouchableOpacity 
-        style={styles.floatingButton}
-        onPress={() => setShowAddMedication(true)}
-      >
-        <Text style={styles.floatingButtonText}>+</Text>
-      </TouchableOpacity>
+  // Main Screen
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
+      
+      {renderScreen()}
+
+      {/* Floating Add Button - Only show on Home screen */}
+      {activeScreen === 'Home' && (
+        <TouchableOpacity 
+          style={styles.floatingButton}
+          onPress={() => setShowAddMedication(true)}
+        >
+          <Text style={styles.floatingButtonText}>+</Text>
+        </TouchableOpacity>
+      )}
 
       {/* Bottom Navigation Bar */}
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIconActive}>🏠</Text>
-          <Text style={styles.navLabelActive}>Home</Text>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => setActiveScreen('Home')}
+        >
+          <Text style={activeScreen === 'Home' ? styles.navIconActive : styles.navIcon}>🏠</Text>
+          <Text style={activeScreen === 'Home' ? styles.navLabelActive : styles.navLabel}>Home</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>📊</Text>
-          <Text style={styles.navLabel}>Stats</Text>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => setActiveScreen('Stats')}
+        >
+          <Text style={activeScreen === 'Stats' ? styles.navIconActive : styles.navIcon}>📊</Text>
+          <Text style={activeScreen === 'Stats' ? styles.navLabelActive : styles.navLabel}>Stats</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>📅</Text>
-          <Text style={styles.navLabel}>Calendar</Text>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => setActiveScreen('Calendar')}
+        >
+          <Text style={activeScreen === 'Calendar' ? styles.navIconActive : styles.navIcon}>📅</Text>
+          <Text style={activeScreen === 'Calendar' ? styles.navLabelActive : styles.navLabel}>Calendar</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem}>
-          <Text style={styles.navIcon}>⚙️</Text>
-          <Text style={styles.navLabel}>Settings</Text>
-          </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.navItem}
+          onPress={() => setActiveScreen('Settings')}
+        >
+          <Text style={activeScreen === 'Settings' ? styles.navIconActive : styles.navIcon}>⚙️</Text>
+          <Text style={activeScreen === 'Settings' ? styles.navLabelActive : styles.navLabel}>Settings</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -800,5 +893,51 @@ const styles = StyleSheet.create({
   medTime: {
     fontSize: 13,
     color: '#2196F3',
+  },
+  reminderItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  reminderColorDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    marginRight: 12,
+  },
+  reminderInfo: {
+    flex: 1,
+  },
+  reminderMedName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 2,
+  },
+  reminderTime: {
+    fontSize: 13,
+    color: '#2196F3',
+  },
+  screenContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+  },
+  screenTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 12,
+  },
+  screenSubtitle: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
   },
 });
