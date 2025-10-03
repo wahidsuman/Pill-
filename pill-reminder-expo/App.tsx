@@ -54,6 +54,13 @@ export default function App() {
     const timeStr = formatTime(reminderTime);
     if (!reminderTimes.includes(timeStr)) {
       setReminderTimes([...reminderTimes, timeStr]);
+      // Reset to current time for next selection
+      const newTime = new Date();
+      newTime.setHours(12);
+      newTime.setMinutes(0);
+      setReminderTime(newTime);
+    } else {
+      Alert.alert('Already Added', 'This time has already been added');
     }
   };
 
@@ -222,11 +229,16 @@ export default function App() {
   };
 
   const onTimeChange = (event: any, selectedDate?: Date) => {
+    // On Android, hide picker after selection
     if (Platform.OS === 'android') {
       setShowTimePicker(false);
     }
-    if (selectedDate) {
+    
+    // Always update the time when a date is selected
+    if (event.type === 'set' && selectedDate) {
       setReminderTime(selectedDate);
+    } else if (event.type === 'dismissed') {
+      setShowTimePicker(false);
     }
   };
 
@@ -396,23 +408,26 @@ export default function App() {
             )}
 
             {/* Time Picker */}
-            <TouchableOpacity 
-              style={styles.timePickerContainer}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <Text style={styles.timePickerIcon}>🕐</Text>
-              <Text style={styles.timePickerText}>{formatTime(reminderTime)}</Text>
-            </TouchableOpacity>
-            {showTimePicker && (
-              <DateTimePicker
-                testID="dateTimePicker"
-                value={reminderTime}
-                mode="time"
-                is24Hour={false}
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                onChange={onTimeChange}
-              />
-            )}
+            <View>
+              <TouchableOpacity 
+                style={styles.timePickerContainer}
+                onPress={() => setShowTimePicker(true)}
+              >
+                <Text style={styles.timePickerIcon}>🕐</Text>
+                <Text style={styles.timePickerText}>{formatTime(reminderTime)}</Text>
+                <Text style={styles.timePickerHint}>Tap to change</Text>
+              </TouchableOpacity>
+              {showTimePicker && (
+                <DateTimePicker
+                  testID="dateTimePicker"
+                  value={reminderTime}
+                  mode="time"
+                  is24Hour={false}
+                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                  onChange={onTimeChange}
+                />
+              )}
+            </View>
             <TouchableOpacity 
               style={styles.addTimeButton}
               onPress={addReminderTime}
@@ -927,8 +942,8 @@ const styles = StyleSheet.create({
   },
   timePickerContainer: {
     backgroundColor: '#FFFFFF',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderWidth: 2,
+    borderColor: '#2196F3',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 14,
@@ -940,9 +955,15 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   timePickerText: {
-    fontSize: 16,
+    fontSize: 18,
     color: '#333',
-    fontWeight: '500',
+    fontWeight: '600',
+    flex: 1,
+  },
+  timePickerHint: {
+    fontSize: 12,
+    color: '#2196F3',
+    fontStyle: 'italic',
   },
   addTimeButton: {
     marginTop: 12,
