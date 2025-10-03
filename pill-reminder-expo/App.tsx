@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform, Alert } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+interface Medication {
+  id: string;
+  name: string;
+  color: string;
+  frequency: string;
+  customDays?: string[];
+  reminderTimes: string[];
+}
 
 export default function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -11,6 +21,8 @@ export default function App() {
   const [medicationName, setMedicationName] = useState('');
   const [reminderTime, setReminderTime] = useState(new Date());
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [customDays, setCustomDays] = useState<string[]>([]);
+  const [medications, setMedications] = useState<Medication[]>([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -18,6 +30,69 @@ export default function App() {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    loadMedications();
+  }, []);
+
+  const loadMedications = async () => {
+    try {
+      const stored = await AsyncStorage.getItem('medications');
+      if (stored) {
+        setMedications(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.error('Error loading medications:', error);
+    }
+  };
+
+  const saveMedication = async () => {
+    if (!medicationName.trim()) {
+      Alert.alert('Error', 'Please enter medication name');
+      return;
+    }
+
+    if (selectedFrequency === 'Custom' && customDays.length === 0) {
+      Alert.alert('Error', 'Please select at least one day for custom frequency');
+      return;
+    }
+
+    const newMedication: Medication = {
+      id: Date.now().toString(),
+      name: medicationName,
+      color: selectedColor,
+      frequency: selectedFrequency,
+      customDays: selectedFrequency === 'Custom' ? customDays : undefined,
+      reminderTimes: [formatTime(reminderTime)],
+    };
+
+    try {
+      const updatedMedications = [...medications, newMedication];
+      await AsyncStorage.setItem('medications', JSON.stringify(updatedMedications));
+      setMedications(updatedMedications);
+      
+      // Reset form
+      setMedicationName('');
+      setSelectedColor('#2196F3');
+      setSelectedFrequency('Daily');
+      setCustomDays([]);
+      setReminderTime(new Date());
+      setShowAddMedication(false);
+      
+      Alert.alert('Success', 'Medication added successfully!');
+    } catch (error) {
+      Alert.alert('Error', 'Failed to save medication');
+      console.error('Error saving medication:', error);
+    }
+  };
+
+  const toggleCustomDay = (day: string) => {
+    if (customDays.includes(day)) {
+      setCustomDays(customDays.filter(d => d !== day));
+    } else {
+      setCustomDays([...customDays, day]);
+    }
+  };
 
   const formatDate = (date: Date) => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -139,6 +214,32 @@ export default function App() {
             </View>
           </View>
 
+          {/* Custom Days Selector */}
+          {selectedFrequency === 'Custom' && (
+            <View style={styles.formSection}>
+              <Text style={styles.formLabel}>Select Days</Text>
+              <View style={styles.daysContainer}>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+                  <TouchableOpacity
+                    key={day}
+                    style={[
+                      styles.dayButton,
+                      customDays.includes(day) && styles.dayButtonActive
+                    ]}
+                    onPress={() => toggleCustomDay(day)}
+                  >
+                    <Text style={[
+                      styles.dayText,
+                      customDays.includes(day) && styles.dayTextActive
+                    ]}>
+                      {day}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+          )}
+
           {/* Reminder Times */}
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>Reminder Times</Text>
@@ -174,7 +275,10 @@ export default function App() {
           >
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.addPillButton}>
+          <TouchableOpacity 
+            style={styles.addPillButton}
+            onPress={saveMedication}
+          >
             <Text style={styles.addPillButtonText}>Add Pill</Text>
           </TouchableOpacity>
         </View>
@@ -245,8 +349,28 @@ export default function App() {
             <Text style={styles.iconBottle}>💊</Text>
             <Text style={styles.sectionTitle}>My Medication</Text>
           </View>
-          <Text style={styles.emptyText}>No medications added yet</Text>
-          <Text style={styles.hintText}>Add your first medication using the + button above</Text>
+          {medications.length === 0 ? (
+            <>
+              <Text style={styles.emptyText}>No medications added yet</Text>
+              <Text style={styles.hintText}>Add your first medication using the + button above</Text>
+            </>
+          ) : (
+            medications.map((med) => (
+              <View key={med.id} style={styles.medicationCard}>
+                <View style={[styles.medColorIndicator, { backgroundColor: med.color }]} />
+                <View style={styles.medInfo}>
+                  <Text style={styles.medName}>{med.name}</Text>
+                  <Text style={styles.medDetails}>
+                    {med.frequency === 'Custom' 
+                      ? `Custom: ${med.customDays?.join(', ')}`
+                      : med.frequency
+                    }
+                  </Text>
+                  <Text style={styles.medTime}>⏰ {med.reminderTimes.join(', ')}</Text>
+                </View>
+              </View>
+            ))
+          )}
         </View>
 
         <View style={{ height: 100 }} />
@@ -616,5 +740,65 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '600',
+  },
+  daysContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  dayButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  dayButtonActive: {
+    backgroundColor: '#2196F3',
+    borderColor: '#2196F3',
+  },
+  dayText: {
+    fontSize: 12,
+    color: '#666',
+    fontWeight: '500',
+  },
+  dayTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  medicationCard: {
+    flexDirection: 'row',
+    backgroundColor: '#F9FAFB',
+    borderRadius: 8,
+    padding: 12,
+    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  medColorIndicator: {
+    width: 4,
+    borderRadius: 2,
+    marginRight: 12,
+  },
+  medInfo: {
+    flex: 1,
+  },
+  medName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 4,
+  },
+  medDetails: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 2,
+  },
+  medTime: {
+    fontSize: 13,
+    color: '#2196F3',
   },
 });
