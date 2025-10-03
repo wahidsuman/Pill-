@@ -24,6 +24,8 @@ export default function App() {
   const [customDays, setCustomDays] = useState<string[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [activeScreen, setActiveScreen] = useState('Home');
+  const [takenReminders, setTakenReminders] = useState<string[]>([]);
+  const [editingMedId, setEditingMedId] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -58,17 +60,38 @@ export default function App() {
       return;
     }
 
-    const newMedication: Medication = {
-      id: Date.now().toString(),
-      name: medicationName,
-      color: selectedColor,
-      frequency: selectedFrequency,
-      customDays: selectedFrequency === 'Custom' ? customDays : undefined,
-      reminderTimes: [formatTime(reminderTime)],
-    };
-
     try {
-      const updatedMedications = [...medications, newMedication];
+      let updatedMedications;
+      
+      if (editingMedId) {
+        // Update existing medication
+        updatedMedications = medications.map(med => 
+          med.id === editingMedId 
+            ? {
+                ...med,
+                name: medicationName,
+                color: selectedColor,
+                frequency: selectedFrequency,
+                customDays: selectedFrequency === 'Custom' ? customDays : undefined,
+                reminderTimes: [formatTime(reminderTime)],
+              }
+            : med
+        );
+        Alert.alert('Success', 'Medication updated successfully!');
+      } else {
+        // Add new medication
+        const newMedication: Medication = {
+          id: Date.now().toString(),
+          name: medicationName,
+          color: selectedColor,
+          frequency: selectedFrequency,
+          customDays: selectedFrequency === 'Custom' ? customDays : undefined,
+          reminderTimes: [formatTime(reminderTime)],
+        };
+        updatedMedications = [...medications, newMedication];
+        Alert.alert('Success', 'Medication added successfully!');
+      }
+      
       await AsyncStorage.setItem('medications', JSON.stringify(updatedMedications));
       setMedications(updatedMedications);
       
@@ -78,12 +101,64 @@ export default function App() {
       setSelectedFrequency('Daily');
       setCustomDays([]);
       setReminderTime(new Date());
+      setEditingMedId(null);
       setShowAddMedication(false);
-      
-      Alert.alert('Success', 'Medication added successfully!');
     } catch (error) {
       Alert.alert('Error', 'Failed to save medication');
       console.error('Error saving medication:', error);
+    }
+  };
+
+  const deleteMedication = async (id: string) => {
+    Alert.alert(
+      'Delete Medication',
+      'Are you sure you want to delete this medication?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const updatedMedications = medications.filter(med => med.id !== id);
+              await AsyncStorage.setItem('medications', JSON.stringify(updatedMedications));
+              setMedications(updatedMedications);
+              Alert.alert('Success', 'Medication deleted');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to delete medication');
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  const editMedication = (med: Medication) => {
+    setEditingMedId(med.id);
+    setMedicationName(med.name);
+    setSelectedColor(med.color);
+    setSelectedFrequency(med.frequency);
+    setCustomDays(med.customDays || []);
+    // Parse time back to Date object
+    const timeParts = med.reminderTimes[0].match(/(\d+):(\d+) (AM|PM)/);
+    if (timeParts) {
+      const hours = parseInt(timeParts[1]);
+      const minutes = parseInt(timeParts[2]);
+      const isPM = timeParts[3] === 'PM';
+      const date = new Date();
+      date.setHours(isPM && hours !== 12 ? hours + 12 : hours === 12 && !isPM ? 0 : hours);
+      date.setMinutes(minutes);
+      setReminderTime(date);
+    }
+    setShowAddMedication(true);
+  };
+
+  const markAsTaken = (medId: string, time: string) => {
+    const key = `${medId}-${time}`;
+    if (takenReminders.includes(key)) {
+      setTakenReminders(takenReminders.filter(r => r !== key));
+    } else {
+      setTakenReminders([...takenReminders, key]);
     }
   };
 
@@ -177,7 +252,9 @@ export default function App() {
         <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
           {/* Header */}
           <View style={styles.addMedHeader}>
-            <Text style={styles.addMedTitle}>Add New Medication</Text>
+            <Text style={styles.addMedTitle}>
+              {editingMedId ? 'Edit Medication' : 'Add New Medication'}
+            </Text>
           </View>
 
           {/* Medication Name Input */}
@@ -311,7 +388,9 @@ export default function App() {
             style={styles.addPillButton}
             onPress={saveMedication}
           >
-            <Text style={styles.addPillButtonText}>Add Pill</Text>
+            <Text style={styles.addPillButtonText}>
+              {editingMedId ? 'Update Pill' : 'Add Pill'}
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -401,15 +480,30 @@ export default function App() {
           {getUpcomingReminders().length === 0 ? (
             <Text style={styles.emptyText}>No upcoming reminders</Text>
           ) : (
-            getUpcomingReminders().map((reminder, index) => (
-              <View key={index} style={styles.reminderItem}>
-                <View style={[styles.reminderColorDot, { backgroundColor: reminder.med.color }]} />
-                <View style={styles.reminderInfo}>
-                  <Text style={styles.reminderMedName}>{reminder.med.name}</Text>
-                  <Text style={styles.reminderTime}>⏰ {reminder.time}</Text>
+            getUpcomingReminders().map((reminder, index) => {
+              const isTaken = takenReminders.includes(`${reminder.med.id}-${reminder.time}`);
+              return (
+                <View key={index} style={styles.reminderItem}>
+                  <View style={[styles.reminderColorDot, { backgroundColor: reminder.med.color }]} />
+                  <View style={styles.reminderInfo}>
+                    <Text style={[styles.reminderMedName, isTaken && styles.reminderMedNameTaken]}>
+                      {reminder.med.name}
+                    </Text>
+                    <Text style={[styles.reminderTime, isTaken && styles.reminderTimeTaken]}>
+                      ⏰ {reminder.time}
+                    </Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={[styles.takenButton, isTaken && styles.takenButtonActive]}
+                    onPress={() => markAsTaken(reminder.med.id, reminder.time)}
+                  >
+                    <Text style={[styles.takenButtonText, isTaken && styles.takenButtonTextActive]}>
+                      {isTaken ? '✓ Taken' : 'Take'}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
-              </View>
-            ))
+              );
+            })
           )}
         </View>
 
@@ -437,6 +531,20 @@ export default function App() {
                     }
                   </Text>
                   <Text style={styles.medTime}>⏰ {med.reminderTimes.join(', ')}</Text>
+                </View>
+                <View style={styles.medActions}>
+                  <TouchableOpacity 
+                    style={styles.editButton}
+                    onPress={() => editMedication(med)}
+                  >
+                    <Text style={styles.editButtonText}>✏️</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    style={styles.deleteButton}
+                    onPress={() => deleteMedication(med.id)}
+                  >
+                    <Text style={styles.deleteButtonText}>🗑️</Text>
+                  </TouchableOpacity>
                 </View>
               </View>
             ))
@@ -922,6 +1030,60 @@ const styles = StyleSheet.create({
   reminderTime: {
     fontSize: 13,
     color: '#2196F3',
+  },
+  reminderMedNameTaken: {
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
+  },
+  reminderTimeTaken: {
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
+  },
+  takenButton: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1.5,
+    borderColor: '#4CAF50',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  takenButtonActive: {
+    backgroundColor: '#4CAF50',
+  },
+  takenButtonText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#4CAF50',
+  },
+  takenButtonTextActive: {
+    color: '#FFFFFF',
+  },
+  medActions: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  editButton: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 8,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  editButtonText: {
+    fontSize: 18,
+  },
+  deleteButton: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 8,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    fontSize: 18,
   },
   screenContainer: {
     flex: 1,
