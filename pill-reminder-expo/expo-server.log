@@ -7,3 +7,13 @@ The following packages should be updated for best compatibility with the install
 Your project may not work correctly until you install the expected versions of the packages.
 Waiting on http://localhost:8082
 Logs for your project will appear below.
+Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android ./index.ts ▓░░░░░░░░░░░░░░░ 11.1% ( 30/147)
+Android ./index.ts ▓▓▓▓▓░░░░░░░░░░░ 33.5% (176/304)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 70.2% (398/475)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.4% (501/550)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.4% (643/669)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.7% (685/686)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (686/686)
+Android Bundled 23401ms index.ts (686 modules)
+ WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
