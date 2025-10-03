@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 export default function App() {
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -8,7 +9,8 @@ export default function App() {
   const [selectedColor, setSelectedColor] = useState('#2196F3');
   const [selectedFrequency, setSelectedFrequency] = useState('Daily');
   const [medicationName, setMedicationName] = useState('');
-  const [selectedTime, setSelectedTime] = useState('12:00 PM');
+  const [reminderTime, setReminderTime] = useState(new Date());
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -34,6 +36,23 @@ export default function App() {
     const minutesStr = minutes < 10 ? '0' + minutes : minutes;
     
     return `${dayName}, ${monthName} ${String(day).padStart(2, '0')}, ${year} · ${String(hours).padStart(2, '0')}:${minutesStr} ${ampm}`;
+  };
+
+  const formatTime = (date: Date) => {
+    let hours = date.getHours();
+    const minutes = date.getMinutes();
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+    return `${String(hours).padStart(2, '0')}:${minutesStr} ${ampm}`;
+  };
+
+  const onTimeChange = (event: any, selectedDate?: Date) => {
+    setShowTimePicker(Platform.OS === 'ios');
+    if (selectedDate) {
+      setReminderTime(selectedDate);
+    }
   };
 
   const colors = [
@@ -100,7 +119,7 @@ export default function App() {
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>Frequency</Text>
             <View style={styles.frequencyButtons}>
-              {['Daily', 'Weekly', 'Monthly'].map((freq) => (
+              {['Daily', 'Weekly', 'Monthly', 'Custom'].map((freq) => (
                 <TouchableOpacity
                   key={freq}
                   style={[
@@ -123,10 +142,22 @@ export default function App() {
           {/* Reminder Times */}
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>Reminder Times</Text>
-            <View style={styles.timePickerContainer}>
+            <TouchableOpacity 
+              style={styles.timePickerContainer}
+              onPress={() => setShowTimePicker(true)}
+            >
               <Text style={styles.timePickerIcon}>🕐</Text>
-              <Text style={styles.timePickerText}>{selectedTime}</Text>
-            </View>
+              <Text style={styles.timePickerText}>{formatTime(reminderTime)}</Text>
+            </TouchableOpacity>
+            {showTimePicker && (
+              <DateTimePicker
+                value={reminderTime}
+                mode="time"
+                is24Hour={false}
+                display="default"
+                onChange={onTimeChange}
+              />
+            )}
             <TouchableOpacity style={styles.addTimeButton}>
               <Text style={styles.addTimeText}>+ Add another time</Text>
             </TouchableOpacity>
@@ -419,7 +450,7 @@ const styles = StyleSheet.create({
   // Add Medication Screen Styles
   addMedHeader: {
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: 40,
     paddingBottom: 10,
   },
   addMedTitle: {
@@ -497,15 +528,18 @@ const styles = StyleSheet.create({
   },
   frequencyButtons: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   frequencyButton: {
+    minWidth: '22%',
     flex: 1,
     backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 20,
     paddingVertical: 12,
+    paddingHorizontal: 8,
     alignItems: 'center',
   },
   frequencyButtonActive: {
