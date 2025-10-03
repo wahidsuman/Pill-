@@ -26,6 +26,7 @@ export default function App() {
   const [activeScreen, setActiveScreen] = useState('Home');
   const [takenReminders, setTakenReminders] = useState<string[]>([]);
   const [editingMedId, setEditingMedId] = useState<string | null>(null);
+  const [reminderTimes, setReminderTimes] = useState<string[]>([]);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -49,6 +50,17 @@ export default function App() {
     }
   };
 
+  const addReminderTime = () => {
+    const timeStr = formatTime(reminderTime);
+    if (!reminderTimes.includes(timeStr)) {
+      setReminderTimes([...reminderTimes, timeStr]);
+    }
+  };
+
+  const removeReminderTime = (time: string) => {
+    setReminderTimes(reminderTimes.filter(t => t !== time));
+  };
+
   const saveMedication = async () => {
     if (!medicationName.trim()) {
       Alert.alert('Error', 'Please enter medication name');
@@ -57,6 +69,11 @@ export default function App() {
 
     if (selectedFrequency === 'Custom' && customDays.length === 0) {
       Alert.alert('Error', 'Please select at least one day for custom frequency');
+      return;
+    }
+
+    if (reminderTimes.length === 0) {
+      Alert.alert('Error', 'Please add at least one reminder time');
       return;
     }
 
@@ -73,7 +90,7 @@ export default function App() {
                 color: selectedColor,
                 frequency: selectedFrequency,
                 customDays: selectedFrequency === 'Custom' ? customDays : undefined,
-                reminderTimes: [formatTime(reminderTime)],
+                reminderTimes: reminderTimes,
               }
             : med
         );
@@ -86,7 +103,7 @@ export default function App() {
           color: selectedColor,
           frequency: selectedFrequency,
           customDays: selectedFrequency === 'Custom' ? customDays : undefined,
-          reminderTimes: [formatTime(reminderTime)],
+          reminderTimes: reminderTimes,
         };
         updatedMedications = [...medications, newMedication];
         Alert.alert('Success', 'Medication added successfully!');
@@ -101,6 +118,7 @@ export default function App() {
       setSelectedFrequency('Daily');
       setCustomDays([]);
       setReminderTime(new Date());
+      setReminderTimes([]);
       setEditingMedId(null);
       setShowAddMedication(false);
     } catch (error) {
@@ -139,16 +157,20 @@ export default function App() {
     setSelectedColor(med.color);
     setSelectedFrequency(med.frequency);
     setCustomDays(med.customDays || []);
-    // Parse time back to Date object
-    const timeParts = med.reminderTimes[0].match(/(\d+):(\d+) (AM|PM)/);
-    if (timeParts) {
-      const hours = parseInt(timeParts[1]);
-      const minutes = parseInt(timeParts[2]);
-      const isPM = timeParts[3] === 'PM';
-      const date = new Date();
-      date.setHours(isPM && hours !== 12 ? hours + 12 : hours === 12 && !isPM ? 0 : hours);
-      date.setMinutes(minutes);
-      setReminderTime(date);
+    setReminderTimes(med.reminderTimes);
+    
+    // Set initial time picker to first time or current time
+    if (med.reminderTimes.length > 0) {
+      const timeParts = med.reminderTimes[0].match(/(\d+):(\d+) (AM|PM)/);
+      if (timeParts) {
+        const hours = parseInt(timeParts[1]);
+        const minutes = parseInt(timeParts[2]);
+        const isPM = timeParts[3] === 'PM';
+        const date = new Date();
+        date.setHours(isPM && hours !== 12 ? hours + 12 : hours === 12 && !isPM ? 0 : hours);
+        date.setMinutes(minutes);
+        setReminderTime(date);
+      }
     }
     setShowAddMedication(true);
   };
@@ -351,6 +373,25 @@ export default function App() {
           {/* Reminder Times */}
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>Reminder Times</Text>
+            
+            {/* Added Times List */}
+            {reminderTimes.length > 0 && (
+              <View style={styles.addedTimesList}>
+                {reminderTimes.map((time, index) => (
+                  <View key={index} style={styles.addedTimeItem}>
+                    <Text style={styles.addedTimeText}>⏰ {time}</Text>
+                    <TouchableOpacity 
+                      style={styles.removeTimeButton}
+                      onPress={() => removeReminderTime(time)}
+                    >
+                      <Text style={styles.removeTimeText}>✕</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+
+            {/* Time Picker */}
             <TouchableOpacity 
               style={styles.timePickerContainer}
               onPress={() => setShowTimePicker(true)}
@@ -368,8 +409,11 @@ export default function App() {
                 onChange={onTimeChange}
               />
             )}
-            <TouchableOpacity style={styles.addTimeButton}>
-              <Text style={styles.addTimeText}>+ Add another time</Text>
+            <TouchableOpacity 
+              style={styles.addTimeButton}
+              onPress={addReminderTime}
+            >
+              <Text style={styles.addTimeText}>+ Add this time</Text>
             </TouchableOpacity>
           </View>
 
@@ -901,11 +945,49 @@ const styles = StyleSheet.create({
   },
   addTimeButton: {
     marginTop: 12,
+    backgroundColor: '#E3F2FD',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
   },
   addTimeText: {
     fontSize: 14,
-    color: '#00BCD4',
+    color: '#2196F3',
+    fontWeight: '600',
+  },
+  addedTimesList: {
+    marginBottom: 12,
+    gap: 8,
+  },
+  addedTimeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#E8F5E9',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderWidth: 1,
+    borderColor: '#4CAF50',
+  },
+  addedTimeText: {
+    fontSize: 15,
+    color: '#2E7D32',
     fontWeight: '500',
+  },
+  removeTimeButton: {
+    backgroundColor: '#FFCDD2',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeTimeText: {
+    fontSize: 14,
+    color: '#C62828',
+    fontWeight: 'bold',
   },
   bottomActions: {
     flexDirection: 'row',
