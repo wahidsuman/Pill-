@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   headerCard: {
     backgroundColor: '#2196F3',
     padding: 20,
-    marginTop: 10,
+    marginTop: 40,
     marginHorizontal: 16,
     borderRadius: 12,
     shadowColor: '#000',
