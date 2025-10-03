@@ -16,12 +16,22 @@ interface Medication {
 }
 
 export default function App() {
+  // Initialize reminder time to 12:00 PM
+  const getInitialTime = () => {
+    const date = new Date();
+    date.setHours(12);
+    date.setMinutes(0);
+    date.setSeconds(0);
+    date.setMilliseconds(0);
+    return date;
+  };
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showAddMedication, setShowAddMedication] = useState(false);
   const [selectedColor, setSelectedColor] = useState('#2196F3');
   const [selectedFrequency, setSelectedFrequency] = useState('Daily');
   const [medicationName, setMedicationName] = useState('');
-  const [reminderTime, setReminderTime] = useState(new Date());
+  const [reminderTime, setReminderTime] = useState(getInitialTime());
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [customDays, setCustomDays] = useState<string[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
@@ -99,11 +109,8 @@ export default function App() {
     const timeStr = formatTime(reminderTime);
     if (!reminderTimes.includes(timeStr)) {
       setReminderTimes([...reminderTimes, timeStr]);
-      // Reset to current time for next selection
-      const newTime = new Date();
-      newTime.setHours(12);
-      newTime.setMinutes(0);
-      setReminderTime(newTime);
+      // Reset to 12:00 PM for next selection
+      setReminderTime(getInitialTime());
     } else {
       Alert.alert('Already Added', 'This time has already been added');
     }
@@ -171,7 +178,7 @@ export default function App() {
       setSelectedColor('#2196F3');
       setSelectedFrequency('Daily');
       setCustomDays([]);
-      setReminderTime(new Date());
+      setReminderTime(getInitialTime());
       setReminderTimes([]);
       setSelectedImage(null);
       setEditingMedId(null);
@@ -196,7 +203,6 @@ export default function App() {
               const updatedMedications = medications.filter(med => med.id !== id);
               await AsyncStorage.setItem('medications', JSON.stringify(updatedMedications));
               setMedications(updatedMedications);
-              Alert.alert('Success', 'Medication deleted');
             } catch (error) {
               Alert.alert('Error', 'Failed to delete medication');
             }
@@ -278,16 +284,22 @@ export default function App() {
   };
 
   const onTimeChange = (event: any, selectedDate?: Date) => {
-    // On Android, hide picker after selection
-    if (Platform.OS === 'android') {
+    // Handle different event types
+    if (event.type === 'dismissed') {
+      // User cancelled the picker
       setShowTimePicker(false);
+      return;
     }
     
-    // Always update the time when a date is selected
-    if (event.type === 'set' && selectedDate) {
-      setReminderTime(selectedDate);
-    } else if (event.type === 'dismissed') {
-      setShowTimePicker(false);
+    if (event.type === 'set' || selectedDate) {
+      // User confirmed a time selection
+      const currentDate = selectedDate || reminderTime;
+      setReminderTime(currentDate);
+      
+      // On Android, close the picker immediately
+      if (Platform.OS === 'android') {
+        setShowTimePicker(false);
+      }
     }
   };
 
@@ -479,6 +491,7 @@ export default function App() {
 
             {/* Time Picker */}
             <View>
+              <Text style={styles.timePickerLabel}>Select Time:</Text>
               <TouchableOpacity 
                 style={styles.timePickerContainer}
                 onPress={() => setShowTimePicker(true)}
@@ -488,14 +501,24 @@ export default function App() {
                 <Text style={styles.timePickerHint}>Tap to change</Text>
               </TouchableOpacity>
               {showTimePicker && (
-                <DateTimePicker
-                  testID="dateTimePicker"
-                  value={reminderTime}
-                  mode="time"
-                  is24Hour={false}
-                  display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-                  onChange={onTimeChange}
-                />
+                <>
+                  <DateTimePicker
+                    testID="dateTimePicker"
+                    value={reminderTime}
+                    mode="time"
+                    is24Hour={false}
+                    display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                    onChange={onTimeChange}
+                  />
+                  {Platform.OS === 'ios' && (
+                    <TouchableOpacity 
+                      style={styles.iosTimePickerDone}
+                      onPress={() => setShowTimePicker(false)}
+                    >
+                      <Text style={styles.iosTimePickerDoneText}>Done</Text>
+                    </TouchableOpacity>
+                  )}
+                </>
               )}
             </View>
             <TouchableOpacity 
@@ -1042,6 +1065,12 @@ const styles = StyleSheet.create({
     color: '#2196F3',
     fontWeight: '600',
   },
+  timePickerLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#666',
+    marginBottom: 8,
+  },
   timePickerContainer: {
     backgroundColor: '#FFFFFF',
     borderWidth: 2,
@@ -1066,6 +1095,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#2196F3',
     fontStyle: 'italic',
+  },
+  iosTimePickerDone: {
+    backgroundColor: '#2196F3',
+    borderRadius: 8,
+    paddingVertical: 12,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  iosTimePickerDoneText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
   },
   addTimeButton: {
     marginTop: 12,
