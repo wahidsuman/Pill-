@@ -50,7 +50,7 @@ fun HomeScreen(
             
             Button(
                 onClick = {
-                    // TODO: Navigate to add medication screen
+                    navController.navigate("add_medication")
                 }
             ) {
                 Text("Add Medication")

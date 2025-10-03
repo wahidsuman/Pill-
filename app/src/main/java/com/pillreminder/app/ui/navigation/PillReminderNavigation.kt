@@ -5,6 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.pillreminder.app.ui.screens.AddMedicationScreen
 import com.pillreminder.app.ui.screens.HomeScreen
 
 @Composable
@@ -19,8 +20,11 @@ fun PillReminderNavigation(
             HomeScreen(navController = navController)
         }
         
+        composable("add_medication") {
+            AddMedicationScreen(navController = navController)
+        }
+        
         // TODO: Add more navigation routes
-        // composable("add_medication") { ... }
         // composable("medication_details/{id}") { ... }
         // composable("settings") { ... }
     }
