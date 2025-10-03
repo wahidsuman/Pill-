@@ -502,8 +502,7 @@ export default function App() {
                 style={styles.addReminderButton}
                 onPress={() => setShowTimePicker(true)}
               >
-                <Text style={styles.addReminderIcon}>⏰</Text>
-                <Text style={styles.addReminderText}>Add Reminder Time</Text>
+                <Text style={styles.addReminderText}>+ Add More Time</Text>
               </TouchableOpacity>
             </View>
 
@@ -1207,18 +1206,13 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingVertical: 16,
     paddingHorizontal: 20,
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
     shadowColor: '#2196F3',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 6,
-  },
-  addReminderIcon: {
-    fontSize: 20,
   },
   addReminderText: {
     fontSize: 16,
