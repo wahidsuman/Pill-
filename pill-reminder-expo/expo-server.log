@@ -1,77 +1,16 @@
 Starting project at /workspace/pill-reminder-expo
 Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
 Tunnel connected.
 Tunnel ready.
-The following packages should be updated for best compatibility with the installed expo version:
-  @react-native-community/datetimepicker@8.4.5 - expected version: 8.4.4
-Your project may not work correctly until you install the expected versions of the packages.
 Waiting on http://localhost:8082
 Logs for your project will appear below.
 Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android ./index.ts ▓░░░░░░░░░░░░░░░ 11.1% ( 30/147)
-Android ./index.ts ▓▓▓▓▓░░░░░░░░░░░ 33.5% (176/304)
-Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 70.2% (398/475)
-Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.4% (501/550)
-Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.4% (643/669)
-Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.7% (685/686)
-Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (686/686)
-Android Bundled 23401ms index.ts (686 modules)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 507ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 809ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 1592ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 2954ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 1367ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 1602ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
- ERROR  SyntaxError: /workspace/pill-reminder-expo/App.tsx: Missing semicolon. (1:4)
-
-> 1 | THIS SHOULD BE A LINTER ERRORimport React, { useState, useEffect } from 'react';
-    |     ^
-  2 | import { StatusBar } from 'expo-status-bar';
-  3 | import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform, Alert } from 'react-native';
-  4 | import DateTimePicker from '@react-native-community/datetimepicker';
- ERROR  [Error: TransformError SyntaxError: /workspace/pill-reminder-expo/App.tsx: Missing semicolon. (1:4)
-
-[0m[31m[1m>[22m[39m[90m 1 |[39m [33mTHIS[39m [33mSHOULD[39m [33mBE[39m [33mA[39m [33mLINTER[39m [33mERRORimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[33m;[39m
- [90m   |[39m     [31m[1m^[22m[39m
- [90m 2 |[39m [36mimport[39m { [33mStatusBar[39m } [36mfrom[39m [32m'expo-status-bar'[39m[33m;[39m
- [90m 3 |[39m [36mimport[39m { [33mStyleSheet[39m[33m,[39m [33mText[39m[33m,[39m [33mView[39m[33m,[39m [33mTouchableOpacity[39m[33m,[39m [33mScrollView[39m[33m,[39m [33mSafeAreaView[39m[33m,[39m [33mTextInput[39m[33m,[39m [33mPlatform[39m[33m,[39m [33mAlert[39m } [36mfrom[39m [32m'react-native'[39m[33m;[39m
- [90m 4 |[39m [36mimport[39m [33mDateTimePicker[39m [36mfrom[39m [32m'@react-native-community/datetimepicker'[39m[33m;[39m[0m]
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 2063ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
- ERROR  SyntaxError: /workspace/pill-reminder-expo/App.tsx: Missing semicolon. (1:4)
-
-> 1 | THIS SHOULD BE A LINTER ERRORimport React, { useState, useEffect } from 'react';
-    |     ^
-  2 | import { StatusBar } from 'expo-status-bar';
-  3 | import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform, Alert, Image } from 'react-native';
-  4 | import DateTimePicker from '@react-native-community/datetimepicker';
- ERROR  [Error: TransformError SyntaxError: /workspace/pill-reminder-expo/App.tsx: Missing semicolon. (1:4)
-
-[0m[31m[1m>[22m[39m[90m 1 |[39m [33mTHIS[39m [33mSHOULD[39m [33mBE[39m [33mA[39m [33mLINTER[39m [33mERRORimport[39m [33mReact[39m[33m,[39m { useState[33m,[39m useEffect } [36mfrom[39m [32m'react'[39m[33m;[39m
- [90m   |[39m     [31m[1m^[22m[39m
- [90m 2 |[39m [36mimport[39m { [33mStatusBar[39m } [36mfrom[39m [32m'expo-status-bar'[39m[33m;[39m
- [90m 3 |[39m [36mimport[39m { [33mStyleSheet[39m[33m,[39m [33mText[39m[33m,[39m [33mView[39m[33m,[39m [33mTouchableOpacity[39m[33m,[39m [33mScrollView[39m[33m,[39m [33mSafeAreaView[39m[33m,[39m [33mTextInput[39m[33m,[39m [33mPlatform[39m[33m,[39m [33mAlert[39m[33m,[39m [33mImage[39m } [36mfrom[39m [32m'react-native'[39m[33m;[39m
- [90m 4 |[39m [36mimport[39m [33mDateTimePicker[39m [36mfrom[39m [32m'@react-native-community/datetimepicker'[39m[33m;[39m[0m]
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 1833ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 1901ms index.ts (1 module)
- WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
-Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
-Android Bundled 131ms index.ts (1 module)
+Android ./index.ts ▓░░░░░░░░░░░░░░░ 11.1% ( 41/162)
+Android ./index.ts ▓▓▓▓░░░░░░░░░░░░ 30.2% (166/302)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓░░░░░░░ 59.0% (361/470)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 84.5% (502/548)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.4% (617/622)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.7% (695/696)
+Android Bundled 23662ms index.ts (696 modules)
  WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
