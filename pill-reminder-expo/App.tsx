@@ -502,7 +502,9 @@ export default function App() {
                 style={styles.addReminderButton}
                 onPress={() => setShowTimePicker(true)}
               >
-                <Text style={styles.addReminderText}>+ Add More Time</Text>
+                <Text style={styles.addReminderText}>
+                  {reminderTimes.length === 0 ? 'Add Time' : '+ Add More Time'}
+                </Text>
               </TouchableOpacity>
             </View>
 
