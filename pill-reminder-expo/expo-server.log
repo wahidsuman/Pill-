@@ -66,3 +66,6 @@ Android Bundled 2063ms index.ts (1 module)
  [90m 2 |[39m [36mimport[39m { [33mStatusBar[39m } [36mfrom[39m [32m'expo-status-bar'[39m[33m;[39m
  [90m 3 |[39m [36mimport[39m { [33mStyleSheet[39m[33m,[39m [33mText[39m[33m,[39m [33mView[39m[33m,[39m [33mTouchableOpacity[39m[33m,[39m [33mScrollView[39m[33m,[39m [33mSafeAreaView[39m[33m,[39m [33mTextInput[39m[33m,[39m [33mPlatform[39m[33m,[39m [33mAlert[39m[33m,[39m [33mImage[39m } [36mfrom[39m [32m'react-native'[39m[33m;[39m
  [90m 4 |[39m [36mimport[39m [33mDateTimePicker[39m [36mfrom[39m [32m'@react-native-community/datetimepicker'[39m[33m;[39m[0m]
+Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 1833ms index.ts (1 module)
+ WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
