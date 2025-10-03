@@ -20,7 +20,11 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "This app needs access to your camera to take photos of your medications.",
+        "NSPhotoLibraryUsageDescription": "This app needs access to your photo library to select medication images."
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -28,8 +32,23 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "READ_MEDIA_IMAGES"
+      ]
     },
+    "plugins": [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your photos to let you select medication images.",
+          "cameraPermission": "The app needs access to your camera to let you take photos of your medications."
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }

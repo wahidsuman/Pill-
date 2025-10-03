@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform, Alert, Image } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
 
 interface Medication {
   id: string;
@@ -11,6 +12,7 @@ interface Medication {
   frequency: string;
   customDays?: string[];
   reminderTimes: string[];
+  imageUri?: string;
 }
 
 export default function App() {
@@ -27,6 +29,7 @@ export default function App() {
   const [takenReminders, setTakenReminders] = useState<string[]>([]);
   const [editingMedId, setEditingMedId] = useState<string | null>(null);
   const [reminderTimes, setReminderTimes] = useState<string[]>([]);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -47,6 +50,48 @@ export default function App() {
       }
     } catch (error) {
       console.error('Error loading medications:', error);
+    }
+  };
+
+  const requestPermissions = async () => {
+    const cameraPermission = await ImagePicker.requestCameraPermissionsAsync();
+    const mediaPermission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    
+    if (cameraPermission.status !== 'granted' || mediaPermission.status !== 'granted') {
+      Alert.alert('Permission Required', 'Please grant camera and gallery permissions to add images');
+      return false;
+    }
+    return true;
+  };
+
+  const pickImageFromGallery = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedImage(result.assets[0].uri);
+    }
+  };
+
+  const takePhoto = async () => {
+    const hasPermission = await requestPermissions();
+    if (!hasPermission) return;
+
+    const result = await ImagePicker.launchCameraAsync({
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    });
+
+    if (!result.canceled && result.assets[0]) {
+      setSelectedImage(result.assets[0].uri);
     }
   };
 
@@ -98,6 +143,7 @@ export default function App() {
                 frequency: selectedFrequency,
                 customDays: selectedFrequency === 'Custom' ? customDays : undefined,
                 reminderTimes: reminderTimes,
+                imageUri: selectedImage || med.imageUri,
               }
             : med
         );
@@ -111,6 +157,7 @@ export default function App() {
           frequency: selectedFrequency,
           customDays: selectedFrequency === 'Custom' ? customDays : undefined,
           reminderTimes: reminderTimes,
+          imageUri: selectedImage || undefined,
         };
         updatedMedications = [...medications, newMedication];
         Alert.alert('Success', 'Medication added successfully!');
@@ -126,6 +173,7 @@ export default function App() {
       setCustomDays([]);
       setReminderTime(new Date());
       setReminderTimes([]);
+      setSelectedImage(null);
       setEditingMedId(null);
       setShowAddMedication(false);
     } catch (error) {
@@ -165,6 +213,7 @@ export default function App() {
     setSelectedFrequency(med.frequency);
     setCustomDays(med.customDays || []);
     setReminderTimes(med.reminderTimes);
+    setSelectedImage(med.imageUri || null);
     
     // Set initial time picker to first time or current time
     if (med.reminderTimes.length > 0) {
@@ -309,18 +358,39 @@ export default function App() {
           {/* Pill Representation Section */}
           <View style={styles.formSection}>
             <Text style={styles.formLabel}>Pill Representation</Text>
+            
+            {/* Image Preview */}
+            {selectedImage && (
+              <View style={styles.imagePreviewContainer}>
+                <Image source={{ uri: selectedImage }} style={styles.imagePreview} />
+                <TouchableOpacity 
+                  style={styles.removeImageButton}
+                  onPress={() => setSelectedImage(null)}
+                >
+                  <Text style={styles.removeImageText}>✕ Remove</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
             <View style={styles.representationButtons}>
-              <TouchableOpacity style={styles.representationButton}>
+              <TouchableOpacity 
+                style={styles.representationButton}
+                onPress={takePhoto}
+              >
                 <Text style={styles.representationIcon}>📷</Text>
                 <Text style={styles.representationText}>Take Photo</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.representationButton}>
-                <Text style={styles.representationIcon}>🎨</Text>
-                <Text style={styles.representationText}>Use Color</Text>
+              <TouchableOpacity 
+                style={styles.representationButton}
+                onPress={pickImageFromGallery}
+              >
+                <Text style={styles.representationIcon}>🖼️</Text>
+                <Text style={styles.representationText}>From Gallery</Text>
               </TouchableOpacity>
             </View>
             
             {/* Color Picker */}
+            <Text style={styles.colorPickerLabel}>Or choose a color:</Text>
             <View style={styles.colorPicker}>
               {colors.map((item) => (
                 <TouchableOpacity
@@ -581,7 +651,11 @@ export default function App() {
           ) : (
             medications.map((med) => (
               <View key={med.id} style={styles.medicationCard}>
-                <View style={[styles.medColorIndicator, { backgroundColor: med.color }]} />
+                {med.imageUri ? (
+                  <Image source={{ uri: med.imageUri }} style={styles.medImage} />
+                ) : (
+                  <View style={[styles.medColorIndicator, { backgroundColor: med.color }]} />
+                )}
                 <View style={styles.medInfo}>
                   <Text style={styles.medName}>{med.name}</Text>
                   <Text style={styles.medDetails}>
@@ -888,11 +962,39 @@ const styles = StyleSheet.create({
     color: '#333',
     fontWeight: '500',
   },
+  colorPickerLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 16,
+    marginBottom: 8,
+  },
   colorPicker: {
     flexDirection: 'row',
     gap: 12,
-    marginTop: 16,
     justifyContent: 'center',
+  },
+  imagePreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  imagePreview: {
+    width: 150,
+    height: 150,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#2196F3',
+  },
+  removeImageButton: {
+    marginTop: 8,
+    backgroundColor: '#FFEBEE',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  removeImageText: {
+    color: '#C62828',
+    fontWeight: '600',
+    fontSize: 13,
   },
   colorButton: {
     width: 50,
@@ -1086,6 +1188,12 @@ const styles = StyleSheet.create({
   medColorIndicator: {
     width: 4,
     borderRadius: 2,
+    marginRight: 12,
+  },
+  medImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 8,
     marginRight: 12,
   },
   medInfo: {
