@@ -106,18 +106,6 @@ export default function App() {
     }
   };
 
-  const addReminderTime = () => {
-    const timeStr = getCurrentTimeString();
-    if (!reminderTimes.includes(timeStr)) {
-      setReminderTimes([...reminderTimes, timeStr]);
-      // Reset to 12:00 PM for next selection
-      setSelectedHour(12);
-      setSelectedMinute(0);
-      setSelectedPeriod('PM');
-    } else {
-      Alert.alert('Already Added', 'This time has already been added');
-    }
-  };
 
   const removeReminderTime = (time: string) => {
     setReminderTimes(reminderTimes.filter(t => t !== time));
@@ -276,6 +264,17 @@ export default function App() {
   };
 
   const confirmTimePicker = () => {
+    // Automatically add the time when user confirms
+    const timeStr = getCurrentTimeString();
+    if (!reminderTimes.includes(timeStr)) {
+      setReminderTimes([...reminderTimes, timeStr]);
+      // Reset to 12:00 PM for next selection
+      setSelectedHour(12);
+      setSelectedMinute(0);
+      setSelectedPeriod('PM');
+    } else {
+      Alert.alert('Already Added', 'This time has already been added');
+    }
     setShowTimePicker(false);
   };
 
@@ -498,23 +497,13 @@ export default function App() {
 
             {/* Time Picker */}
             <View>
-              <Text style={styles.timePickerLabel}>Select Time:</Text>
+              <Text style={styles.timePickerLabel}>Reminder Times</Text>
               <TouchableOpacity 
-                style={styles.timePickerContainer}
+                style={styles.addReminderButton}
                 onPress={() => setShowTimePicker(true)}
               >
-                <Text style={styles.timePickerIcon}>🕐</Text>
-                <View style={styles.timePickerTextContainer}>
-                  <Text style={styles.timePickerText}>{getCurrentTimeString()}</Text>
-                  <Text style={styles.timePickerHint}>Tap to select different time</Text>
-                </View>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.addTimeButton}
-                onPress={addReminderTime}
-              >
-                <Text style={styles.addTimeText}>+ Add {getCurrentTimeString()}</Text>
+                <Text style={styles.addReminderIcon}>⏰</Text>
+                <Text style={styles.addReminderText}>Add Reminder Time</Text>
               </TouchableOpacity>
             </View>
 
@@ -1211,35 +1200,30 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#666',
-    marginBottom: 8,
-  },
-  timePickerContainer: {
-    backgroundColor: '#FFFFFF',
-    borderWidth: 2,
-    borderColor: '#2196F3',
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
     marginBottom: 12,
   },
-  timePickerIcon: {
-    fontSize: 24,
+  addReminderButton: {
+    backgroundColor: '#2196F3',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  timePickerTextContainer: {
-    flex: 1,
-  },
-  timePickerText: {
+  addReminderIcon: {
     fontSize: 20,
-    color: '#2196F3',
-    fontWeight: 'bold',
   },
-  timePickerHint: {
-    fontSize: 11,
-    color: '#666',
-    marginTop: 2,
+  addReminderText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -1354,19 +1338,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#FFFFFF',
     fontWeight: 'bold',
-  },
-  addTimeButton: {
-    marginTop: 12,
-    backgroundColor: '#E3F2FD',
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  addTimeText: {
-    fontSize: 14,
-    color: '#2196F3',
-    fontWeight: '600',
   },
   addedTimesList: {
     marginBottom: 12,
