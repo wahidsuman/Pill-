@@ -14,3 +14,5 @@ Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.4% (617/6
 Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.7% (695/696)
 Android Bundled 23662ms index.ts (696 modules)
  WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
+Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 1759ms index.ts (1 module)
