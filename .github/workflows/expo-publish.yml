@@ -1,0 +1,68 @@
+name: Expo Publish to Expo Go
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'pill-reminder-expo/**'
+  workflow_dispatch:
+
+jobs:
+  publish:
+    name: Publish to Expo
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: 🏗 Setup repo
+        uses: actions/checkout@v4
+
+      - name: 🏗 Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: npm
+          cache-dependency-path: pill-reminder-expo/package-lock.json
+
+      - name: 🏗 Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: 📦 Install dependencies
+        working-directory: pill-reminder-expo
+        run: npm ci
+
+      - name: 🔐 Expo Login
+        working-directory: pill-reminder-expo
+        run: |
+          npx expo login -u ${{ secrets.EXPO_USERNAME }} -p ${{ secrets.EXPO_PASSWORD }}
+        env:
+          EXPO_USERNAME: ${{ secrets.EXPO_USERNAME }}
+          EXPO_PASSWORD: ${{ secrets.EXPO_PASSWORD }}
+
+      - name: 🚀 Publish to Expo
+        working-directory: pill-reminder-expo
+        run: |
+          echo "📱 Publishing to Expo..."
+          npx expo publish --non-interactive
+        env:
+          EXPO_USERNAME: ${{ secrets.EXPO_USERNAME }}
+          EXPO_PASSWORD: ${{ secrets.EXPO_PASSWORD }}
+
+      - name: 📝 Get published URL
+        working-directory: pill-reminder-expo
+        run: |
+          echo "✅ App published successfully!"
+          echo ""
+          echo "📱 Access your app in Expo Go:"
+          echo "   - Open Expo Go app on your device"
+          echo "   - Search for: @wahidsuman/pill-reminder-expo"
+          echo "   - Or scan the QR code from: https://expo.dev/@wahidsuman/pill-reminder-expo"
+          echo ""
+          echo "🔗 Direct link: exp://exp.host/@wahidsuman/pill-reminder-expo"
+
+      - name: 💬 Comment on commit (if applicable)
+        if: github.event_name == 'push'
+        run: |
+          echo "::notice title=Expo Published::Your app has been published to Expo Go! Access it at exp://exp.host/@wahidsuman/pill-reminder-expo"
