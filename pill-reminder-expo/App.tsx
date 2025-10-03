@@ -295,8 +295,8 @@ export default function App() {
     }
   };
 
-  const getUpcomingReminders = () => {
-    const reminders: Array<{med: Medication, time: string}> = [];
+  const getTodaysReminders = () => {
+    const allReminders: Array<{med: Medication, time: string}> = [];
     const now = new Date();
     const currentDay = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][now.getDay()];
     
@@ -315,16 +315,47 @@ export default function App() {
       
       if (shouldShow) {
         med.reminderTimes.forEach((time) => {
-          const key = `${med.id}-${time}`;
-          // Only add if not marked as taken
-          if (!takenReminders.includes(key)) {
-            reminders.push({ med, time });
-          }
+          allReminders.push({ med, time });
         });
       }
     });
     
-    return reminders.slice(0, 3);
+    return allReminders;
+  };
+
+  const getUpcomingReminders = () => {
+    const todaysReminders = getTodaysReminders();
+    
+    // Filter out taken reminders
+    const upcoming = todaysReminders.filter((reminder) => {
+      const key = `${reminder.med.id}-${reminder.time}`;
+      return !takenReminders.includes(key);
+    });
+    
+    return upcoming.slice(0, 3);
+  };
+
+  const getStatistics = () => {
+    const todaysReminders = getTodaysReminders();
+    const totalToday = todaysReminders.length;
+    
+    // Count taken today
+    const takenToday = todaysReminders.filter((reminder) => {
+      const key = `${reminder.med.id}-${reminder.time}`;
+      return takenReminders.includes(key);
+    }).length;
+    
+    // Count pending (not yet taken)
+    const pending = totalToday - takenToday;
+    
+    // Total medications count
+    const totalMedications = medications.length;
+    
+    return {
+      takenToday,
+      pending,
+      total: totalMedications
+    };
   };
 
   const colors = [
@@ -610,15 +641,15 @@ export default function App() {
         {/* Statistics Section */}
         <View style={styles.statsContainer}>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={[styles.statNumber, styles.statNumberTaken]}>{getStatistics().takenToday}</Text>
             <Text style={styles.statLabel}>Taken Today</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={[styles.statNumber, styles.statNumberPending]}>{getStatistics().pending}</Text>
             <Text style={styles.statLabel}>Pending</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={[styles.statNumber, styles.statNumberTotal]}>{getStatistics().total}</Text>
             <Text style={styles.statLabel}>Total</Text>
           </View>
         </View>
@@ -818,6 +849,15 @@ const styles = StyleSheet.create({
   statNumber: {
     fontSize: 32,
     fontWeight: 'bold',
+    color: '#2196F3',
+  },
+  statNumberTaken: {
+    color: '#4CAF50',
+  },
+  statNumberPending: {
+    color: '#FF9800',
+  },
+  statNumberTotal: {
     color: '#2196F3',
   },
   statLabel: {
