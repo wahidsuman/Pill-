@@ -1,273 +1,275 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity, Platform, ScrollView } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView } from 'react-native';
 
 export default function App() {
-  const [medicationName, setMedicationName] = useState('');
-  const [dosage, setDosage] = useState('');
-  const [notes, setNotes] = useState('');
-  const [time, setTime] = useState(new Date());
-  const [showTimePicker, setShowTimePicker] = useState(false);
-  
-  // Handle time change from native picker
-  const onTimeChange = (event: any, selectedTime?: Date) => {
-    // On Android, the picker is dismissed after selection
-    if (Platform.OS === 'android') {
-      setShowTimePicker(false);
-    }
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const formatDate = (date: Date) => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
     
-    if (selectedTime) {
-      setTime(selectedTime);
-    }
-  };
-  
-  // Format time for display
-  const formatTime = (date: Date) => {
-    const hours = date.getHours();
+    const dayName = days[date.getDay()];
+    const monthName = months[date.getMonth()];
+    const day = date.getDate();
+    const year = date.getFullYear();
+    
+    let hours = date.getHours();
     const minutes = date.getMinutes();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
-    const displayMinutes = minutes < 10 ? `0${minutes}` : minutes;
-    return `${displayHours}:${displayMinutes} ${ampm}`;
-  };
-  
-  // Handle save medication
-  const handleSave = () => {
-    if (medicationName && dosage) {
-      console.log('Saving medication:', {
-        name: medicationName,
-        dosage,
-        time: formatTime(time),
-        notes
-      });
-      // Reset form
-      setMedicationName('');
-      setDosage('');
-      setNotes('');
-      setTime(new Date());
-      alert('Medication reminder saved successfully!');
-    } else {
-      alert('Please fill in medication name and dosage');
-    }
+    const ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const minutesStr = minutes < 10 ? '0' + minutes : minutes;
+    
+    return `${dayName}, ${monthName} ${String(day).padStart(2, '0')}, ${year} · ${String(hours).padStart(2, '0')}:${minutesStr} ${ampm}`;
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="auto" />
-      
-      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>💊 Pill Reminder</Text>
-          <Text style={styles.subtitle}>Add Medication</Text>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="dark" />
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+        {/* Top Section - Title Card */}
+        <View style={styles.headerCard}>
+          <Text style={styles.headerTitle}>Pill Reminder</Text>
+          <Text style={styles.headerSubtitle}>Never forget your Medicines</Text>
+          <Text style={styles.dateTime}>{formatDate(currentTime)}</Text>
         </View>
-        
-        <View style={styles.form}>
-          {/* Medication Name Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Medication Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., Aspirin"
-              value={medicationName}
-              onChangeText={setMedicationName}
-            />
+
+        {/* Statistics Section */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}>Taken Today</Text>
           </View>
-          
-          {/* Dosage Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Dosage</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g., 500mg"
-              value={dosage}
-              onChangeText={setDosage}
-            />
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}>Pending</Text>
           </View>
-          
-          {/* Native Time Picker */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Reminder Time</Text>
-            <TouchableOpacity
-              style={styles.timeButton}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <Text style={styles.timeButtonText}>🕐 {formatTime(time)}</Text>
-            </TouchableOpacity>
-          </View>
-          
-          {/* Native Time Picker Component */}
-          {showTimePicker && (
-            <DateTimePicker
-              value={time}
-              mode="time"
-              is24Hour={false}
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-              onChange={onTimeChange}
-            />
-          )}
-          
-          {/* iOS: Close button for time picker */}
-          {showTimePicker && Platform.OS === 'ios' && (
-            <TouchableOpacity
-              style={styles.doneButton}
-              onPress={() => setShowTimePicker(false)}
-            >
-              <Text style={styles.doneButtonText}>Done</Text>
-            </TouchableOpacity>
-          )}
-          
-          {/* Notes Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Notes (Optional)</Text>
-            <TextInput
-              style={[styles.input, styles.notesInput]}
-              placeholder="Add any additional notes"
-              value={notes}
-              onChangeText={setNotes}
-              multiline
-              numberOfLines={4}
-              textAlignVertical="top"
-            />
-          </View>
-          
-          {/* Save Button */}
-          <TouchableOpacity
-            style={[
-              styles.saveButton,
-              (!medicationName || !dosage) && styles.saveButtonDisabled
-            ]}
-            onPress={handleSave}
-            disabled={!medicationName || !dosage}
-          >
-            <Text style={styles.saveButtonText}>Save Medication</Text>
-          </TouchableOpacity>
-          
-          {/* Info Text */}
-          <View style={styles.infoBox}>
-            <Text style={styles.infoText}>
-              ℹ️ This app uses native time pickers:
-            </Text>
-            <Text style={styles.infoDetail}>
-              • Android: Material Design time picker dialog
-            </Text>
-            <Text style={styles.infoDetail}>
-              • iOS: Native spinner-style time picker
-            </Text>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statLabel}>Total</Text>
           </View>
         </View>
+
+        {/* Next Reminders Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.iconBell}>🔔</Text>
+            <Text style={styles.sectionTitle}>Next Reminders</Text>
+          </View>
+          <Text style={styles.emptyText}>No upcoming reminders</Text>
+        </View>
+
+        {/* My Medication Section */}
+        <View style={styles.sectionCard}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.iconBottle}>💊</Text>
+            <Text style={styles.sectionTitle}>My Medication</Text>
+          </View>
+          <Text style={styles.emptyText}>No medications added yet</Text>
+          <Text style={styles.hintText}>Add your first medication using the + button above</Text>
+        </View>
+
+        <View style={{ height: 100 }} />
       </ScrollView>
-    </View>
+
+      {/* Floating Add Button */}
+      <TouchableOpacity style={styles.floatingButton}>
+        <Text style={styles.floatingButtonText}>+</Text>
+      </TouchableOpacity>
+
+      {/* Bottom Navigation Bar */}
+      <View style={styles.bottomNav}>
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIconActive}>🏠</Text>
+          <Text style={styles.navLabelActive}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIcon}>📊</Text>
+          <Text style={styles.navLabel}>Stats</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIcon}>📅</Text>
+          <Text style={styles.navLabel}>Calendar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navItem}>
+          <Text style={styles.navIcon}>⚙️</Text>
+          <Text style={styles.navLabel}>Settings</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#E3F2FD',
+    backgroundColor: '#F5F7FA',
   },
   scrollView: {
     flex: 1,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingTop: 60,
-    paddingBottom: 40,
+  headerCard: {
+    backgroundColor: '#2196F3',
+    padding: 20,
+    marginTop: 10,
+    marginHorizontal: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  header: {
+  headerTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+  },
+  headerSubtitle: {
+    fontSize: 16,
+    color: '#E3F2FD',
+    marginTop: 4,
+  },
+  dateTime: {
+    fontSize: 14,
+    color: '#E3F2FD',
+    marginTop: 8,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginHorizontal: 16,
+    marginTop: 16,
+  },
+  statCard: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+    padding: 16,
+    marginHorizontal: 4,
+    borderRadius: 12,
     alignItems: 'center',
-    marginBottom: 30,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
   },
-  title: {
+  statNumber: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#2196F3',
-    marginBottom: 8,
   },
-  subtitle: {
-    fontSize: 18,
+  statLabel: {
+    fontSize: 12,
     color: '#666',
-  },
-  form: {
-    paddingHorizontal: 20,
-  },
-  inputGroup: {
-    marginBottom: 20,
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 12,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  notesInput: {
-    height: 100,
-    paddingTop: 12,
-  },
-  timeButton: {
-    backgroundColor: '#2196F3',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-  },
-  timeButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  doneButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 12,
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  doneButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 8,
-    padding: 16,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#ccc',
-  },
-  saveButtonText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  infoBox: {
-    backgroundColor: 'white',
-    borderRadius: 8,
-    padding: 16,
-    marginTop: 30,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2196F3',
-  },
-  infoText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  infoDetail: {
-    fontSize: 13,
-    color: '#666',
-    marginLeft: 10,
     marginTop: 4,
+    textAlign: 'center',
+  },
+  sectionCard: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  iconBell: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  iconBottle: {
+    fontSize: 24,
+    marginRight: 8,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginVertical: 8,
+  },
+  hintText: {
+    fontSize: 12,
+    color: '#BBB',
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  floatingButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 90,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 8,
+  },
+  floatingButtonText: {
+    fontSize: 32,
+    color: '#FFFFFF',
+    fontWeight: '300',
+  },
+  bottomNav: {
+    flexDirection: 'row',
+    backgroundColor: '#FFFFFF',
+    paddingVertical: 8,
+    paddingBottom: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 8,
+  },
+  navItem: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  navIcon: {
+    fontSize: 24,
+    opacity: 0.5,
+  },
+  navIconActive: {
+    fontSize: 24,
+  },
+  navLabel: {
+    fontSize: 11,
+    color: '#999',
+    marginTop: 4,
+  },
+  navLabelActive: {
+    fontSize: 11,
+    color: '#2196F3',
+    marginTop: 4,
+    fontWeight: '600',
   },
 });
