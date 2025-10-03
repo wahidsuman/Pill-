@@ -1,0 +1,9 @@
+Starting project at /workspace/pill-reminder-expo
+Starting Metro Bundler
+Tunnel connected.
+Tunnel ready.
+The following packages should be updated for best compatibility with the installed expo version:
+  @react-native-community/datetimepicker@8.4.5 - expected version: 8.4.4
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
