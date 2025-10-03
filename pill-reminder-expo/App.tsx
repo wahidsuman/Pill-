@@ -518,7 +518,7 @@ export default function App() {
               </TouchableOpacity>
             </View>
 
-            {/* Custom Time Picker Modal */}
+            {/* Modern Wheel Time Picker Modal */}
             <Modal
               visible={showTimePicker}
               transparent={true}
@@ -526,99 +526,134 @@ export default function App() {
               onRequestClose={() => setShowTimePicker(false)}
             >
               <View style={styles.modalOverlay}>
-                <View style={styles.timePickerModalContent}>
+                <View style={styles.modernTimePickerModal}>
                   <Text style={styles.modalTitle}>Select Time</Text>
+                  <Text style={styles.modalSubtitle}>Scroll to select hour and minute</Text>
                   
-                  <View style={styles.timeSelectors}>
-                    {/* Hour Selector */}
-                    <View style={styles.timeColumn}>
-                      <Text style={styles.timeColumnLabel}>Hour</Text>
-                      <ScrollView style={styles.timeScroll}>
-                        {[...Array(12)].map((_, i) => {
-                          const hour = i + 1;
-                          return (
-                            <TouchableOpacity
-                              key={hour}
-                              style={[
-                                styles.timeOption,
-                                selectedHour === hour && styles.timeOptionSelected
-                              ]}
-                              onPress={() => setSelectedHour(hour)}
-                            >
-                              <Text style={[
-                                styles.timeOptionText,
-                                selectedHour === hour && styles.timeOptionTextSelected
-                              ]}>
-                                {hour}
-                              </Text>
-                            </TouchableOpacity>
-                          );
-                        })}
-                      </ScrollView>
-                    </View>
+                  <View style={styles.wheelPickerContainer}>
+                    {/* Selection Indicator - the highlighted middle area */}
+                    <View style={styles.selectionIndicator} />
+                    
+                    <View style={styles.wheelColumns}>
+                      {/* Hour Wheel */}
+                      <View style={styles.wheelColumn}>
+                        <ScrollView
+                          style={styles.wheelScroll}
+                          showsVerticalScrollIndicator={false}
+                          snapToInterval={50}
+                          decelerationRate="fast"
+                          onScroll={(e) => {
+                            const y = e.nativeEvent.contentOffset.y;
+                            const index = Math.round(y / 50);
+                            const hour = index + 1;
+                            if (hour >= 1 && hour <= 12) {
+                              setSelectedHour(hour);
+                            }
+                          }}
+                          scrollEventThrottle={16}
+                        >
+                          <View style={styles.wheelPadding} />
+                          {[...Array(12)].map((_, i) => {
+                            const hour = i + 1;
+                            const isSelected = selectedHour === hour;
+                            return (
+                              <View key={hour} style={styles.wheelItem}>
+                                <Text style={[
+                                  styles.wheelItemText,
+                                  isSelected && styles.wheelItemTextSelected
+                                ]}>
+                                  {hour}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                          <View style={styles.wheelPadding} />
+                        </ScrollView>
+                      </View>
 
-                    {/* Minute Selector */}
-                    <View style={styles.timeColumn}>
-                      <Text style={styles.timeColumnLabel}>Minute</Text>
-                      <ScrollView style={styles.timeScroll}>
-                        {[0, 15, 30, 45].map((minute) => (
-                          <TouchableOpacity
-                            key={minute}
-                            style={[
-                              styles.timeOption,
-                              selectedMinute === minute && styles.timeOptionSelected
-                            ]}
-                            onPress={() => setSelectedMinute(minute)}
-                          >
-                            <Text style={[
-                              styles.timeOptionText,
-                              selectedMinute === minute && styles.timeOptionTextSelected
-                            ]}>
-                              {minute.toString().padStart(2, '0')}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
-                      </ScrollView>
-                    </View>
+                      <Text style={styles.wheelSeparator}>:</Text>
 
-                    {/* AM/PM Selector */}
-                    <View style={styles.timeColumn}>
-                      <Text style={styles.timeColumnLabel}>Period</Text>
-                      <View style={styles.periodSelector}>
-                        {(['AM', 'PM'] as const).map((period) => (
-                          <TouchableOpacity
-                            key={period}
-                            style={[
-                              styles.periodOption,
-                              selectedPeriod === period && styles.periodOptionSelected
-                            ]}
-                            onPress={() => setSelectedPeriod(period)}
-                          >
-                            <Text style={[
-                              styles.periodOptionText,
-                              selectedPeriod === period && styles.periodOptionTextSelected
-                            ]}>
-                              {period}
-                            </Text>
-                          </TouchableOpacity>
-                        ))}
+                      {/* Minute Wheel */}
+                      <View style={styles.wheelColumn}>
+                        <ScrollView
+                          style={styles.wheelScroll}
+                          showsVerticalScrollIndicator={false}
+                          snapToInterval={50}
+                          decelerationRate="fast"
+                          onScroll={(e) => {
+                            const y = e.nativeEvent.contentOffset.y;
+                            const minute = Math.round(y / 50);
+                            if (minute >= 0 && minute <= 59) {
+                              setSelectedMinute(minute);
+                            }
+                          }}
+                          scrollEventThrottle={16}
+                        >
+                          <View style={styles.wheelPadding} />
+                          {[...Array(60)].map((_, i) => {
+                            const isSelected = selectedMinute === i;
+                            return (
+                              <View key={i} style={styles.wheelItem}>
+                                <Text style={[
+                                  styles.wheelItemText,
+                                  isSelected && styles.wheelItemTextSelected
+                                ]}>
+                                  {i.toString().padStart(2, '0')}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                          <View style={styles.wheelPadding} />
+                        </ScrollView>
+                      </View>
+
+                      {/* AM/PM Wheel */}
+                      <View style={styles.wheelColumn}>
+                        <ScrollView
+                          style={styles.wheelScroll}
+                          showsVerticalScrollIndicator={false}
+                          snapToInterval={50}
+                          decelerationRate="fast"
+                          onScroll={(e) => {
+                            const y = e.nativeEvent.contentOffset.y;
+                            const index = Math.round(y / 50);
+                            setSelectedPeriod(index === 0 ? 'AM' : 'PM');
+                          }}
+                          scrollEventThrottle={16}
+                        >
+                          <View style={styles.wheelPadding} />
+                          {(['AM', 'PM'] as const).map((period) => {
+                            const isSelected = selectedPeriod === period;
+                            return (
+                              <View key={period} style={styles.wheelItem}>
+                                <Text style={[
+                                  styles.wheelItemText,
+                                  isSelected && styles.wheelItemTextSelected
+                                ]}>
+                                  {period}
+                                </Text>
+                              </View>
+                            );
+                          })}
+                          <View style={styles.wheelPadding} />
+                        </ScrollView>
                       </View>
                     </View>
                   </View>
 
-                  <View style={styles.modalButtons}>
+                  <View style={styles.modernModalButtons}>
                     <TouchableOpacity 
-                      style={styles.modalCancelButton}
+                      style={styles.modernCancelButton}
                       onPress={() => setShowTimePicker(false)}
                     >
-                      <Text style={styles.modalCancelText}>Cancel</Text>
+                      <Text style={styles.modernCancelText}>Cancel</Text>
                     </TouchableOpacity>
                     <TouchableOpacity 
-                      style={styles.modalConfirmButton}
+                      style={styles.modernConfirmButton}
                       onPress={confirmTimePicker}
                     >
-                      <Text style={styles.modalConfirmText}>
-                        Done ({getCurrentTimeString()})
+                      <Text style={styles.modernConfirmText}>
+                        Set {getCurrentTimeString()}
                       </Text>
                     </TouchableOpacity>
                   </View>
@@ -1208,114 +1243,117 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'flex-end',
+  },
+  modernTimePickerModal: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#999',
+    textAlign: 'center',
+    marginBottom: 24,
+  },
+  wheelPickerContainer: {
+    height: 200,
+    marginBottom: 24,
+    position: 'relative',
+  },
+  selectionIndicator: {
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    right: 0,
+    height: 50,
+    marginTop: -25,
+    backgroundColor: 'rgba(33, 150, 243, 0.1)',
+    borderTopWidth: 2,
+    borderBottomWidth: 2,
+    borderColor: '#2196F3',
+    zIndex: 1,
+    pointerEvents: 'none',
+  },
+  wheelColumns: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    height: '100%',
+    paddingHorizontal: 20,
+  },
+  wheelColumn: {
+    flex: 1,
+    height: '100%',
+  },
+  wheelScroll: {
+    flex: 1,
+  },
+  wheelPadding: {
+    height: 75,
+  },
+  wheelItem: {
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  timePickerModalContent: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    width: '85%',
-    maxHeight: '70%',
+  wheelItemText: {
+    fontSize: 24,
+    color: '#CCCCCC',
+    fontWeight: '400',
   },
-  modalTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  timeSelectors: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 20,
-  },
-  timeColumn: {
-    flex: 1,
-  },
-  timeColumnLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#666',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  timeScroll: {
-    maxHeight: 200,
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-  },
-  timeOption: {
-    paddingVertical: 12,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  timeOptionSelected: {
-    backgroundColor: '#E3F2FD',
-  },
-  timeOptionText: {
-    fontSize: 18,
-    color: '#666',
-  },
-  timeOptionTextSelected: {
+  wheelItemTextSelected: {
+    fontSize: 28,
     color: '#2196F3',
     fontWeight: 'bold',
   },
-  periodSelector: {
-    gap: 8,
+  wheelSeparator: {
+    fontSize: 32,
+    color: '#2196F3',
+    fontWeight: 'bold',
+    marginHorizontal: 8,
   },
-  periodOption: {
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#E0E0E0',
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
-  },
-  periodOptionSelected: {
-    backgroundColor: '#2196F3',
-    borderColor: '#2196F3',
-  },
-  periodOptionText: {
-    fontSize: 18,
-    color: '#666',
-    fontWeight: '600',
-  },
-  periodOptionTextSelected: {
-    color: '#FFFFFF',
-  },
-  modalButtons: {
+  modernModalButtons: {
     flexDirection: 'row',
     gap: 12,
   },
-  modalCancelButton: {
+  modernCancelButton: {
     flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
+    paddingVertical: 16,
+    borderRadius: 12,
     backgroundColor: '#F5F5F5',
     alignItems: 'center',
   },
-  modalCancelText: {
+  modernCancelText: {
     fontSize: 16,
     color: '#666',
     fontWeight: '600',
   },
-  modalConfirmButton: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 8,
+  modernConfirmButton: {
+    flex: 2,
+    paddingVertical: 16,
+    borderRadius: 12,
     backgroundColor: '#2196F3',
     alignItems: 'center',
+    shadowColor: '#2196F3',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
   },
-  modalConfirmText: {
+  modernConfirmText: {
     fontSize: 16,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   addTimeButton: {
     marginTop: 12,
