@@ -37,8 +37,17 @@
         "CAMERA",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES"
-      ]
+        "READ_MEDIA_IMAGES",
+        "SCHEDULE_EXACT_ALARM",
+        "USE_EXACT_ALARM",
+        "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "USE_FULL_SCREEN_INTENT",
+        "SYSTEM_ALERT_WINDOW",
+        "WAKE_LOCK",
+        "POST_NOTIFICATIONS"
+      ],
+      "package": "com.wahidsuman.pillreminder"
     },
     "plugins": [
       [
@@ -47,8 +56,23 @@
           "photosPermission": "The app needs access to your photos to let you select medication images.",
           "cameraPermission": "The app needs access to your camera to let you take photos of your medications."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#2196F3",
+          "sounds": [],
+          "mode": "production"
+        }
       ]
     ],
+    "notification": {
+      "icon": "./assets/icon.png",
+      "color": "#2196F3",
+      "androidMode": "default",
+      "androidCollapsedTitle": "Pill Reminder"
+    },
     "web": {
       "favicon": "./assets/favicon.png"
     }

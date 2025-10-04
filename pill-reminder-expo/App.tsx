@@ -1,8 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { StyleSheet, Text, View, TouchableOpacity, ScrollView, SafeAreaView, TextInput, Platform, Alert, Image, Modal } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as ImagePicker from 'expo-image-picker';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+
+// Configure notification handler to show notifications even when app is in foreground
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
+  }),
+});
 
 interface Medication {
   id: string;
@@ -41,6 +54,10 @@ export default function App() {
   const [selectedHour, setSelectedHour] = useState(12);
   const [selectedMinute, setSelectedMinute] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<'AM' | 'PM'>('PM');
+  const [showAlarmPopup, setShowAlarmPopup] = useState(false);
+  const [currentAlarm, setCurrentAlarm] = useState<any>(null);
+  const notificationListener = useRef<any>(null);
+  const responseListener = useRef<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -50,8 +67,160 @@ export default function App() {
   }, []);
 
   useEffect(() => {
+    registerForPushNotificationsAsync();
+    
+    // Listener for notifications received - show full screen alarm
+    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
+      console.log('Notification received!', notification);
+      setCurrentAlarm(notification.request.content);
+      setShowAlarmPopup(true);
+    });
+
+    // Listener for when user taps on notification
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification tapped!', response);
+      setCurrentAlarm(response.notification.request.content);
+      setShowAlarmPopup(true);
+    });
+
+    return () => {
+      if (notificationListener.current) {
+        notificationListener.current.remove();
+      }
+      if (responseListener.current) {
+        responseListener.current.remove();
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     loadMedications();
   }, []);
+
+  const registerForPushNotificationsAsync = async () => {
+    let token;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('medication-reminders', {
+        name: 'Medication Reminders',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#2196F3',
+        sound: 'default',
+        enableVibrate: true,
+        enableLights: true,
+        showBadge: true,
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      
+      if (finalStatus !== 'granted') {
+        Alert.alert('Permission Required', 'Please enable notifications to receive medication reminders!');
+        return;
+      }
+    } else {
+      Alert.alert('Alert', 'Must use physical device for notifications');
+    }
+
+    return token;
+  };
+
+  const scheduleNotificationForMedication = async (medication: Medication) => {
+    // Cancel existing notifications for this medication
+    const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    for (const notification of existingNotifications) {
+      if (notification.content.data?.medicationId === medication.id) {
+        await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+      }
+    }
+
+    // Schedule new notifications for each reminder time
+    for (const timeStr of medication.reminderTimes) {
+      // Parse time string (e.g., "8:00 AM")
+      const timeMatch = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/);
+      if (!timeMatch) continue;
+
+      let hour = parseInt(timeMatch[1]);
+      const minute = parseInt(timeMatch[2]);
+      const period = timeMatch[3];
+
+      // Convert to 24-hour format
+      if (period === 'PM' && hour !== 12) hour += 12;
+      if (period === 'AM' && hour === 12) hour = 0;
+
+      // Create trigger for specific time
+      const trigger: any = {
+        hour,
+        minute,
+        repeats: true,
+      };
+
+      // Add day-specific triggers for custom frequency
+      if (medication.frequency === 'Custom' && medication.customDays) {
+        const dayMap: {[key: string]: number} = {
+          'Sun': 1, 'Mon': 2, 'Tue': 3, 'Wed': 4, 'Thu': 5, 'Fri': 6, 'Sat': 7
+        };
+        
+        for (const day of medication.customDays) {
+          trigger.weekday = dayMap[day];
+          
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: '💊 Time to Take Your Medication',
+              body: `${medication.name} - ${timeStr}`,
+              data: { 
+                medicationId: medication.id,
+                medicationName: medication.name,
+                time: timeStr,
+                imageUri: medication.imageUri,
+                color: medication.color,
+              },
+              sound: true,
+              priority: Notifications.AndroidNotificationPriority.MAX,
+              vibrate: [0, 250, 250, 250],
+            },
+            trigger,
+          });
+        }
+      } else {
+        // For Daily, Weekly, Monthly - schedule for every day
+        await Notifications.scheduleNotificationAsync({
+          content: {
+            title: '💊 Time to Take Your Medication',
+            body: `${medication.name} - ${timeStr}`,
+            data: { 
+              medicationId: medication.id,
+              medicationName: medication.name,
+              time: timeStr,
+              imageUri: medication.imageUri,
+              color: medication.color,
+            },
+            sound: true,
+            priority: Notifications.AndroidNotificationPriority.MAX,
+            vibrate: [0, 250, 250, 250],
+          },
+          trigger,
+        });
+      }
+    }
+  };
+
+  const cancelNotificationsForMedication = async (medicationId: string) => {
+    const existingNotifications = await Notifications.getAllScheduledNotificationsAsync();
+    for (const notification of existingNotifications) {
+      if (notification.content.data?.medicationId === medicationId) {
+        await Notifications.cancelScheduledNotificationAsync(notification.identifier);
+      }
+    }
+  };
 
   const loadMedications = async () => {
     try {
@@ -164,6 +333,15 @@ export default function App() {
       await AsyncStorage.setItem('medications', JSON.stringify(updatedMedications));
       setMedications(updatedMedications);
       
+      // Schedule notifications for the medication
+      const savedMed = editingMedId 
+        ? updatedMedications.find(m => m.id === editingMedId)
+        : updatedMedications[updatedMedications.length - 1];
+      
+      if (savedMed) {
+        await scheduleNotificationForMedication(savedMed);
+      }
+      
       // Reset form
       setMedicationName('');
       setSelectedColor('#2196F3');
@@ -193,6 +371,9 @@ export default function App() {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Cancel all notifications for this medication
+              await cancelNotificationsForMedication(id);
+              
               const updatedMedications = medications.filter(med => med.id !== id);
               await AsyncStorage.setItem('medications', JSON.stringify(updatedMedications));
               setMedications(updatedMedications);
@@ -714,10 +895,56 @@ export default function App() {
         );
       case 'Settings':
         return (
-          <View style={styles.screenContainer}>
-            <Text style={styles.screenTitle}>⚙️ Settings</Text>
-            <Text style={styles.screenSubtitle}>App settings will appear here</Text>
-          </View>
+          <ScrollView style={styles.scrollView} contentContainerStyle={styles.settingsContainer}>
+            <Text style={styles.settingsTitle}>⚙️ Settings</Text>
+            
+            <View style={styles.settingsSection}>
+              <Text style={styles.settingsSectionTitle}>Notifications</Text>
+              
+              <TouchableOpacity 
+                style={styles.testNotificationButton}
+                onPress={async () => {
+                  await Notifications.scheduleNotificationAsync({
+                    content: {
+                      title: '💊 Time to Take Your Medication',
+                      body: 'Test Medication - 12:00 PM',
+                      data: {
+                        medicationId: 'test',
+                        medicationName: 'Test Medication',
+                        time: '12:00 PM',
+                        color: '#2196F3',
+                      },
+                      sound: true,
+                      priority: Notifications.AndroidNotificationPriority.MAX,
+                    },
+                    trigger: null, // Triggers immediately
+                  });
+                  Alert.alert('Success', 'Test notification sent! Check your notifications.');
+                }}
+              >
+                <Text style={styles.testNotificationText}>🔔 Test Alarm Notification</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.viewScheduledButton}
+                onPress={async () => {
+                  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+                  Alert.alert(
+                    'Scheduled Notifications',
+                    `You have ${scheduled.length} scheduled reminders`
+                  );
+                }}
+              >
+                <Text style={styles.viewScheduledText}>📋 View Scheduled Reminders ({medications.reduce((sum, med) => sum + med.reminderTimes.length, 0)})</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.settingsSection}>
+              <Text style={styles.settingsSectionTitle}>About</Text>
+              <Text style={styles.settingsText}>Version: 1.0.0</Text>
+              <Text style={styles.settingsText}>All data stored locally on your device</Text>
+            </View>
+          </ScrollView>
         );
       default:
         return renderHomeScreen();
@@ -884,6 +1111,75 @@ export default function App() {
           <Text style={activeScreen === 'Settings' ? styles.navLabelActive : styles.navLabel}>Settings</Text>
         </TouchableOpacity>
       </View>
+
+      {/* Full Screen Alarm Popup */}
+      <Modal
+        visible={showAlarmPopup}
+        animationType="fade"
+        transparent={false}
+        onRequestClose={() => setShowAlarmPopup(false)}
+      >
+        <View style={styles.alarmContainer}>
+          <View style={styles.alarmContent}>
+            {/* Alarm Icon */}
+            <View style={styles.alarmIconContainer}>
+              <Text style={styles.alarmIcon}>⏰</Text>
+            </View>
+
+            {/* Medicine Image or Color */}
+            {currentAlarm?.data?.imageUri ? (
+              <Image 
+                source={{ uri: currentAlarm.data.imageUri }} 
+                style={styles.alarmMedicineImage}
+              />
+            ) : (
+              <View style={[
+                styles.alarmColorCircle, 
+                { backgroundColor: currentAlarm?.data?.color || '#2196F3' }
+              ]}>
+                <Text style={styles.alarmPillIcon}>💊</Text>
+              </View>
+            )}
+
+            {/* Medication Name */}
+            <Text style={styles.alarmTitle}>Time to Take Your Medication!</Text>
+            <Text style={styles.alarmMedicationName}>
+              {currentAlarm?.data?.medicationName || 'Medication'}
+            </Text>
+            <Text style={styles.alarmTime}>
+              ⏰ {currentAlarm?.data?.time || ''}
+            </Text>
+
+            {/* Action Buttons */}
+            <View style={styles.alarmButtons}>
+              <TouchableOpacity 
+                style={styles.snoozeButton}
+                onPress={() => setShowAlarmPopup(false)}
+              >
+                <Text style={styles.snoozeButtonText}>⏰ Snooze</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.takenAlarmButton}
+                onPress={() => {
+                  if (currentAlarm?.data?.medicationId && currentAlarm?.data?.time) {
+                    markAsTaken(currentAlarm.data.medicationId, currentAlarm.data.time);
+                  }
+                  setShowAlarmPopup(false);
+                }}
+              >
+                <Text style={styles.takenAlarmButtonText}>✓ I Took It</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity 
+              style={styles.dismissButton}
+              onPress={() => setShowAlarmPopup(false)}
+            >
+              <Text style={styles.dismissButtonText}>Dismiss</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -1557,5 +1853,157 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  // Full Screen Alarm Styles
+  alarmContainer: {
+    flex: 1,
+    backgroundColor: '#2196F3',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  alarmContent: {
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  alarmIconContainer: {
+    marginBottom: 20,
+  },
+  alarmIcon: {
+    fontSize: 80,
+  },
+  alarmMedicineImage: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 6,
+    borderColor: '#FFFFFF',
+    marginBottom: 30,
+  },
+  alarmColorCircle: {
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    borderWidth: 6,
+    borderColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  alarmPillIcon: {
+    fontSize: 80,
+  },
+  alarmTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 12,
+  },
+  alarmMedicationName: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+  alarmTime: {
+    fontSize: 20,
+    color: '#E3F2FD',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  alarmButtons: {
+    flexDirection: 'row',
+    gap: 16,
+    marginBottom: 20,
+  },
+  snoozeButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+  },
+  snoozeButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  takenAlarmButton: {
+    backgroundColor: '#4CAF50',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  takenAlarmButtonText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
+  },
+  dismissButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+  },
+  dismissButtonText: {
+    fontSize: 14,
+    color: '#E3F2FD',
+    textAlign: 'center',
+  },
+  // Settings Screen Styles
+  settingsContainer: {
+    padding: 20,
+  },
+  settingsTitle: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 24,
+    marginTop: 20,
+  },
+  settingsSection: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 20,
+  },
+  settingsSectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 16,
+  },
+  testNotificationButton: {
+    backgroundColor: '#2196F3',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  testNotificationText: {
+    fontSize: 15,
+    color: '#FFFFFF',
+    fontWeight: '600',
+  },
+  viewScheduledButton: {
+    backgroundColor: '#E3F2FD',
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  viewScheduledText: {
+    fontSize: 14,
+    color: '#2196F3',
+    fontWeight: '600',
+  },
+  settingsText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 8,
   },
 });
