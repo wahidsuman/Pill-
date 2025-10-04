@@ -7,3 +7,13 @@ Tunnel connected.
 Tunnel ready.
 Waiting on http://localhost:8081
 Logs for your project will appear below.
+Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android ./index.ts ▓░░░░░░░░░░░░░░░  9.0% ( 42/163)
+Android ./index.ts ▓▓▓▓▓░░░░░░░░░░░ 31.8% (171/303)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 69.6% (403/483)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 85.0% (512/560)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 98.4% (654/683)
+Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (696/696)
+Android Bundled 21939ms index.ts (696 modules)
+ WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
+ WARN  [expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated. Use `ImagePicker.MediaType` or an array of `ImagePicker.MediaType` instead.
