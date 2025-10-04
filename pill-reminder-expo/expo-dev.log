@@ -17,3 +17,6 @@ Android ./index.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (696/6
 Android Bundled 21939ms index.ts (696 modules)
  WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
  WARN  [expo-image-picker] `ImagePicker.MediaTypeOptions` have been deprecated. Use `ImagePicker.MediaType` or an array of `ImagePicker.MediaType` instead.
+Android ./index.ts ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 137ms index.ts (1 module)
+ WARN  SafeAreaView has been deprecated and will be removed in a future release. Please use 'react-native-safe-area-context' instead. See https://github.com/th3rdwave/react-native-safe-area-context
