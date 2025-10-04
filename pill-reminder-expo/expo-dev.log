@@ -1,0 +1,9 @@
+
+Development build: Unable to determine the default URI scheme for deep linking into the app. Ensure that the expo-dev-client package is installed.
+Starting project at /workspace/pill-reminder-expo
+Starting Metro Bundler
+warning: Bundler cache is empty, rebuilding (this may take a minute)
+Tunnel connected.
+Tunnel ready.
+Waiting on http://localhost:8081
+Logs for your project will appear below.

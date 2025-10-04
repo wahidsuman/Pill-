@@ -1,23 +1,34 @@
-🚀 YOUR EXPO GO LINK (Restarted & Updated):
+🚀 FRESH EXPO GO LINK (All Caches Cleared):
 
-exp://bejpvxg-wahidsuman-8082.exp.direct
+exp://zj_usvw-wahidsuman-8081.exp.direct
 
-📱 How to Use:
-1. Open Expo Go app on your phone
-2. Tap "Enter URL manually" or the '+' button
-3. Paste this link: exp://bejpvxg-wahidsuman-8082.exp.direct
-4. Tap "Connect"
+📱 How to Connect:
+1. CLOSE Expo Go completely (swipe away)
+2. REOPEN Expo Go
+3. Clear any old projects in the list
+4. Tap "Enter URL manually" or '+' button
+5. Paste: exp://zj_usvw-wahidsuman-8081.exp.direct
+6. Tap "Connect"
 
 ✅ Server Status:
-- Expo Dev Server: RUNNING (Fresh restart with --clear)
+- Expo Dev Server: RUNNING (Fresh clean start)
+- All caches: CLEARED
 - Tunnel: ACTIVE  
-- Cache: CLEARED
-- Ready for development!
+- Metro bundler: Rebuilding fresh
 
-🔄 Changes Applied:
-- Button text changed to "+ Add More Time"
-- Modern wheel time picker active
-- Auto-add on time selection
-- All latest features included!
+🎉 Features Ready:
+- Modern wheel time picker (smooth scrolling, center selection)
+- Dynamic "Add Time" / "+ Add More Time" button
+- Image upload (camera & gallery)
+- Multiple reminder times
+- Custom day selection (Mon, Tue, Wed, etc.)
+- Real-time statistics (Taken, Pending, Total)
+- Edit & Delete medications
+- Next 3 reminders display
+- Local storage (AsyncStorage)
 
-Note: Server was restarted with cache cleared to fix the download error.
+⚠️ Important:
+This is the EXPO app. The APK from GitHub Actions is a DIFFERENT native Android app.
+For testing, use Expo Go with this link!
+
+Last Updated: Fresh restart - All errors should be fixed!
